@@ -26,21 +26,24 @@
       <div class="canvas-wrap">
         <canvas id="game" width="960" height="600" aria-label="イラスト風のファンタジー世界"></canvas>
         <div id="start-panel" class="overlay">
-          <div class="start-card">
-            <div class="crest">✦</div>
-            <p class="eyebrow">WELCOME, ADVENTURER</p>
-            <h2>WORLD SERCHER</h2>
-            <p class="intro">まだ見ぬ世界へ、自分だけの冒険を。</p>
-            <label for="player-name">冒険者の名前</label>
-            <input id="player-name" maxlength="12" value="冒険者" autocomplete="nickname">
-            <button id="start-button" type="button">冒険をはじめる <span>▶</span></button>
-            <p class="small-note">矢印キー / WASD で移動　・　E キーで調べる</p>
+          <div class="start-card auth-card">
+            <div class="crest">✦</div><p class="eyebrow">WELCOME, ADVENTURER</p>
+            <h2>WORLD SERCHER</h2><p class="intro">ログインして冒険の続きを始めよう。</p>
+            <div class="auth-tabs"><button id="login-tab" class="auth-tab active" type="button">ログイン</button><button id="register-tab" class="auth-tab" type="button">新規登録</button></div>
+            <form id="auth-form">
+              <label for="account-name">ユーザーID</label><input id="account-name" maxlength="16" autocomplete="username" required placeholder="3〜16文字">
+              <div id="character-name-wrap" class="auth-extra hidden"><label for="character-name">ゲーム内の名前</label><input id="character-name" maxlength="12" autocomplete="nickname" placeholder="冒険者"></div>
+              <label for="account-password">パスワード</label><input id="account-password" type="password" minlength="10" maxlength="72" autocomplete="current-password" required placeholder="10文字以上">
+              <button id="auth-submit" class="primary-action" type="submit">ログイン <span>▶</span></button>
+            </form>
+            <p id="auth-message" class="auth-message" role="status" aria-live="polite">初めて遊ぶ場合は新規登録してね。</p>
+            <p class="small-note">パスワードは安全な方法でハッシュ化して保存します。</p>
           </div>
         </div>
         <div id="notice" class="notice" aria-live="polite"></div>
         <div class="hud">
           <div class="hud-player"><span class="avatar">☺</span><span id="hud-name">冒険者</span></div>
-          <div class="hud-help">移動：WASD / ↑↓←→　調べる：E</div>
+          <div class="hud-right"><div class="hud-help">移動：WASD / ↑↓←→　調べる：E</div><button id="logout-button" type="button">ログアウト</button></div>
         </div>
       </div>
 
