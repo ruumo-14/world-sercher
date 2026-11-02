@@ -40,3 +40,14 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;image-rendering:aut
 .mobile-controls button{width:42px;height:38px;border:1px solid #617a63;border-radius:7px;background:#263d30;color:#f5f0db;font-size:16px;touch-action:none}
 .mobile-controls .interact-button{width:82px;height:48px;background:#d5ad5f;color:#263323;font-weight:800}
 @media(max-width:650px){#app{width:calc(100% - 16px);padding-top:10px}.game-shell{padding:10px;border-radius:10px}.game-heading{align-items:center}.game-heading h1{font-size:17px}.location-chip{font-size:10px;padding:6px 8px}.hud-help{display:none}.mobile-controls{display:flex}.bottom-info{font-size:9px}.start-card{padding:18px}.start-card h2{font-size:19px}}
+
+.auth-card{width:min(420px,calc(100% - 24px));max-height:95%;overflow:auto}
+.auth-tabs{display:flex;gap:8px;margin:0 0 14px}
+.auth-tabs .auth-tab{width:50%;height:38px;margin:0;background:#263d30;color:#dce8d9;border:1px solid #617b64;font:700 13px 'Noto Sans JP',sans-serif}
+.auth-tabs .auth-tab.active{background:#e4c47c;color:#263323;border-color:#f4d995}
+.auth-card form{text-align:left}.auth-card label{margin:10px 0 6px}.auth-card input{height:42px}
+.auth-card .primary-action{margin-top:16px;font-family:'Noto Sans JP',sans-serif}
+.auth-extra.hidden{display:none}.auth-message{min-height:20px;margin:10px 0 0;color:#f2d28d;font-size:12px}
+.hud-right{display:flex;align-items:center;gap:8px;pointer-events:auto}
+#logout-button{border:1px solid #78916b;border-radius:6px;padding:7px 10px;background:#102019d9;color:#fff4df;font:12px 'Noto Sans JP',sans-serif;cursor:pointer}
+@media(max-width:650px){.auth-card{padding:16px 18px}.auth-card .intro{margin-bottom:12px}.auth-card .small-note{font-size:9px}}
