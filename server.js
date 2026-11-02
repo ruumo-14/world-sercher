@@ -1,7 +1,7 @@
 "use strict";
 const express=require("express"),http=require("http"),path=require("path"),crypto=require("crypto"),bcrypt=require("bcryptjs"),session=require("express-session"),PgSession=require("connect-pg-simple")(session),{Pool}=require("pg"),{rateLimit}=require("express-rate-limit"),{Server}=require("socket.io");
 const app=express(),server=http.createServer(app),io=new Server(server),PORT=process.env.PORT||3000,WORLD={width:3200,height:2400},players=new Map();
-const pool=process.env.DATABASE_URL?new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false},max:5}):null;
+const pool=process.env.DATABASE_URL?new Pool({connectionString:process.env.DATABASE_URL,ssl:true,max:5}):null;
 app.set("trust proxy",1);app.use(express.json({limit:"30kb"}));
 const sessionSecret=process.env.SESSION_SECRET||crypto.randomBytes(32).toString("hex");
 if(!process.env.SESSION_SECRET)console.warn("SESSION_SECRET is not set; sessions reset on restart.");
