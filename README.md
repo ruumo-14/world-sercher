@@ -36,3 +36,15 @@ Render の Web Service で公開できる構成です。
 7. セーブデータとアカウント管理
 
 ※現在は開発初期の試作版です。データ保存、アカウント、ランキング、取引などはまだ実装されていません。
+
+
+## Account and save database setup
+
+The account system requires a PostgreSQL database. Set these environment variables on the Render Web Service:
+
+- `DATABASE_URL`: the PostgreSQL connection string from your database provider. Keep it secret.
+- `SESSION_SECRET`: a long random secret generated in Render. Do not commit it to GitHub.
+
+The server creates the account and save tables automatically at startup. Passwords are stored as bcrypt hashes, not plaintext. Player name and position are saved automatically; more game progress fields can be added as those systems are implemented.
+
+Do not use a local SQLite file on Render Free for account saves: its filesystem is ephemeral.
