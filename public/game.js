@@ -4,13 +4,8 @@
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
   const startPanel = document.getElementById("start-panel");
-  const startButton = document.getElementById("start-button");
-  const nameInput = document.getElementById("player-name");
-  const notice = document.getElementById("notice");
-  const onlineCount = document.getElementById("online-count");
-  const connectionState = document.getElementById("connection-state");
-  const hudName = document.getElementById("hud-name");
-
+  const authForm=document.getElementById("auth-form"),accountNameInput=document.getElementById("account-name"),passwordInput=document.getElementById("account-password"),characterNameInput=document.getElementById("character-name"),characterNameWrap=document.getElementById("character-name-wrap"),authMessage=document.getElementById("auth-message"),authSubmit=document.getElementById("auth-submit"),loginTab=document.getElementById("login-tab"),registerTab=document.getElementById("register-tab"),logoutButton=document.getElementById("logout-button");
+  const notice=document.getElementById("notice"),onlineCount=document.getElementById("online-count"),connectionState=document.getElementById("connection-state"),hudName=document.getElementById("hud-name");
   const VIEW_W = 960;
   const VIEW_H = 600;
   const TILE = 48;
@@ -25,8 +20,10 @@
     { x: 1460, y: 1510, w: 210, h: 155, name: "あなたの家", color: "#876a9c" },
     { x: 1850, y: 1510, w: 190, h: 145, name: "工房", color: "#8c7650" }
   ];
-  const socket = typeof io === "function" ? io() : null;
+  const socket = typeof io === "function" ? io({ autoConnect: false }) : null;
   let started = false;
+  let authMode = "login";
+  let saveTimer = 0;
   let lastTime = 0;
   let lastSent = 0;
   let noticeTimer = null;
@@ -45,23 +42,35 @@
     return buildings.some(b => x + radius > b.x && x - radius < b.x + b.w && y + radius > b.y + 28 && y - radius < b.y + b.h);
   }
 
-  function joinWorld() {
-    if (started) return;
-    player.name = (nameInput.value || "冒険者").trim().slice(0, 12) || "冒険者";
-    hudName.textContent = player.name;
-    started = true;
-    startPanel.classList.add("hidden");
-    if (socket) socket.emit("player:join", { name: player.name });
-    showNotice("冒険のはじまり！ 町の中を自由に歩いてみよう。");
+  function setAuthMode(mode){
+    authMode=mode;const registering=mode==="register";
+    loginTab.classList.toggle("active",!registering);registerTab.classList.toggle("active",registering);
+    characterNameWrap.classList.toggle("hidden",!registering);passwordInput.autocomplete=registering?"new-password":"current-password";
+    passwordInput.minLength=registering?10:1;authSubmit.innerHTML=registering?"アカウントを作成 <span>✦</span>":"ログイン <span>▶</span>";
+    authMessage.textContent=registering?"ユーザーIDと10文字以上のパスワードを設定してね。":"登録済みのユーザーIDとパスワードを入力してね。";
   }
-
-  startButton.addEventListener("click", joinWorld);
-  nameInput.addEventListener("keydown", e => { if (e.key === "Enter") joinWorld(); });
-
+  loginTab.addEventListener("click",()=>setAuthMode("login"));registerTab.addEventListener("click",()=>setAuthMode("register"));
+  async function enterWorld(profile){
+    player.name=profile.name||"冒険者";player.x=Number(profile.x)||1600;player.y=Number(profile.y)||1370;hudName.textContent=player.name;
+    started=true;startPanel.classList.add("hidden");if(socket)socket.connect();showNotice("おかえりなさい！ 前回の冒険データを読み込んだよ。");
+  }
+  authForm.addEventListener("submit",async event=>{
+    event.preventDefault();authSubmit.disabled=true;authMessage.textContent="確認しています...";
+    const payload={username:accountNameInput.value.trim(),password:passwordInput.value,characterName:characterNameInput.value.trim()||accountNameInput.value.trim()};
+    try{const response=await fetch(authMode==="register"?"/api/register":"/api/login",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify(payload)});
+      const result=await response.json();if(!response.ok)throw new Error(result.error||"処理に失敗しました。");passwordInput.value="";await enterWorld(result.profile);
+    }catch(error){authMessage.textContent=error.message||"通信に失敗しました。";}finally{authSubmit.disabled=false;}
+  });
+  async function saveCurrent(){if(!started)return;try{await fetch("/api/save",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:player.name,x:player.x,y:player.y})});}catch(_error){}}
+  logoutButton.addEventListener("click",async()=>{await saveCurrent();if(socket)socket.disconnect();await fetch("/api/logout",{method:"POST",credentials:"same-origin"});location.reload();});
+  setInterval(()=>{if(started)saveCurrent();},10000);window.addEventListener("pagehide",saveCurrent);
+  async function checkExistingLogin(){try{const response=await fetch("/api/me",{credentials:"same-origin"});const result=await response.json();if(response.ok&&result.loggedIn)await enterWorld(result.profile);else if(!response.ok)authMessage.textContent=result.error||"アカウント機能の準備が必要です。";}catch(_error){authMessage.textContent="サーバーに接続できません。再読み込みしてね。";}}
+  checkExistingLogin();
   if (socket) {
     socket.on("connect", () => {
       connectionState.textContent = "サーバー接続済み";
       onlineCount.textContent = "オンライン";
+      if (started) socket.emit("player:join");
     });
     socket.on("disconnect", () => {
       connectionState.textContent = "再接続を待っています";
@@ -72,10 +81,11 @@
       (data.players || []).forEach(p => others.set(p.id, p));
       updateOnline();
     });
-    socket.on("player:ready", data => Object.assign(player, data));
+    socket.on("player:ready", data => { player.id=data.id; player.x=data.x; player.y=data.y; player.name=data.name; });
     socket.on("player:joined", p => { others.set(p.id, p); updateOnline(); showNotice(p.name + " が冒険に参加したよ！"); });
     socket.on("player:moved", p => { const old = others.get(p.id); if (old) Object.assign(old, p); });
     socket.on("player:left", id => { others.delete(id); updateOnline(); });
+    socket.on("connect_error", error => { connectionState.textContent="ログイン接続エラー"; showNotice(error.message||"接続できませんでした。"); });
   } else {
     connectionState.textContent = "オフライン表示";
     onlineCount.textContent = "サーバー未接続";
@@ -289,7 +299,7 @@
         dy=dy/length*player.speed*dt;
         if (!blocked(player.x+dx,player.y)) player.x+=dx;
         if (!blocked(player.x,player.y+dy)) player.y+=dy;
-        if (socket && time-lastSent>90) {
+        if (socket && socket.connected && time-lastSent>90) {
           socket.emit("player:move",{x:player.x,y:player.y});
           lastSent=time;
         }
@@ -297,6 +307,7 @@
       camera.x=Math.max(0,Math.min(world.width-VIEW_W,player.x-VIEW_W/2));
       camera.y=Math.max(0,Math.min(world.height-VIEW_H,player.y-VIEW_H/2));
       updateOnline();
+      if (time-saveTimer>10000) { saveTimer=time; saveCurrent(); }
     } else {
       camera.x=1120;
       camera.y=950;
