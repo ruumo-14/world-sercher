@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Nunito:wght@400;600;700;800&display=swap');
+
+:root{color-scheme:dark;--bg:#101c19;--panel:#1a2b25;--line:#365044;--gold:#f4cf79;--muted:#a9bdb0}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#294336 0,#172820 48%,#101916 100%);color:#f4f1df;font-family:'Nunito','DotGothic16',sans-serif}
+#app{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:22px 0 28px}
+.topbar{height:48px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.14em;font-size:14px}
+.brand-mark{color:var(--gold);font-size:24px}
+.online{display:flex;align-items:center;gap:8px;color:#b9cdbf;font-size:12px}
+.online-dot{width:8px;height:8px;border-radius:50%;background:#7bd69a;box-shadow:0 0 12px #7bd69a}
+.game-shell{padding:20px;background:linear-gradient(145deg,#22372d,#192921);border:1px solid #456151;border-radius:16px;box-shadow:0 20px 70px #0007}
+.game-heading{display:flex;justify-content:space-between;align-items:end;margin:0 2px 14px}
+.eyebrow{font-size:10px;letter-spacing:.22em;color:var(--gold);font-weight:800;margin:0 0 5px}
+h1{font-size:22px;margin:0;font-family:'DotGothic16',sans-serif;font-weight:400}
+.location-chip{padding:8px 12px;border:1px solid #496653;border-radius:20px;color:#d3e2d4;font-size:12px}
+.canvas-wrap{position:relative;overflow:hidden;border:3px solid #6b805d;border-radius:8px;background:#294b35;box-shadow:inset 0 0 0 2px #1c3026}
+canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;image-rendering:pixelated;touch-action:none}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#07130fc9;backdrop-filter:blur(2px);transition:opacity .25s}
+.overlay.hidden{opacity:0;pointer-events:none}
+.start-card{width:min(390px,calc(100% - 30px));padding:25px 28px;text-align:center;background:linear-gradient(160deg,#294334,#1b2e25);border:1px solid #718b62;border-radius:12px;box-shadow:0 12px 40px #0008}
+.crest{width:48px;height:48px;margin:0 auto 12px;display:grid;place-items:center;border:1px solid #b89d5d;border-radius:50%;color:var(--gold);font-size:27px}
+.start-card h2{font-family:'DotGothic16',sans-serif;font-size:23px;letter-spacing:.08em;margin:0 0 7px}
+.intro{color:#c5d5c8;font-size:13px;margin:0 0 20px}
+.start-card label{display:block;text-align:left;font-size:12px;color:#d8e4d7;margin-bottom:6px}
+.start-card input{width:100%;height:42px;border-radius:6px;border:1px solid #617b64;background:#14231c;color:#fff;padding:0 12px;font:inherit;outline:none}
+.start-card input:focus{border-color:var(--gold)}
+.start-card button{width:100%;margin-top:12px;height:45px;border:0;border-radius:6px;background:linear-gradient(#f3d58d,#d5ad5f);color:#293323;font:800 14px inherit;cursor:pointer}
+.start-card button span{margin-left:8px}
+.small-note{font-size:10px;color:#a8bbaa;margin:13px 0 0}
+.hud{position:absolute;left:12px;right:12px;top:12px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.hud-player,.hud-help{background:#102019d9;border:1px solid #78916b;border-radius:6px;padding:7px 10px;font-size:11px;color:#f4f1df}
+.avatar{display:inline-grid;place-items:center;width:20px;height:20px;margin-right:6px;border-radius:4px;background:#e5c27a;color:#27382c}
+.notice{position:absolute;left:50%;bottom:58px;transform:translate(-50%,12px);opacity:0;background:#102019ed;border:1px solid #c4a96a;border-radius:7px;padding:10px 16px;font-size:13px;max-width:90%;text-align:center;transition:.2s;pointer-events:none}
+.notice.show{opacity:1;transform:translate(-50%,0)}
+.bottom-info{display:flex;justify-content:space-between;gap:12px;padding:13px 2px 0;color:#a9bdb0;font-size:11px}
+.mobile-controls{display:none;justify-content:space-between;align-items:center;padding:14px 4px 0}
+.dpad{display:flex;flex-direction:column;align-items:center;gap:5px}
+.dpad>div{display:flex;gap:5px}
+.mobile-controls button{width:42px;height:38px;border:1px solid #617a63;border-radius:7px;background:#263d30;color:#f5f0db;font-size:16px;touch-action:none}
+.mobile-controls .interact-button{width:82px;height:48px;background:#d5ad5f;color:#263323;font-weight:800}
+@media(max-width:650px){#app{width:calc(100% - 16px);padding-top:10px}.game-shell{padding:10px;border-radius:10px}.game-heading{align-items:center}.game-heading h1{font-size:17px}.location-chip{font-size:10px;padding:6px 8px}.hud-help{display:none}.mobile-controls{display:flex}.bottom-info{font-size:9px}.start-card{padding:18px}.start-card h2{font-size:19px}}
