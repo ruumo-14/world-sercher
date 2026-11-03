@@ -43,7 +43,7 @@
         <div id="notice" class="notice" aria-live="polite"></div>
         <div class="hud">
           <div class="hud-player"><span class="avatar">☺</span><span id="hud-name">冒険者</span></div>
-          <div class="hud-right"><div class="hud-help">移動：WASD / ↑↓←→　調べる：E</div><button id="logout-button" type="button">ログアウト</button></div>
+          <div class="hud-right"><div class="hud-help">移動：WASD / ↑↓←→　調べる：E</div><button id="open-adventurer" type="button">冒険者メニュー</button><button id="logout-button" type="button">ログアウト</button></div>
         </div>
       </div>
 
@@ -55,6 +55,12 @@
         <button id="interact-button" class="interact-button">調べる</button>
       </div>
 
+      <section id="adventurer-panel" class="adventurer-panel hidden" aria-label="冒険者メニュー">
+        <div class="panel-head"><div><p class="eyebrow">ADVENTURER RECORD</p><h2>冒険者メニュー</h2></div><button id="close-adventurer" class="panel-close" type="button">閉じる ✕</button></div>
+        <nav class="panel-tabs"><button class="panel-tab active" data-tab="status">ステータス</button><button class="panel-tab" data-tab="job">職業</button><button class="panel-tab" data-tab="skills">スキル</button><button class="panel-tab" data-tab="equipment">装備強化</button></nav>
+        <div id="panel-content" class="panel-content"></div>
+        <p id="panel-message" class="panel-message" role="status"></p>
+      </section>
       <footer class="bottom-info">
         <span>✦ 友達と同じ世界で冒険できる試作版</span>
         <span id="connection-state">サーバーに接続しています</span>
@@ -62,6 +68,6 @@
     </section>
   </main>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/game.js"></script>
+  <script src="/game.js"></script>\n  <script src="/game-system.js"></script>
 </body>
 </html>
