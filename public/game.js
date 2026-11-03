@@ -274,33 +274,26 @@
     const dwarf=p.species==="ドワーフ",key=[isPlayer?1:0,female?1:0,dwarf?1:0,dir,frame,isPlayer?"purple":(p.color||"blue"),p.hair||""].join("|");
     let sprite=spriteCache.get(key);
     if(!sprite){
-      const c=document.createElement("canvas");c.width=24;c.height=32;
-      const g=c.getContext("2d"),cells=Array.from({length:32},()=>Array(24).fill(null));
+      const base=document.createElement("canvas");base.width=24;base.height=32;
+      const g=base.getContext("2d"),cells=Array.from({length:32},()=>Array(24).fill(null));
       const put=(x0,y0,w,h,col)=>{for(let yy=y0;yy<y0+h;yy++)for(let xx=x0;xx<x0+w;xx++)if(xx>=0&&xx<24&&yy>=0&&yy<32)cells[yy][xx]=col};
-      const back=dir==="up",side=dir==="left"||dir==="right"||dir==="up-left"||dir==="up-right"||dir==="down-left"||dir==="down-right";
-      const mirror=dir==="left"||dir==="up-left"||dir==="down-left";
-      const shift=mirror?1:0,leg= moving?(frame===1?-1:frame===3?1:0):0;
-      // boots, legs and compact rounded silhouette
+      const leg=moving?(frame===1?-1:frame===3?1:0):0;
+      const cloth=isPlayer?"#7029a8":(female?"#3267a5":p.color||"#6685a0");
+      // Rounded head, compact torso, arms and independently animated legs.
       put(5+leg,27,5,4,"#4c3540");put(14-leg,27,5,4,"#4c3540");
       put(4+leg,29,6,3,"#5c9eb7");put(14-leg,29,6,3,"#5c9eb7");
       put(7+leg,22,3,7,"#e6d9c7");put(14-leg,22,3,7,"#e6d9c7");
-      const cloth=isPlayer?"#7029a8":(female?"#3267a5":p.color||"#6685a0");
       put(6,14+(moving&&frame%2?1:0),12,9,cloth);
       put(4,15,3,7,isPlayer?"#8e4ac2":cloth);put(17,15,3,7,isPlayer?"#8e4ac2":cloth);
       put(5,20,2,3,"#e6b98f");put(17,20,2,3,"#e6b98f");
       put(7,21,10,2,"#e7c86c");put(8,23,2,2,"#b28b54");put(14,23,2,2,"#b28b54");
       put(7,15,2,6,isPlayer?"#a65bd0":"#e0c18a");put(15,15,2,6,isPlayer?"#54217f":"#765b48");
-      // neck, ears and softly rounded face
       put(10,11,4,4,"#d99c76");put(5,8,2,4,"#d99c76");put(17,8,2,4,"#d99c76");
       put(7,4,10,9,"#6d4939");put(6,6,12,7,"#d99c76");put(8,3,8,2,"#d99c76");
-      if(!back){
-        if(side){put(mirror?8:14,8,2,2,"#fff0d5");put(mirror?9:14,8,1,2,"#493c42");}
-        else {put(7,8,3,2,"#fff0d5");put(14,8,3,2,"#fff0d5");put(8,8,2,2,"#493c42");put(15,8,2,2,"#493c42");}
-        put(10,12,4,1,"#a85d59");
-      }
+      put(7,8,3,2,"#fff0d5");put(14,8,3,2,"#fff0d5");
+      put(8,8,2,2,"#493c42");put(15,8,2,2,"#493c42");put(10,12,4,1,"#a85d59");
       if(isPlayer){
-        const turban=back?"#6425a8":"#7029bb";
-        put(5,1,14,4,"#482078");put(6,0,12,4,turban);put(8,0,8,2,"#963ee0");
+        put(5,1,14,4,"#482078");put(6,0,12,4,"#7029bb");put(8,0,8,2,"#963ee0");
         put(5,3,3,3,"#58218f");put(16,3,3,3,"#58218f");put(8,2,8,1,"#bd79ed");put(11,3,2,2,"#d39af1");
         put(3,14,3,9,"#7029a8");put(18,14,3,9,"#7029a8");put(4,15,2,6,"#a85bd0");put(18,15,2,6,"#51217f");
       }else if(female){
@@ -308,21 +301,25 @@
       }else{
         put(6,2,12,4,p.hair||"#60412f");put(5,5,2,5,p.hair||"#60412f");put(17,5,2,5,p.hair||"#60412f");
       }
-      // Draw only the outside contour. Adjacent body parts share pixels, so no internal black seams.
+      // Find exterior empty pixels only, so the outline never cuts through the face or clothing.
+      const outside=Array.from({length:32},()=>Array(24).fill(false)),queue=[];
+      for(let xx=0;xx<24;xx++){if(!cells[0][xx]){outside[0][xx]=true;queue.push([xx,0]);}if(!cells[31][xx]){outside[31][xx]=true;queue.push([xx,31]);}}
+      for(let yy=0;yy<32;yy++){if(!cells[yy][0]){outside[yy][0]=true;queue.push([0,yy]);}if(!cells[yy][23]){outside[yy][23]=true;queue.push([23,yy]);}}
+      for(let n=0;n<queue.length;n++){const [xx,yy]=queue[n];for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=xx+dx,ny=yy+dy;if(nx>=0&&nx<24&&ny>=0&&ny<32&&!cells[ny][nx]&&!outside[ny][nx]){outside[ny][nx]=true;queue.push([nx,ny]);}}}
       const out=g.createImageData(24,32);
-      for(let yy=0;yy<32;yy++)for(let xx=0;xx<24;xx++){
-        if(!cells[yy][xx])continue;
-        const n=[[0,-1],[0,1],[-1,0],[1,0]].some(([dx,dy])=>!cells[yy+dy]?.[xx+dx]);
-        if(n){const z=(yy*24+xx)*4;out.data[z]=28;out.data[z+1]=22;out.data[z+2]=29;out.data[z+3]=255;}
-      }
+      for(let yy=0;yy<32;yy++)for(let xx=0;xx<24;xx++)if(!cells[yy][xx]&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>cells[yy+dy]?.[xx+dx]&&outside[yy][xx])){const z=(yy*24+xx)*4;out.data[z]=20;out.data[z+1]=17;out.data[z+2]=24;out.data[z+3]=255;}
       g.putImageData(out,0,0);
       for(let yy=0;yy<32;yy++)for(let xx=0;xx<24;xx++)if(cells[yy][xx]){g.fillStyle=cells[yy][xx];g.fillRect(xx,yy,1,1);}
-      sprite=c;spriteCache.set(key,sprite);
-      if(spriteCache.size>160)spriteCache.delete(spriteCache.keys().next().value);
+      // Rotate the complete body, including head, facial features, mouth, arms and feet.
+      sprite=document.createElement("canvas");sprite.width=32;sprite.height=32;
+      const sg=sprite.getContext("2d");sg.imageSmoothingEnabled=false;
+      const angles={"down":0,"down-right":-Math.PI/4,"right":-Math.PI/2,"up-right":-3*Math.PI/4,"up":Math.PI,"up-left":3*Math.PI/4,"left":Math.PI/2,"down-left":Math.PI/4};
+      sg.translate(16,16);sg.rotate(angles[dir]??0);sg.drawImage(base,-12,-16);sg.setTransform(1,0,0,1,0,0);
+      spriteCache.set(key,sprite);if(spriteCache.size>160)spriteCache.delete(spriteCache.keys().next().value);
     }
     ctx.save();ctx.imageSmoothingEnabled=false;
     const bob=moving&&frame%2===1?-1:0;
-    ctx.drawImage(sprite,x+(dwarf?4:0),y+bob,48,64);ctx.restore();
+    ctx.drawImage(sprite,x+(dwarf?0:-8),y+bob,64,64);ctx.restore();
     ellipse(x+24,y+63,14,4,"#30452f");
   }
   function drawPlayerName(p){
