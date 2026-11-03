@@ -1,7 +1,7 @@
 "use strict";
 (() => {
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
-  const W=960,H=600; canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=false;
+  const W=960,H=600; canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=false;\n  const spriteAtlas=new Image();spriteAtlas.src="/assets/riefel-atlas.svg";let atlasReady=false;spriteAtlas.onload=()=>{atlasReady=true};
   const $=id=>document.getElementById(id);
   const startPanel=$("start-panel"),authForm=$("auth-form"),accountName=$("account-name"),password=$("account-password"),characterName=$("character-name"),nameWrap=$("character-name-wrap"),authMessage=$("auth-message"),authSubmit=$("auth-submit"),loginTab=$("login-tab"),registerTab=$("register-tab"),notice=$("notice"),hudName=$("hud-name"),onlineCount=$("online-count"),connectionState=$("connection-state");
   const player={id:null,name:"冒険者",x:1600,y:1300,speed:155,dir:"down",species:"人間",hair:"栗色",skin:"明るい肌",eyes:"青",style:"旅人",outfit:"#4f78a5",accessory:"なし"};
