@@ -2,9 +2,8 @@
 (() => {
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
   const W=960,H=600; canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=false;
-  const spriteAtlas=new Image();spriteAtlas.src="/assets/riefel-atlas.svg";let atlasReady=false;spriteAtlas.onload=()=>{atlasReady=true};
-  // User-provided detailed village reference: crop only the illustrated town area, not the asset catalog.
-  const villageAtlas=new Image();villageAtlas.src="/assets/e0e5d04f-4acb-499a-b02e-f715b836c31c.png";let villageReady=false;villageAtlas.onload=()=>{villageReady=true};
+  // Simple shape-only graphics: no external image assets are loaded.
+  const atlasReady=false;
   const $=id=>document.getElementById(id);
   const startPanel=$("start-panel"),authForm=$("auth-form"),accountName=$("account-name"),password=$("account-password"),characterName=$("character-name"),nameWrap=$("character-name-wrap"),authMessage=$("auth-message"),authSubmit=$("auth-submit"),loginTab=$("login-tab"),registerTab=$("register-tab"),notice=$("notice"),hudName=$("hud-name"),onlineCount=$("online-count"),connectionState=$("connection-state");
   const player={id:null,name:"冒険者",x:1600,y:1300,speed:155,dir:"down",species:"人間",hair:"栗色",skin:"明るい肌",eyes:"青",style:"旅人",outfit:"#4f78a5",accessory:"なし"};
@@ -93,9 +92,7 @@
     if(isPlayer){ctx.fillStyle="#fff3d5";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText(player.name,x,y-34)}
   }
   function drawDecor(){for(let i=0;i<20;i++){const x=900+(i*97)%1100,y=800+(i*139)%1000;ellipse(x-camera.x,y-camera.y,5,3,["#d9c17a","#e2a0a3","#c8d49a"][i%3])}for(let i=0;i<8;i++){const x=1460+i*40-camera.x,y=1280-camera.y;rect(x,y,2,10,"#e5d29c");ellipse(x,y-2,5,4,"#f0d88c")}}
-  function render(){ctx.clearRect(0,0,W,H);if(villageReady){rect(0,0,W,H,"#6e9b57");ctx.drawImage(villageAtlas,0,0,1080,660,600-camera.x,650-camera.y,1800,1100);}else{drawGround();drawTreePatch();drawDecor();buildings.forEach(drawHouse);npcs.forEach(n=>drawPixelPerson(n));}for(const p of others.values())drawPixelPerson(p);drawPixelPerson(player,true);
-    // foreground vignette, light pixel frame
-    const g=ctx.createRadialGradient(W/2,H/2,120,W/2,H/2,650);g.addColorStop(.65,"#0000");g.addColorStop(1,"#203b2c55");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  function render(){ctx.clearRect(0,0,W,H);drawGround();drawTreePatch();drawDecor();buildings.forEach(drawHouse);npcs.forEach(n=>drawPixelPerson(n));for(const p of others.values())drawPixelPerson(p);drawPixelPerson(player,true);
   }
   function update(dt){if(!started||!$("creation-panel").classList.contains("hidden"))return;let dx=0,dy=0;if(keys.has("w")||keys.has("arrowup"))dy--;if(keys.has("s")||keys.has("arrowdown"))dy++;if(keys.has("a")||keys.has("arrowleft"))dx--;if(keys.has("d")||keys.has("arrowright"))dx++;if(dx||dy){const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=player.x+dx*player.speed*dt,ny=player.y+dy*player.speed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";const now=performance.now();if(socket&&socket.connected&&now-lastMoveSent>80){lastMoveSent=now;socket.emit("player:move",{x:player.x,y:player.y,dir:player.dir})}}camera.x=Math.max(0,Math.min(worldW-W,player.x-W/2));camera.y=Math.max(0,Math.min(worldH-H,player.y-H/2))}
   function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
