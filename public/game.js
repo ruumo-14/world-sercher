@@ -271,10 +271,11 @@
     if(x<-70||y<-90||x>W+70||y>H+45)return;
     const female=!isPlayer&&[0,2,8,14,16,18,19,21,23,26,31,32].includes(p.id);
     const raw=p.dir||"down";
-    // Four hand-drawn facings: diagonals resolve to the closest cardinal view.
-    const dir=raw.includes("left")||raw==="left"?(raw.includes("up")||raw==="up-left"?"up":"left"):
-      raw.includes("right")||raw==="right"?(raw.includes("up")||raw==="up-right"?"up":"right"):
-      raw==="up"?"up":"down";
+    // Keep all eight directions as distinct sprite identities.
+    const validDirs=["down","up","left","right","down-left","down-right","up-left","up-right"];
+    const dir=validDirs.includes(raw)?raw:"down";
+    const left=dir==="left"||dir.endsWith("-left"),right=dir==="right"||dir.endsWith("-right");
+    const diagonal=dir.includes("-"),front=dir==="down",back=dir==="up";
     const moving=!!p.moving,frame=moving?(Math.floor((p.walkClock||0)*9)%4):0;
     const dwarf=p.species==="ドワーフ";
     const key=[isPlayer?1:0,female?1:0,dwarf?1:0,dir,frame,p.color||"",p.hair||""].join("|");
@@ -286,40 +287,40 @@
       const hair=p.hair||"#56372d",cloth=isPlayer?"#7029a8":(female?"#3267a5":p.color||"#6685a0");
       const legA=moving?(frame===1?-2:frame===3?2:0):0,legB=-legA;
       // Boots and legs have direction-specific silhouettes, not a rotated front sprite.
-      if(dir==="down"){
+      if(front){
         px(8+legA,31,6,5,"#e9d8bd");px(18+legB,31,6,5,"#e9d8bd");
         px(7+legA,35,8,3,"#5a8ca5");px(17+legB,35,8,3,"#355d7b");
         px(9,23,5,9,"#d9c7ae");px(18,23,5,9,"#f0dfc4");
-      }else if(dir==="up"){
+      }else if(back){
         px(8+legA,31,6,5,"#e9d8bd");px(18+legB,31,6,5,"#e9d8bd");
         px(7+legA,35,8,3,"#355d7b");px(17+legB,35,8,3,"#5a8ca5");
         px(9,23,5,9,"#c8b59c");px(18,23,5,9,"#b9a58d");
       }else{
-        const left=dir==="left";
-        px(left?8+legA:17+legA,31,7,5,"#e9d8bd");px(left?14+legB:9+legB,35,9,3,"#456f8a");
-        px(left?10:15,23,7,9,"#d8c5ab");
+        const profileLeft=left;
+        px(profileLeft?8+legA:17+legA,31,7,5,"#e9d8bd");px(profileLeft?14+legB:9+legB,35,9,3,"#456f8a");
+        px(profileLeft?10:15,23,7,9,"#d8c5ab");
       }
       // Tunic: layered highlights and shadow bands make the cloth read as rounded.
-      if(dir==="down"||dir==="up"){
+      if(front||back){
         px(7,15,18,12,cloth);px(9,14,14,2,isPlayer?"#963ee0":"#6f9bc0");
         px(8,18,2,7,isPlayer?"#54217f":"#244c79");px(22,18,2,7,isPlayer?"#54217f":"#244c79");
         px(11,17,9,1,isPlayer?"#c27be7":"#b7d7e8");px(12,21,7,1,isPlayer?"#8b40bd":"#477eae");
         px(7,26,18,2,"#e5c56e");
-        px(dir==="up"?8:6,16,3,9,isPlayer?"#54217f":"#244c79");
+        px(back?8:6,16,3,9,isPlayer?"#54217f":"#244c79");
       }else{
         px(10,15,13,12,cloth);px(12,14,8,2,isPlayer?"#963ee0":"#6f9bc0");
         px(dir==="left"?10:21,17,2,8,isPlayer?"#54217f":"#244c79");
         px(13,17,7,1,isPlayer?"#c27be7":"#b7d7e8");px(11,26,12,2,"#e5c56e");
       }
       // Arms follow the facing direction; hands remain visible at the silhouette edge.
-      if(dir==="down"){
+      if(front){
         px(4,17,4,9,isPlayer?"#8e4ac2":cloth);px(24,17,4,9,isPlayer?"#8e4ac2":cloth);
         px(4,24,4,3,skin[2]);px(24,24,4,3,skin[2]);
-      }else if(dir==="up"){
+      }else if(back){
         px(4,17,4,9,isPlayer?"#54217f":cloth);px(24,17,4,9,isPlayer?"#54217f":cloth);
       }else{
-        const left=dir==="left";
-        px(left?7:22,17,5,10,isPlayer?"#8e4ac2":cloth);
+        const profileLeft=left;
+        px(profileLeft?7:22,17,5,10,isPlayer?"#8e4ac2":cloth);
         px(left?7:22,25,5,3,skin[2]);
       }
       // Head and hair are redrawn for front, back and both distinct profiles.
@@ -331,17 +332,17 @@
         px(7,3,18,17,hair);px(5,7,3,8,hair);px(24,7,3,8,hair);
         px(9,5,14,2,p.hair||"#74513a");px(8,17,16,2,skin[1]);
       }else{
-        const left=dir==="left";
-        px(9,3,15,16,hair);px(left?7:23,6,4,12,skin[2]);px(left?8:18,5,8,3,hair);
-        px(left?8:20,10,3,4,"#fff0d5");px(left?9:21,11,2,3,"#493c42");
-        px(left?8:21,16,4,2,"#a85d59");
-        px(left?7:24,9,3,6,skin[1]);
+        const profileLeft=left;
+        px(9,3,15,16,hair);px(profileLeft?7:23,6,4,12,skin[2]);px(profileLeft?8:18,5,8,3,hair);
+        px(profileLeft?8:20,10,3,4,"#fff0d5");px(profileLeft?9:21,11,2,3,"#493c42");
+        px(profileLeft?8:21,16,4,2,"#a85d59");
+        px(profileLeft?7:24,9,3,6,skin[1]);
       }
       // Original player turban/cape, with direction-specific rear and side profiles.
       if(isPlayer){
-        if(dir==="down"){px(6,1,20,6,"#482078");px(8,0,16,5,"#7029bb");px(11,1,10,2,"#bd79ed");px(6,5,4,3,"#58218f");px(22,5,4,3,"#58218f");}
-        else if(dir==="up"){px(6,1,20,8,"#482078");px(8,0,16,5,"#7029bb");px(11,1,10,2,"#963ee0");px(7,7,18,3,"#58218f");}
-        else{px(dir==="left"?7:18,1,13,7,"#482078");px(dir==="left"?9:18,0,11,5,"#7029bb");px(dir==="left"?10:19,1,7,2,"#bd79ed");}
+        if(front){px(6,1,20,6,"#482078");px(8,0,16,5,"#7029bb");px(11,1,10,2,"#bd79ed");px(6,5,4,3,"#58218f");px(22,5,4,3,"#58218f");}
+        else if(back){px(6,1,20,8,"#482078");px(8,0,16,5,"#7029bb");px(11,1,10,2,"#963ee0");px(7,7,18,3,"#58218f");}
+        else{px(left?7:18,1,13,7,"#482078");px(left?9:18,0,11,5,"#7029bb");px(left?10:19,1,7,2,"#bd79ed");}
         px(5,15,4,12,"#7029a8");px(23,15,4,12,"#7029a8");
       }else if(female){
         px(7,1,18,5,"#e5bd58");px(5,5,4,11,"#c98f3c");px(23,5,4,11,"#c98f3c");
@@ -350,6 +351,20 @@
         px(7,2,18,5,hair);px(6,6,4,8,hair);px(22,6,4,8,hair);
         px(10,2,6,2,"#a47a52");px(18,3,4,2,"#a47a52");
       }
+      if(diagonal){
+        const towardLeft=left;
+        // Three-quarter head: near cheek, one dominant eye, nose and mouth point along travel.
+        px(towardLeft?7:22,8,3,8,skin[1]);
+        px(towardLeft?10:19,10,2,3,"#fff0d5");
+        px(towardLeft?11:19,11,1,2,"#493c42");
+        px(towardLeft?13:17,14,3,1,"#a85d59");
+        // Offset shoulder and leading foot so the whole pose, not only the face, turns diagonally.
+        px(towardLeft?6:22,16,4,8,isPlayer?"#963ee0":"#6f9bc0");
+        px(towardLeft?7:19,31,7,5,"#e9d8bd");
+      }
+      // Distinct jaw/neck separator: short black pixels follow the underside of the chin.
+      if(front){px(10,20,12,1,"#17131b");}
+      else if(!back){px(left?12:18,17,5,1,"#17131b");}
       // Outline only around the final opaque silhouette, never between internal color regions.
       const im=g.getImageData(0,0,32,40),alpha=(x,y)=>x>=0&&x<32&&y>=0&&y<40&&im.data[(y*32+x)*4+3]>0;
       const mask=document.createElement("canvas");mask.width=32;mask.height=40;const mg=mask.getContext("2d");
