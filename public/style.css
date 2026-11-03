@@ -146,3 +146,11 @@ canvas{image-rendering:auto}
 .battle-move{display:flex;gap:6px;pointer-events:auto}
 .battle-move button{padding:10px 13px;background:#344966;border:1px solid #9bb4d7;border-radius:5px;color:#fff;font-weight:700;touch-action:none}
 @media(max-width:650px){.battle-controls{gap:6px}.battle-move{justify-content:center}.battle-move button{padding:8px 12px}}
+
+
+/* Crisp 16-bit pixel rendering: never smooth enlarged sprite art. */
+img, canvas, .tile {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+#game { image-rendering: pixelated; image-rendering: crisp-edges; }
