@@ -52,7 +52,7 @@
   loginTab.addEventListener("click",()=>setAuthMode("login"));registerTab.addEventListener("click",()=>setAuthMode("register"));
   async function enterWorld(profile){
     player.name=profile.name||"冒険者";player.x=Number(profile.x)||1600;player.y=Number(profile.y)||1370;hudName.textContent=player.name;
-    started=true;startPanel.classList.add("hidden");if(socket)socket.connect();showNotice("おかえりなさい！ 前回の冒険データを読み込んだよ。");
+    started=true;startPanel.classList.add("hidden");window.dispatchEvent(new Event("world:entered"));if(socket)socket.connect();showNotice("おかえりなさい！ 前回の冒険データを読み込んだよ。");
   }
   authForm.addEventListener("submit",async event=>{
     event.preventDefault();authSubmit.disabled=true;authMessage.textContent="確認しています...";
