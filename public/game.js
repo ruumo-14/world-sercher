@@ -2,7 +2,13 @@
 
 (() => {
   const canvas = document.getElementById("game");
+  // Render the 960x600 world into a 480x300 buffer, then upscale with nearest-neighbour filtering.
+  // This gives the prototype a crisp, retro pixel-art presentation without heavy image assets.
+  canvas.width = 480;
+  canvas.height = 300;
   const ctx = canvas.getContext("2d");
+  ctx.scale(0.5, 0.5);
+  ctx.imageSmoothingEnabled = false;
   const startPanel = document.getElementById("start-panel");
   const authForm=document.getElementById("auth-form"),accountNameInput=document.getElementById("account-name"),passwordInput=document.getElementById("account-password"),characterNameInput=document.getElementById("character-name"),characterNameWrap=document.getElementById("character-name-wrap"),authMessage=document.getElementById("auth-message"),authSubmit=document.getElementById("auth-submit"),loginTab=document.getElementById("login-tab"),registerTab=document.getElementById("register-tab"),logoutButton=document.getElementById("logout-button");
   const notice=document.getElementById("notice"),onlineCount=document.getElementById("online-count"),connectionState=document.getElementById("connection-state"),hudName=document.getElementById("hud-name");
