@@ -270,56 +270,97 @@
     const q=project(p.x,p.y),x=q.x-24,y=q.y-64;
     if(x<-70||y<-90||x>W+70||y>H+45)return;
     const female=!isPlayer&&[0,2,8,14,16,18,19,21,23,26,31,32].includes(p.id);
-    const dir=p.dir||"down",moving=!!p.moving,frame=moving?(Math.floor((p.walkClock||0)*9)%4):0;
-    const dwarf=p.species==="ドワーフ",key=[isPlayer?1:0,female?1:0,dwarf?1:0,dir,frame,isPlayer?"purple":(p.color||"blue"),p.hair||""].join("|");
+    const raw=p.dir||"down";
+    // Four hand-drawn facings: diagonals resolve to the closest cardinal view.
+    const dir=raw.includes("left")||raw==="left"?(raw.includes("up")||raw==="up-left"?"up":"left"):
+      raw.includes("right")||raw==="right"?(raw.includes("up")||raw==="up-right"?"up":"right"):
+      raw==="up"?"up":"down";
+    const moving=!!p.moving,frame=moving?(Math.floor((p.walkClock||0)*9)%4):0;
+    const dwarf=p.species==="ドワーフ";
+    const key=[isPlayer?1:0,female?1:0,dwarf?1:0,dir,frame,p.color||"",p.hair||""].join("|");
     let sprite=spriteCache.get(key);
     if(!sprite){
-      const base=document.createElement("canvas");base.width=24;base.height=32;
-      const g=base.getContext("2d"),cells=Array.from({length:32},()=>Array(24).fill(null));
-      const put=(x0,y0,w,h,col)=>{for(let yy=y0;yy<y0+h;yy++)for(let xx=x0;xx<x0+w;xx++)if(xx>=0&&xx<24&&yy>=0&&yy<32)cells[yy][xx]=col};
-      const leg=moving?(frame===1?-1:frame===3?1:0):0;
-      const cloth=isPlayer?"#7029a8":(female?"#3267a5":p.color||"#6685a0");
-      // Rounded head, compact torso, arms and independently animated legs.
-      put(5+leg,27,5,4,"#4c3540");put(14-leg,27,5,4,"#4c3540");
-      put(4+leg,29,6,3,"#5c9eb7");put(14-leg,29,6,3,"#5c9eb7");
-      put(7+leg,22,3,7,"#e6d9c7");put(14-leg,22,3,7,"#e6d9c7");
-      put(6,14+(moving&&frame%2?1:0),12,9,cloth);
-      put(4,15,3,7,isPlayer?"#8e4ac2":cloth);put(17,15,3,7,isPlayer?"#8e4ac2":cloth);
-      put(5,20,2,3,"#e6b98f");put(17,20,2,3,"#e6b98f");
-      put(7,21,10,2,"#e7c86c");put(8,23,2,2,"#b28b54");put(14,23,2,2,"#b28b54");
-      put(7,15,2,6,isPlayer?"#a65bd0":"#e0c18a");put(15,15,2,6,isPlayer?"#54217f":"#765b48");
-      put(10,11,4,4,"#d99c76");put(5,8,2,4,"#d99c76");put(17,8,2,4,"#d99c76");
-      put(7,4,10,9,"#6d4939");put(6,6,12,7,"#d99c76");put(8,3,8,2,"#d99c76");
-      put(7,8,3,2,"#fff0d5");put(14,8,3,2,"#fff0d5");
-      put(8,8,2,2,"#493c42");put(15,8,2,2,"#493c42");put(10,12,4,1,"#a85d59");
-      if(isPlayer){
-        put(5,1,14,4,"#482078");put(6,0,12,4,"#7029bb");put(8,0,8,2,"#963ee0");
-        put(5,3,3,3,"#58218f");put(16,3,3,3,"#58218f");put(8,2,8,1,"#bd79ed");put(11,3,2,2,"#d39af1");
-        put(3,14,3,9,"#7029a8");put(18,14,3,9,"#7029a8");put(4,15,2,6,"#a85bd0");put(18,15,2,6,"#51217f");
-      }else if(female){
-        put(6,2,12,4,"#e5bd58");put(5,5,2,8,"#c98f3c");put(17,5,2,8,"#c98f3c");put(4,12,3,4,"#eac76b");put(17,12,3,4,"#eac76b");
+      const c=document.createElement("canvas");c.width=32;c.height=40;
+      const g=c.getContext("2d"),px=(x0,y0,w,h,col)=>{g.fillStyle=col;g.fillRect(x0,y0,w,h)};
+      const skin=["#8b5545","#c98262","#edb58b","#f7d0a5"];
+      const hair=p.hair||"#56372d",cloth=isPlayer?"#7029a8":(female?"#3267a5":p.color||"#6685a0");
+      const legA=moving?(frame===1?-2:frame===3?2:0):0,legB=-legA;
+      // Boots and legs have direction-specific silhouettes, not a rotated front sprite.
+      if(dir==="down"){
+        px(8+legA,31,6,5,"#e9d8bd");px(18+legB,31,6,5,"#e9d8bd");
+        px(7+legA,35,8,3,"#5a8ca5");px(17+legB,35,8,3,"#355d7b");
+        px(9,23,5,9,"#d9c7ae");px(18,23,5,9,"#f0dfc4");
+      }else if(dir==="up"){
+        px(8+legA,31,6,5,"#e9d8bd");px(18+legB,31,6,5,"#e9d8bd");
+        px(7+legA,35,8,3,"#355d7b");px(17+legB,35,8,3,"#5a8ca5");
+        px(9,23,5,9,"#c8b59c");px(18,23,5,9,"#b9a58d");
       }else{
-        put(6,2,12,4,p.hair||"#60412f");put(5,5,2,5,p.hair||"#60412f");put(17,5,2,5,p.hair||"#60412f");
+        const left=dir==="left";
+        px(left?8+legA:17+legA,31,7,5,"#e9d8bd");px(left?14+legB:9+legB,35,9,3,"#456f8a");
+        px(left?10:15,23,7,9,"#d8c5ab");
       }
-      // Find exterior empty pixels only, so the outline never cuts through the face or clothing.
-      const outside=Array.from({length:32},()=>Array(24).fill(false)),queue=[];
-      for(let xx=0;xx<24;xx++){if(!cells[0][xx]){outside[0][xx]=true;queue.push([xx,0]);}if(!cells[31][xx]){outside[31][xx]=true;queue.push([xx,31]);}}
-      for(let yy=0;yy<32;yy++){if(!cells[yy][0]){outside[yy][0]=true;queue.push([0,yy]);}if(!cells[yy][23]){outside[yy][23]=true;queue.push([23,yy]);}}
-      for(let n=0;n<queue.length;n++){const [xx,yy]=queue[n];for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=xx+dx,ny=yy+dy;if(nx>=0&&nx<24&&ny>=0&&ny<32&&!cells[ny][nx]&&!outside[ny][nx]){outside[ny][nx]=true;queue.push([nx,ny]);}}}
-      const out=g.createImageData(24,32);
-      for(let yy=0;yy<32;yy++)for(let xx=0;xx<24;xx++)if(!cells[yy][xx]&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>cells[yy+dy]?.[xx+dx]&&outside[yy][xx])){const z=(yy*24+xx)*4;out.data[z]=20;out.data[z+1]=17;out.data[z+2]=24;out.data[z+3]=255;}
-      g.putImageData(out,0,0);
-      for(let yy=0;yy<32;yy++)for(let xx=0;xx<24;xx++)if(cells[yy][xx]){g.fillStyle=cells[yy][xx];g.fillRect(xx,yy,1,1);}
-      // Rotate the complete body, including head, facial features, mouth, arms and feet.
-      sprite=document.createElement("canvas");sprite.width=32;sprite.height=32;
-      const sg=sprite.getContext("2d");sg.imageSmoothingEnabled=false;
-      const angles={"down":0,"down-right":-Math.PI/4,"right":-Math.PI/2,"up-right":-3*Math.PI/4,"up":Math.PI,"up-left":3*Math.PI/4,"left":Math.PI/2,"down-left":Math.PI/4};
-      sg.translate(16,16);sg.rotate(angles[dir]??0);sg.drawImage(base,-12,-16);sg.setTransform(1,0,0,1,0,0);
-      spriteCache.set(key,sprite);if(spriteCache.size>160)spriteCache.delete(spriteCache.keys().next().value);
+      // Tunic: layered highlights and shadow bands make the cloth read as rounded.
+      if(dir==="down"||dir==="up"){
+        px(7,15,18,12,cloth);px(9,14,14,2,isPlayer?"#963ee0":"#6f9bc0");
+        px(8,18,2,7,isPlayer?"#54217f":"#244c79");px(22,18,2,7,isPlayer?"#54217f":"#244c79");
+        px(11,17,9,1,isPlayer?"#c27be7":"#b7d7e8");px(12,21,7,1,isPlayer?"#8b40bd":"#477eae");
+        px(7,26,18,2,"#e5c56e");
+        px(dir==="up"?8:6,16,3,9,isPlayer?"#54217f":"#244c79");
+      }else{
+        px(10,15,13,12,cloth);px(12,14,8,2,isPlayer?"#963ee0":"#6f9bc0");
+        px(dir==="left"?10:21,17,2,8,isPlayer?"#54217f":"#244c79");
+        px(13,17,7,1,isPlayer?"#c27be7":"#b7d7e8");px(11,26,12,2,"#e5c56e");
+      }
+      // Arms follow the facing direction; hands remain visible at the silhouette edge.
+      if(dir==="down"){
+        px(4,17,4,9,isPlayer?"#8e4ac2":cloth);px(24,17,4,9,isPlayer?"#8e4ac2":cloth);
+        px(4,24,4,3,skin[2]);px(24,24,4,3,skin[2]);
+      }else if(dir==="up"){
+        px(4,17,4,9,isPlayer?"#54217f":cloth);px(24,17,4,9,isPlayer?"#54217f":cloth);
+      }else{
+        const left=dir==="left";
+        px(left?7:22,17,5,10,isPlayer?"#8e4ac2":cloth);
+        px(left?7:22,25,5,3,skin[2]);
+      }
+      // Head and hair are redrawn for front, back and both distinct profiles.
+      if(dir==="down"){
+        px(7,3,18,13,hair);px(6,7,20,13,skin[2]);px(8,5,16,4,hair);
+        px(9,10,4,3,"#fff0d5");px(19,10,4,3,"#fff0d5");px(10,11,2,2,"#493c42");px(20,11,2,2,"#493c42");
+        px(14,16,5,1,"#a85d59");px(8,15,3,3,skin[1]);px(23,15,3,3,skin[1]);
+      }else if(dir==="up"){
+        px(7,3,18,17,hair);px(5,7,3,8,hair);px(24,7,3,8,hair);
+        px(9,5,14,2,p.hair||"#74513a");px(8,17,16,2,skin[1]);
+      }else{
+        const left=dir==="left";
+        px(9,3,15,16,hair);px(left?7:23,6,4,12,skin[2]);px(left?8:18,5,8,3,hair);
+        px(left?8:20,10,3,4,"#fff0d5");px(left?9:21,11,2,3,"#493c42");
+        px(left?8:21,16,4,2,"#a85d59");
+        px(left?7:24,9,3,6,skin[1]);
+      }
+      // Original player turban/cape, with direction-specific rear and side profiles.
+      if(isPlayer){
+        if(dir==="down"){px(6,1,20,6,"#482078");px(8,0,16,5,"#7029bb");px(11,1,10,2,"#bd79ed");px(6,5,4,3,"#58218f");px(22,5,4,3,"#58218f");}
+        else if(dir==="up"){px(6,1,20,8,"#482078");px(8,0,16,5,"#7029bb");px(11,1,10,2,"#963ee0");px(7,7,18,3,"#58218f");}
+        else{px(dir==="left"?7:18,1,13,7,"#482078");px(dir==="left"?9:18,0,11,5,"#7029bb");px(dir==="left"?10:19,1,7,2,"#bd79ed");}
+        px(5,15,4,12,"#7029a8");px(23,15,4,12,"#7029a8");
+      }else if(female){
+        px(7,1,18,5,"#e5bd58");px(5,5,4,11,"#c98f3c");px(23,5,4,11,"#c98f3c");
+        px(8,2,5,2,"#f6dc88");px(19,2,4,2,"#f6dc88");
+      }else{
+        px(7,2,18,5,hair);px(6,6,4,8,hair);px(22,6,4,8,hair);
+        px(10,2,6,2,"#a47a52");px(18,3,4,2,"#a47a52");
+      }
+      // Outline only around the final opaque silhouette, never between internal color regions.
+      const im=g.getImageData(0,0,32,40),alpha=(x,y)=>x>=0&&x<32&&y>=0&&y<40&&im.data[(y*32+x)*4+3]>0;
+      const mask=document.createElement("canvas");mask.width=32;mask.height=40;const mg=mask.getContext("2d");
+      const outline=mg.createImageData(32,40);
+      for(let yy=0;yy<40;yy++)for(let xx=0;xx<32;xx++)if(!alpha(xx,yy)&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>alpha(xx+dx,yy+dy))){const z=(yy*32+xx)*4;outline.data[z]=20;outline.data[z+1]=17;outline.data[z+2]=24;outline.data[z+3]=255;}
+      mg.putImageData(outline,0,0);g.drawImage(mask,0,0);
+      sprite=c;spriteCache.set(key,sprite);if(spriteCache.size>180)spriteCache.delete(spriteCache.keys().next().value);
     }
     ctx.save();ctx.imageSmoothingEnabled=false;
     const bob=moving&&frame%2===1?-1:0;
-    ctx.drawImage(sprite,x+(dwarf?0:-8),y+bob,64,64);ctx.restore();
+    ctx.drawImage(sprite,x-8+(dwarf?4:0),y-8+bob,64,80);ctx.restore();
     ellipse(x+24,y+63,14,4,"#30452f");
   }
   function drawPlayerName(p){
