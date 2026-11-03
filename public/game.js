@@ -157,17 +157,24 @@
   const TILE=32, DEPTH=.68;
   function project(wx,wy){return{x:Math.round(W/2+(wx-camera.x)),y:Math.round(H/2+(wy-camera.y)*DEPTH)};}
   function poly(points,fill,stroke="#29202a",line=2){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}}
-  // Smooth world-anchored grass without tile seams or random speckles.
-  function tile(wx,wy,fill){const p=project(wx,wy);ellipse(p.x,p.y,19,13,fill);}
+  // Continuous grass field with restrained hand-placed pixel blades, not bubble-like patches.
+  function tile(wx,wy,fill){const p=project(wx,wy);rect(p.x,p.y,2,1,fill);}
   function specks(){}
   function drawGround(){
-    rect(0,0,W,H,"#477b46");
-    const gx0=Math.floor((camera.x-W/2-64)/TILE)*TILE,gx1=camera.x+W/2+64;
-    const gy0=Math.floor((camera.y-H/(2*DEPTH)-64)/TILE)*TILE,gy1=camera.y+H/(2*DEPTH)+64;
+    rect(0,0,W,H,"#4c8047");
+    const gx0=Math.floor((camera.x-W/2-32)/TILE)*TILE,gx1=camera.x+W/2+32;
+    const gy0=Math.floor((camera.y-H/(2*DEPTH)-32)/TILE)*TILE,gy1=camera.y+H/(2*DEPTH)+32;
     for(let wy=gy0;wy<=gy1;wy+=TILE)for(let wx=gx0;wx<=gx1;wx+=TILE){
       const p=project(wx,wy),v=hash(Math.floor(wx/TILE),Math.floor(wy/TILE));
-      ellipse(p.x,p.y,22,15,v>.72?"#56864b":v>.35?"#4e8047":"#477842");
-      if(v>.91){ellipse(p.x-6,p.y+1,5,3,"#679451");ellipse(p.x+7,p.y-3,4,3,"#679451");}
+      const tone=v>.66?"#52864a":v>.30?"#4d8046":"#477a42";
+      // Subtle irregular rectangular color variation blends into one lawn.
+      rect(p.x-16,p.y-12,32,24,tone);
+      const h=hash(Math.floor(wx/TILE)+17,Math.floor(wy/TILE)+9);
+      for(let k=0;k<4;k++){
+        const xx=p.x-13+Math.floor(hash(k,Math.floor(wx/TILE)*7+Math.floor(wy/TILE))*26);
+        const yy=p.y-9+Math.floor(hash(k+8,Math.floor(wy/TILE)*11+Math.floor(wx/TILE))*18);
+        rect(xx,yy,2+(k%2),1,h>.5?"#679253":"#3f713d");
+      }
     }
     for(let y=650;y<2200;y+=24){const bend=390+Math.sin(y/150)*65;for(let x=bend-80;x<=bend+80;x+=32){const p=project(x,y);ellipse(p.x,p.y,19,14,"#347c9e");}}
     for(let y=650;y<2200;y+=32){const bend=390+Math.sin(y/150)*65;for(const x of [bend-100,bend+100]){const p=project(x,y);ellipse(p.x,p.y,19,14,"#b69b6b");}}
@@ -177,7 +184,35 @@
     for(let y=1192;y<=1448;y+=32)for(let x=1472;x<=1728;x+=32){const p=project(x,y);ellipse(p.x,p.y,19,14,((x/32+y/32)%2===0)?"#c9bd9b":"#b4a787");}
     for(let y=2048;y<2240;y+=32)for(let x=1840;x<2160;x+=32){const p=project(x,y);ellipse(p.x,p.y,19,14,"#82613d");}
     drawBridge(390,930);drawBridge(430,1260);drawBridge(480,1680);drawBridge(510,1940);
-    const f=project(1600,1320);ellipse(f.x,f.y+12,48,13,"#786c58");rect(f.x-37,f.y-25,74,39,"#bcb39a");rect(f.x-31,f.y-20,62,28,"#d1c7a9");rect(f.x-24,f.y-15,48,18,"#347e9d");rect(f.x-4,f.y-35,8,22,"#d7cfb4");rect(f.x-2,f.y-41,4,7,"#f1dc9a");
+    drawFountain(1600,1320);
+  }
+  function drawFountain(wx,wy){
+    const p=project(wx,wy),x=p.x,y=p.y;
+    // Circular carved-stone basin, layered rim and visible blue water.
+    ellipse(x,y+15,59,21,"#665747");
+    ellipse(x,y+8,57,21,"#8f8877");
+    ellipse(x,y+4,53,18,"#d0c6aa");
+    ellipse(x,y+2,46,14,"#777b78");
+    ellipse(x,y+1,42,12,"#3988a3");
+    ellipse(x-10,y-1,19,4,"#63b4c2");
+    ellipse(x+12,y+4,15,3,"#286f91");
+    // Raised central stone pedestal and bubbling water jet.
+    rect(x-7,y-10,14,13,"#bcb39a");
+    rect(x-5,y-15,10,6,"#ded5bd");
+    ellipse(x,y-17,6,3,"#83d5e2");
+    rect(x-2,y-31,4,14,"#72c6d8");
+    rect(x-1,y-39,2,9,"#a8e8e8");
+    ellipse(x,y-40,3,3,"#e4ffff");
+    // Pixel highlights on the rippling surface.
+    rect(x-29,y+1,8,2,"#b7e8df");rect(x+19,y-3,10,2,"#c5f1e8");
+    rect(x-12,y+9,7,2,"#d4f4e8");rect(x+5,y+6,6,2,"#9cdae0");
+    rect(x-3,y-3,3,2,"#f2ffff");
+    // Individual stone blocks around the outer rim.
+    for(let i=0;i<12;i++){
+      const a=i*Math.PI/6,px=x+Math.cos(a)*51,py=y+Math.sin(a)*16+5;
+      rect(px-4,py-2,8,4,i%2?"#b9b19b":"#d8ceb5");
+      rect(px-3,py-2,5,1,"#eee4cc");
+    }
   }
   function drawBridge(wx,wy){const p=project(wx,wy);rect(p.x-42,p.y-13,84,26,"#62432d");for(let i=-3;i<=3;i++){rect(p.x+i*12-5,p.y-12,9,23,i%2?"#bd8750":"#9d693d");rect(p.x+i*12-4,p.y-9,2,17,"#d2a36b");}rect(p.x-46,p.y-17,92,4,"#d3a66b");rect(p.x-46,p.y+14,92,4,"#d3a66b");}
   function drawTree(wx,wy,index=0){
@@ -218,7 +253,12 @@
     rect(x-12,y+h-18,24,35,"#493126");rect(x-8,y+h-14,16,31,"#95643d");rect(x+4,y+h-5,2,2,"#f0ce72");rect(x-18,y+h+17,36,5,"#b4a58a");
     if(type==="forge"||type==="inn"){rect(x+w*.23,y-70,13,29,"#6e4a3b");rect(x+w*.23-2,y-74,17,5,"#44332f");}
     rect(x-11,y-82,22,10,type==="guild"?"#d6b56e":"#70452f");rect(x-8,y-79,16,3,"#e7d7a5");
-    ctx.fillStyle="#fff0ca";ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";
+    if(b.name!=="住民の家"){
+      const labelY=y-91;
+      ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineJoin="round";
+      ctx.lineWidth=3;ctx.strokeStyle="#30251f";ctx.strokeText(b.name,x,labelY);
+      ctx.fillStyle="#fff0ca";ctx.fillText(b.name,x,labelY);ctx.restore();
+    }
   }
   function drawPixelPerson(p,isPlayer=false){
     const q=project(p.x,p.y),x=q.x,y=q.y;
