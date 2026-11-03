@@ -157,24 +157,42 @@
   const TILE=32, DEPTH=.68;
   function project(wx,wy){return{x:Math.round(W/2+(wx-camera.x)),y:Math.round(H/2+(wy-camera.y)*DEPTH)};}
   function poly(points,fill,stroke="#29202a",line=2){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}}
-  function tile(wx,wy,fill){const p=project(wx,wy);rect(p.x-16,p.y-13,32,26,fill);}
-  function specks(x,y,seed,palette,count=5){for(let i=0;i<count;i++){const xx=x+Math.floor(hash(seed,i)*28)-14,yy=y+Math.floor(hash(seed+7,i)*20)-10;rect(xx,yy,1+(i%3===0?1:0),1,palette[i%palette.length]);}}
+  // World-anchored ground tiles: tile coordinates never depend on screen position.
+  function tile(wx,wy,fill){
+    const p=project(wx,wy),g=ctx.createLinearGradient(p.x,p.y-12,p.x,p.y+12);
+    g.addColorStop(0,"#ffffff12");g.addColorStop(.55,fill);g.addColorStop(1,"#14271822");
+    ctx.fillStyle=g;ctx.fillRect(p.x-16,p.y-12,32,24);
+  }
+  // Disable the former random one-pixel speckles that caused visual noise.
+  function specks(){}
   function drawGround(){
     rect(0,0,W,H,"#31563a");
-    for(let gy=-1000;gy<=1000;gy+=32)for(let gx=-1000;gx<=1000;gx+=32){
-      const wx=camera.x+gx,wy=camera.y+gy,p=project(wx,wy);if(p.x<-20||p.y<-20||p.x>W+20||p.y>H+20)continue;
-      const v=hash(Math.floor(wx/32),Math.floor(wy/32)),base=v>.82?"#5b8c4c":v>.38?"#4a7b43":"#3d6e3c";
-      tile(wx,wy,base);specks(p.x,p.y,Math.floor(wx*3+wy),["#315c37","#6f994b","#88a75a","#c0b56b"],v>.7?5:3);
-      if(v>.94){rect(p.x-5,p.y+2,2,3,"#e8d18b");rect(p.x+3,p.y-3,2,2,"#f0dca0");}
+    const gx0=Math.floor((camera.x-W/2)/TILE)*TILE;
+    const gx1=camera.x+W/2+TILE;
+    const gy0=Math.floor((camera.y-H/(2*DEPTH))/TILE)*TILE;
+    const gy1=camera.y+H/(2*DEPTH)+TILE;
+    for(let wy=gy0;wy<=gy1;wy+=TILE)for(let wx=gx0;wx<=gx1;wx+=TILE){
+      const p=project(wx,wy);
+      const v=hash(Math.floor(wx/TILE),Math.floor(wy/TILE));
+      const base=v>.82?"#5b8c4c":v>.38?"#4a7b43":"#3d6e3c";
+      tile(wx,wy,base);
+      // Broad, restrained grass blades and occasional flower clusters.
+      if(v>.91){ellipse(p.x-5,p.y+1,2,4,"#86a95c");ellipse(p.x+4,p.y-2,2,3,"#a6b86a");}
+      if(v>.975){ellipse(p.x+2,p.y+2,2,2,"#e8d18b");}
     }
     // River runs vertically along the western side, with pixel ripples and sandy banks.
-    for(let y=650;y<2200;y+=24){const bend=390+Math.sin(y/150)*65;for(let x=bend-80;x<=bend+80;x+=32){const p=project(x,y);rect(p.x-16,p.y-11,32,23,"#347c9e");rect(p.x-10,p.y-5,9,2,"#70b7c2");rect(p.x+4,p.y+5,7,2,"#286581");}}
-    for(let y=650;y<2200;y+=32){const bend=390+Math.sin(y/150)*65;for(const x of [bend-100,bend+100]){const p=project(x,y);rect(p.x-15,p.y-12,30,24,"#b69b6b");specks(p.x,p.y,y,["#d4bd88","#8f805d","#c6aa78"],4);}}
+    for(let y=650;y<2200;y+=24){const bend=390+Math.sin(y/150)*65;for(let x=bend-80;x<=bend+80;x+=32){const p=project(x,y),g=ctx.createLinearGradient(p.x,p.y-11,p.x,p.y+11);g.addColorStop(0,"#5599ad");g.addColorStop(.55,"#347c9e");g.addColorStop(1,"#286581");ctx.fillStyle=g;ctx.fillRect(p.x-16,p.y-11,32,22);}}
+    for(let y=650;y<2200;y+=32){const bend=390+Math.sin(y/150)*65;for(const x of [bend-100,bend+100]){const p=project(x,y);rect(p.x-16,p.y-12,32,24,"#b69b6b");rect(p.x-16,p.y-12,32,2,"#d4bd88");rect(p.x-16,p.y+10,32,2,"#8f805d");}}
     // Broad north-south and east-west cobblestone roads.
     const road=(x1,y1,x2,y2,width,color)=>{const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/24);for(let i=0;i<=n;i++){const t=i/n,cx=x1+(x2-x1)*t,cy=y1+(y2-y1)*t;for(let o=-width/2;o<=width/2;o+=32){const p=project(cx+(x2===x1?o:0),cy+(y2===y1?o:0));rect(p.x-16,p.y-12,32,24,color);rect(p.x-10,p.y-7,12,2,"#d7c9a6");rect(p.x+5,p.y+3,7,2,"#83775f");}}};
     road(1600,500,1600,2300,96,"#a99b7c");road(650,1320,2600,1320,96,"#a99b7c");
     road(1600,1320,1100,900,48,"#927c5b");road(1600,1320,2050,900,48,"#927c5b");road(1600,1320,2050,1800,48,"#927c5b");
-    for(let y=1192;y<=1448;y+=32)for(let x=1472;x<=1728;x+=32){const p=project(x,y);rect(p.x-16,p.y-12,32,24,((x+y)/32)%2===0?"#c9bd9b":"#b4a787");rect(p.x-10,p.y-8,9,2,"#e2d6b5");}
+    for(let y=1192;y<=1448;y+=32)for(let x=1472;x<=1728;x+=32){
+      const p=project(x,y),tone=((x/32+y/32)%2===0)?"#c9bd9b":"#b4a787";
+      rect(p.x-16,p.y-12,32,24,tone);
+      rect(p.x-16,p.y-12,32,1,"#e5dbc0");rect(p.x-16,p.y+11,32,1,"#81775f");
+      rect(p.x-16,p.y-12,1,24,"#81775f");
+    }
     for(let y=2048;y<2240;y+=32)for(let x=1840;x<2160;x+=32){const p=project(x,y);rect(p.x-16,p.y-12,32,24,"#82613d");rect(p.x-7,p.y-5,15,4,"#5d873e");rect(p.x+3,p.y-8,4,3,"#a4b75d");}
     drawBridge(390,930);drawBridge(430,1260);drawBridge(480,1680);drawBridge(510,1940);
     const f=project(1600,1320);ellipse(f.x,f.y+12,48,13,"#786c58");rect(f.x-37,f.y-25,74,39,"#bcb39a");rect(f.x-31,f.y-20,62,28,"#d1c7a9");rect(f.x-24,f.y-15,48,18,"#347e9d");rect(f.x-4,f.y-35,8,22,"#d7cfb4");rect(f.x-2,f.y-41,4,7,"#f1dc9a");
@@ -186,8 +204,8 @@
     ellipse(x+2,y+14,23,8,"#263b2b");rect(x-5,y-16,10,30,"#79502f");rect(x-14,y-5,9,5,"#79502f");rect(x+5,y-20,9,5,"#79502f");
     // Layered canopy with irregular pixel clusters, black-green ink edge.
     ellipse(x,y-43,31,29,"#1d3928");ellipse(x-13,y-49,19,20,leaf[0]);ellipse(x+13,y-51,20,21,leaf[1]);ellipse(x,y-68,21,22,leaf[1]);ellipse(x-3,y-74,13,13,leaf[2]);
-    for(let i=0;i<18;i++){const xx=x+Math.floor(hash(index,i)*48)-24,yy=y-79+Math.floor(hash(index+9,i)*57);rect(xx,yy,3+(i%3),2,leaf[i%3]);if(i%4===0)rect(xx+2,yy+3,2,2,"#b5b66b");}
-    rect(x-19,y-49,5,3,"#83a85a");rect(x+12,y-64,6,3,"#c0b56b");
+    ellipse(x-11,y-58,10,6,leaf[2]);ellipse(x+12,y-65,9,5,leaf[2]);
+    ellipse(x-20,y-42,7,5,leaf[1]);ellipse(x+19,y-47,7,5,leaf[1]);
   }
   function drawHouse(b,index=0){
     const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;if(x<-220||y<-200||x>W+220||y>H+180)return;
@@ -208,13 +226,13 @@
     poly([{x:x-w/2-13,y:eaveY},{x:x-3,y:ridgeY},{x:x+w/2+13,y:eaveY},{x:x+w/2+8,y:roofFront},{x:x,y:roofFront+18},{x:x-w/2-8,y:roofFront}], "#392827","#251d20",4);
     poly([{x:x-w/2-9,y:eaveY-2},{x:x-3,y:ridgeY+5},{x:x-1,y:roofFront+5},{x:x-w/2+3,y:roofFront+3}],lit,"#50302a",2);
     poly([{x:x-1,y:ridgeY+5},{x:x+w/2+9,y:eaveY-2},{x:x+w/2+5,y:roofFront+2},{x:x,y:roofFront+18}],roof,"#392725",2);
-    // Individual shingle courses follow the roof slope.
-    for(let row=0;row<5;row++)for(let col=0;col<8;col++){
-      const t=(col+.5)/8,xx=x-w/2+5+t*(w-10),slope=Math.abs(t-.5)*2;
-      const yy= y-25-row*8-slope*42;
-      rect(xx,yy,Math.max(5,w/12),3,(row+col)%4===0?"#e0a06c":(row+col)%2?"#995044":"#743d37");
-      if((row+col)%3===0)rect(xx+2,yy+3,Math.max(3,w/18),1,"#d18b5c");
+    // Continuous roof courses and clean ridge lines, without broken pixel flecks.
+    ctx.save();ctx.strokeStyle="#a85c4d";ctx.lineWidth=3;ctx.lineCap="round";ctx.lineJoin="round";
+    for(let row=0;row<5;row++){
+      const inset=row*3,yy=eaveY-3-row*7;
+      ctx.beginPath();ctx.moveTo(x-w/2+10+inset,yy+18);ctx.lineTo(x-3,yy-48);ctx.lineTo(x+w/2-10-inset,yy+18);ctx.stroke();
     }
+    ctx.restore();
     rect(x-w/2-12,roofFront-1,w+24,5,"#4a3029");
     rect(x-w/2-12,roofFront+3,w+24,2,"#b8784f");
     // Warm windows, shutters and centered wooden door.
