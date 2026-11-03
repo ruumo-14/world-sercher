@@ -98,3 +98,38 @@ canvas{width:100%;height:auto;aspect-ratio:8/5;image-rendering:pixelated;image-r
 .hud{z-index:3}
 .adventurer-panel{z-index:10;border-radius:3px;background:#17291ff5}
 @media(max-width:650px){.creation-card{padding:13px 15px}.creation-grid{gap:5px 8px}.creation-card select{height:36px;font-size:12px}.creation-card h2{font-size:17px}}
+
+
+/* Simplified navy interface: only the clean, restrained presentation is borrowed. */
+:root{color-scheme:dark;--bg:#101522;--panel:#1b2639;--line:#394b68;--gold:#a9c5ef;--muted:#b5c0d1}
+body{background:#101522;color:#edf2fa}
+#app{width:min(1120px,calc(100% - 28px));padding:18px 0 26px}
+.topbar{margin-bottom:14px}
+.brand-mark{color:#a9c5ef}
+.online{color:#c2ccda}
+.online-dot{background:#7fd6a4;box-shadow:none}
+.game-shell{padding:16px;background:#1b2639;border:1px solid #394b68;border-radius:9px;box-shadow:none}
+.game-heading{margin-bottom:12px}
+.eyebrow{color:#a9c5ef;letter-spacing:.12em}
+.location-chip{border:1px solid #465a79;border-radius:5px;background:#273750;color:#e1e9f5}
+.canvas-wrap{border:1px solid #465a79;border-radius:5px;background:#718b68;box-shadow:none}
+canvas{image-rendering:auto}
+.overlay{background:#101522d9;backdrop-filter:none}
+.start-card{background:#273750;border:1px solid #465a79;border-radius:7px;box-shadow:none}
+.crest{border:1px solid #8fa9ce;border-radius:7px;color:#c5d8f5}
+.start-card input{border:1px solid #596d8c;border-radius:5px;background:#172338}
+.start-card button{border:1px solid #657d9f;border-radius:5px;background:#405878;color:#fff}
+.auth-tabs .auth-tab{background:#344966;border:1px solid #596d8c;border-radius:5px;color:#edf2fa}
+.auth-tabs .auth-tab.active{background:#a9c5ef;color:#172338;border-color:#a9c5ef}
+.hud-player,.hud-help{background:#1b2639e8;border:1px solid #596d8c;border-radius:5px}
+.avatar{background:#a9c5ef;color:#172338}
+.notice{background:#1b2639;border:1px solid #596d8c;border-radius:5px}
+.mobile-controls button{background:#344966;border:1px solid #596d8c;border-radius:5px}
+.mobile-controls .interact-button{background:#a9c5ef;color:#172338}
+#logout-button,#open-adventurer{background:#344966;border:1px solid #596d8c;border-radius:5px;color:#fff}
+.adventurer-panel{background:#1b2639f5;border:1px solid #596d8c;border-radius:7px;box-shadow:none}
+.panel-close,.panel-tab,.panel-action{background:#344966;border:1px solid #596d8c;border-radius:5px;color:#fff}
+.panel-tab.active{background:#a9c5ef;color:#172338;border-color:#a9c5ef}
+.panel-content .stat{background:#273750;border:1px solid #465a79;border-radius:5px}
+.panel-content select{background:#172338;border:1px solid #596d8c;border-radius:5px}
+@media(max-width:650px){.game-shell{padding:9px}}
