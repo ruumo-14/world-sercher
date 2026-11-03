@@ -265,40 +265,65 @@
       ctx.fillStyle="#fff0ca";ctx.fillText(b.name,x,labelY);ctx.restore();
     }
   }
+  const spriteCache=new Map();
   function drawPixelPerson(p,isPlayer=false){
     const q=project(p.x,p.y),x=q.x-24,y=q.y-64;
     if(x<-70||y<-90||x>W+70||y>H+45)return;
     const female=!isPlayer&&[0,2,8,14,16,18,19,21,23,26,31,32].includes(p.id);
-    const dwarf=p.species==="ドワーフ",k=2,ox=x+(dwarf?3:0);
-    // One-pixel dark outline around each pixel cluster; crisp at native scale.
-    const px=(a,b,w,h,c)=>{
-      rect(ox+a*k-1,y+b*k-1,w*k+2,h*k+2,"#211b25");
-      rect(ox+a*k,y+b*k,w*k,h*k,c);
-    };
-    ellipse(x+24,y+61,15,4,"#30452f");
-    px(6,26,4,4,"#4c3540");px(14,26,4,4,"#4c3540");
-    px(5,28,5,3,"#5c9eb7");px(14,28,5,3,"#5c9eb7");
-    px(7,22,3,6,"#e6d9c7");px(14,22,3,6,"#e6d9c7");
-    // Slimmer torso and narrower sleeves.
-    px(6,14,12,9,isPlayer?"#7029a8":(female?"#3267a5":p.color||"#6685a0"));
-    px(4,15,2,7,isPlayer?"#8e4ac2":(female?"#28578e":p.color||"#6685a0"));
-    px(18,15,2,7,isPlayer?"#8e4ac2":(female?"#28578e":p.color||"#6685a0"));
-    px(4,20,2,3,"#e6b98f");px(18,20,2,3,"#e6b98f");
-    px(7,21,10,2,"#e7c86c");px(8,23,2,2,"#b28b54");px(14,23,2,2,"#b28b54");
-    px(7,15,2,6,isPlayer?"#a65bd0":"#e0c18a");px(15,15,2,6,isPlayer?"#54217f":"#765b48");
-    px(10,11,4,4,"#d99c76");px(5,8,2,4,"#d99c76");px(17,8,2,4,"#d99c76");
-    // Slightly narrower rounded face.
-    px(7,4,10,9,"#6d4939");px(6,6,12,7,"#d99c76");px(8,3,8,2,"#d99c76");
-    px(7,8,3,2,"#fff0d5");px(14,8,3,2,"#fff0d5");px(8,8,2,2,"#493c42");px(15,8,2,2,"#493c42");px(10,12,4,1,"#a85d59");
-    if(isPlayer){
-      px(5,1,14,4,"#482078");px(6,0,12,4,"#7029bb");px(8,0,8,2,"#963ee0");
-      px(5,3,3,3,"#58218f");px(16,3,3,3,"#58218f");px(8,2,8,1,"#bd79ed");px(11,3,2,2,"#d39af1");
-      px(3,14,3,9,"#7029a8");px(18,14,3,9,"#7029a8");px(4,15,2,6,"#a85bd0");px(18,15,2,6,"#51217f");
-    }else if(female){
-      px(6,2,12,4,"#e5bd58");px(5,5,2,8,"#c98f3c");px(17,5,2,8,"#c98f3c");px(4,12,3,4,"#eac76b");px(17,12,3,4,"#eac76b");
-    }else{
-      px(6,2,12,4,p.hair||"#60412f");px(5,5,2,5,p.hair||"#60412f");px(17,5,2,5,p.hair||"#60412f");
+    const dir=p.dir||"down",moving=!!p.moving,frame=moving?(Math.floor((p.walkClock||0)*9)%4):0;
+    const dwarf=p.species==="ドワーフ",key=[isPlayer?1:0,female?1:0,dwarf?1:0,dir,frame,isPlayer?"purple":(p.color||"blue"),p.hair||""].join("|");
+    let sprite=spriteCache.get(key);
+    if(!sprite){
+      const c=document.createElement("canvas");c.width=24;c.height=32;
+      const g=c.getContext("2d"),cells=Array.from({length:32},()=>Array(24).fill(null));
+      const put=(x0,y0,w,h,col)=>{for(let yy=y0;yy<y0+h;yy++)for(let xx=x0;xx<x0+w;xx++)if(xx>=0&&xx<24&&yy>=0&&yy<32)cells[yy][xx]=col};
+      const back=dir==="up",side=dir==="left"||dir==="right"||dir==="up-left"||dir==="up-right"||dir==="down-left"||dir==="down-right";
+      const mirror=dir==="left"||dir==="up-left"||dir==="down-left";
+      const shift=mirror?1:0,leg= moving?(frame===1?-1:frame===3?1:0):0;
+      // boots, legs and compact rounded silhouette
+      put(5+leg,27,5,4,"#4c3540");put(14-leg,27,5,4,"#4c3540");
+      put(4+leg,29,6,3,"#5c9eb7");put(14-leg,29,6,3,"#5c9eb7");
+      put(7+leg,22,3,7,"#e6d9c7");put(14-leg,22,3,7,"#e6d9c7");
+      const cloth=isPlayer?"#7029a8":(female?"#3267a5":p.color||"#6685a0");
+      put(6,14+(moving&&frame%2?1:0),12,9,cloth);
+      put(4,15,3,7,isPlayer?"#8e4ac2":cloth);put(17,15,3,7,isPlayer?"#8e4ac2":cloth);
+      put(5,20,2,3,"#e6b98f");put(17,20,2,3,"#e6b98f");
+      put(7,21,10,2,"#e7c86c");put(8,23,2,2,"#b28b54");put(14,23,2,2,"#b28b54");
+      put(7,15,2,6,isPlayer?"#a65bd0":"#e0c18a");put(15,15,2,6,isPlayer?"#54217f":"#765b48");
+      // neck, ears and softly rounded face
+      put(10,11,4,4,"#d99c76");put(5,8,2,4,"#d99c76");put(17,8,2,4,"#d99c76");
+      put(7,4,10,9,"#6d4939");put(6,6,12,7,"#d99c76");put(8,3,8,2,"#d99c76");
+      if(!back){
+        if(side){put(mirror?8:14,8,2,2,"#fff0d5");put(mirror?9:14,8,1,2,"#493c42");}
+        else {put(7,8,3,2,"#fff0d5");put(14,8,3,2,"#fff0d5");put(8,8,2,2,"#493c42");put(15,8,2,2,"#493c42");}
+        put(10,12,4,1,"#a85d59");
+      }
+      if(isPlayer){
+        const turban=back?"#6425a8":"#7029bb";
+        put(5,1,14,4,"#482078");put(6,0,12,4,turban);put(8,0,8,2,"#963ee0");
+        put(5,3,3,3,"#58218f");put(16,3,3,3,"#58218f");put(8,2,8,1,"#bd79ed");put(11,3,2,2,"#d39af1");
+        put(3,14,3,9,"#7029a8");put(18,14,3,9,"#7029a8");put(4,15,2,6,"#a85bd0");put(18,15,2,6,"#51217f");
+      }else if(female){
+        put(6,2,12,4,"#e5bd58");put(5,5,2,8,"#c98f3c");put(17,5,2,8,"#c98f3c");put(4,12,3,4,"#eac76b");put(17,12,3,4,"#eac76b");
+      }else{
+        put(6,2,12,4,p.hair||"#60412f");put(5,5,2,5,p.hair||"#60412f");put(17,5,2,5,p.hair||"#60412f");
+      }
+      // Draw only the outside contour. Adjacent body parts share pixels, so no internal black seams.
+      const out=g.createImageData(24,32);
+      for(let yy=0;yy<32;yy++)for(let xx=0;xx<24;xx++){
+        if(!cells[yy][xx])continue;
+        const n=[[0,-1],[0,1],[-1,0],[1,0]].some(([dx,dy])=>!cells[yy+dy]?.[xx+dx]);
+        if(n){const z=(yy*24+xx)*4;out.data[z]=28;out.data[z+1]=22;out.data[z+2]=29;out.data[z+3]=255;}
+      }
+      g.putImageData(out,0,0);
+      for(let yy=0;yy<32;yy++)for(let xx=0;xx<24;xx++)if(cells[yy][xx]){g.fillStyle=cells[yy][xx];g.fillRect(xx,yy,1,1);}
+      sprite=c;spriteCache.set(key,sprite);
+      if(spriteCache.size>160)spriteCache.delete(spriteCache.keys().next().value);
     }
+    ctx.save();ctx.imageSmoothingEnabled=false;
+    const bob=moving&&frame%2===1?-1:0;
+    ctx.drawImage(sprite,x+(dwarf?4:0),y+bob,48,64);ctx.restore();
+    ellipse(x+24,y+63,14,4,"#30452f");
   }
   function drawPlayerName(p){
     const q=project(p.x,p.y);
@@ -339,8 +364,9 @@
       }
       return;
     }
+    player.moving=false;
     let dx=0,dy=0;if(keys.has("w")||keys.has("arrowup"))dy--;if(keys.has("s")||keys.has("arrowdown"))dy++;if(keys.has("a")||keys.has("arrowleft"))dx--;if(keys.has("d")||keys.has("arrowright"))dx++;
-    if(dx||dy){const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=player.x+dx*player.speed*dt,ny=player.y+dy*player.speed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";const now=performance.now();if(socket&&socket.connected&&now-lastMoveSent>80){lastMoveSent=now;socket.emit("player:move",{x:player.x,y:player.y,dir:player.dir})}}
+    if(dx||dy){player.moving=true;player.walkClock=(player.walkClock||0)+dt;const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=player.x+dx*player.speed*dt,ny=player.y+dy*player.speed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";const now=performance.now();if(socket&&socket.connected&&now-lastMoveSent>80){lastMoveSent=now;socket.emit("player:move",{x:player.x,y:player.y,dir:player.dir,moving:true,walkClock:player.walkClock})}}
     camera.x=player.x;camera.y=player.y;
     const touched=fieldEnemies.find(e=>e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<32);if(touched)beginBattle(touched);
   }
