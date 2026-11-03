@@ -23,6 +23,103 @@
   const npcs=npcDefs.map((n,i)=>({id:i,name:n[0],role:n[1],x:n[2],y:n[3],color:n[4],hair:n[5],phase:(i%5)*.7}));
   const water={x:460,y:1350,w:470,h:850};
   const pathPoints=[[-150,1300],[2800,1300],[1600,360],[1600,2360],[460,1350],[2700,1350]];
+
+  const fieldEnemies=[
+    {id:"slime-a",name:"スライム",x:720,y:760,hp:28,maxHp:28,color:"#8bd7d0",boss:false,alive:true},
+    {id:"slime-b",name:"スライム",x:2450,y:780,hp:28,maxHp:28,color:"#8bd7d0",boss:false,alive:true},
+    {id:"wolf-a",name:"森のウルフ",x:520,y:1900,hp:42,maxHp:42,color:"#a7aeb8",boss:false,alive:true},
+    {id:"goblin-a",name:"ゴブリン",x:2550,y:1900,hp:48,maxHp:48,color:"#9ac078",boss:false,alive:true},
+    {id:"guardian",name:"古代の守護者",x:2700,y:430,hp:150,maxHp:150,color:"#d0a66a",boss:true,alive:true}
+  ];
+  let battle=null;
+  let battleMessage="";
+  let battleMessageUntil=0;
+  function beginBattle(touched){
+    const group=[{name:touched.name,hp:touched.hp,maxHp:touched.maxHp,color:touched.color,boss:touched.boss}];
+    if(!touched.boss){
+      const extras=1+Math.floor(Math.random()*3);
+      for(let i=0;i<extras;i++){
+        const options=[["スライム",24,24,"#8bd7d0"],["森のウルフ",34,34,"#a7aeb8"],["ゴブリン",40,40,"#9ac078"]];
+        const e=options[Math.floor(Math.random()*options.length)];
+        group.push({name:e[0],hp:e[1],maxHp:e[2],color:e[3],boss:false});
+      }
+    }
+    battle={enemies:group,playerX:120,playerY:0,vy:0,hp:100,maxHp:100,mp:30,maxMp:30,attackCooldown:0,enemyCooldown:1.1,defending:false,herbs:1,finished:false};
+    $("mobile-controls").classList.add("battle-hidden");
+    $("battle-controls").classList.remove("hidden");
+    say(touched.boss?"強敵が現れた！ ボス戦からは逃げられない。":"敵と接触した！ 戦闘開始！");
+  }
+  function finishBattle(result){
+    if(!battle)return;
+    battle.finished=true;
+    const boss=battle.enemies.some(e=>e.boss);
+    battleMessage=result==="win"?(boss?"守護者を倒した！":"勝利！ 敵をすべて倒した！"):"戦闘から逃げた。";
+    battleMessageUntil=performance.now()+1500;
+    if(result==="win"){
+      const source=fieldEnemies.find(e=>e.boss===boss && e.alive && (boss?e.name==="古代の守護者":e.name===battle.enemies[0].name));
+      if(source)source.alive=false;
+    } else if(result==="escape"){
+      const source=fieldEnemies.find(e=>e.alive&&!e.boss&&e.name===battle.enemies[0].name);
+      if(source){player.x=Math.min(worldW-80,source.x+70);if(Math.hypot(player.x-source.x,player.y-source.y)<40)player.x=source.x-70;saveCurrent();}
+    }
+    setTimeout(()=>{
+      if(!battle)return;
+      battle=null;
+      $("battle-controls").classList.add("hidden");
+      $("mobile-controls").classList.remove("battle-hidden");
+      if(result==="win")say("戦闘に勝利した！（経験値・報酬システムは今後実装）");
+      else say("戦闘から離脱した。報酬は獲得しません。");
+    },1500);
+  }
+  function battleAttack(){
+    if(!battle||battle.finished||battle.attackCooldown>0)return;
+    const target=battle.enemies.find(e=>e.hp>0);
+    if(!target)return;
+    target.hp=Math.max(0,target.hp-14);
+    battle.attackCooldown=.38;
+    if(battle.enemies.every(e=>e.hp<=0))finishBattle("win");
+  }
+  function battleMagic(){
+    if(!battle||battle.finished)return;
+    if(battle.mp<8){say("MPが足りない！");return;}
+    battle.mp-=8;
+    const target=battle.enemies.find(e=>e.hp>0);
+    if(!target)return;
+    target.hp=Math.max(0,target.hp-26);
+    say("火花の魔法！ "+target.name+"にダメージ！");
+    if(battle.enemies.every(e=>e.hp<=0))finishBattle("win");
+  }
+  function battleItem(){
+    if(!battle||battle.finished)return;
+    if(battle.herbs<=0){say("この戦闘で使える薬草はもうない。");return;}
+    battle.herbs--;battle.hp=Math.min(battle.maxHp,battle.hp+28);say("薬草を使った。HPが回復！");
+  }
+  function drawBattle(){
+    rect(0,0,W,H,"#263d45");
+    for(let i=0;i<8;i++){rect(i*140,0,140,300,i%2?"#34545a":"#3d6060");rect(i*140,300,140,300,i%2?"#65744e":"#718256");}
+    rect(0,438,W,162,"#8a805d");rect(0,438,W,8,"#b7a77a");
+    for(let i=0;i<18;i++){const x=i*59;rect(x,420+(i%3)*5,3,18,"#596d42");}
+    ctx.fillStyle="#f4f0df";ctx.font="bold 22px sans-serif";ctx.textAlign="left";ctx.fillText("BATTLE",28,38);
+    ctx.font="16px sans-serif";ctx.fillText("HP "+battle.hp+" / "+battle.maxHp,28,72);ctx.fillText("MP "+battle.mp+" / "+battle.maxMp,28,98);
+    rect(28,108,190,10,"#29313a");rect(28,108,190*battle.hp/battle.maxHp,10,"#d96d68");
+    rect(28,126,190,8,"#29313a");rect(28,126,190*battle.mp/battle.maxMp,8,"#6da9df");
+    const px=battle.playerX,py=438-battle.playerY;
+    ellipse(px,py+7,18,7,"#394239");rect(px-10,py-35,20,30,player.outfit);rect(px-8,py-51,16,16,"#e1bd98");rect(px-8,py-55,16,6,"#60452f");rect(px+8,py-31,20,4,"#d9dce3");
+    battle.enemies.forEach((e,i)=>{
+      if(e.hp<=0)return;
+      const ex=650+(i%3)*92,ey=430-Math.floor(i/3)*55;
+      ellipse(ex,ey+8,e.boss?42:24,e.boss?13:8,"#394239");
+      if(e.boss){rect(ex-34,ey-65,68,64,e.color);rect(ex-28,ey-80,56,22,"#8b6547");rect(ex-25,ey-50,10,8,"#f6df9b");rect(ex+15,ey-50,10,8,"#f6df9b");}
+      else{ellipse(ex,ey-14,24,22,e.color);ellipse(ex-9,ey-18,4,5,"#26323a");ellipse(ex+9,ey-18,4,5,"#26323a");}
+      ctx.fillStyle="#fff";ctx.font="13px sans-serif";ctx.textAlign="center";ctx.fillText(e.name,ex,ey-92);
+      rect(ex-32,ey-85,64,5,"#29313a");rect(ex-32,ey-85,64*e.hp/e.maxHp,5,"#d96d68");
+    });
+    if(battle.defending){ctx.fillStyle="#d9e8ff";ctx.font="14px sans-serif";ctx.fillText("防御中",px,py-68);}
+    if(battleMessageUntil>performance.now()){ctx.fillStyle="#fff";ctx.font="bold 24px sans-serif";ctx.textAlign="center";ctx.fillText(battleMessage,W/2,220);}
+    ctx.fillStyle="#f7f0dd";ctx.font="14px sans-serif";ctx.textAlign="left";ctx.fillText(battle.enemies.some(e=>e.boss)?"BOSS BATTLE":"FIELD BATTLE",28,165);
+    ctx.textAlign="right";ctx.fillText(battle.enemies.some(e=>e.boss)?"ボス戦では逃走できません":"右端まで進むと逃走",W-24,38);
+  }
+
   function say(t){notice.textContent=t;notice.classList.add("show");clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>notice.classList.remove("show"),2600)}
   function setAuthMode(mode){authMode=mode;const reg=mode==="register";loginTab.classList.toggle("active",!reg);registerTab.classList.toggle("active",reg);nameWrap.classList.toggle("hidden",!reg);password.autocomplete=reg?"new-password":"current-password";password.minLength=reg?10:1;authSubmit.textContent=reg?"アカウントを作成 ✦":"ログイン ▶";authMessage.textContent=reg?"ユーザーIDと10文字以上のパスワードを設定してね。":"登録済みのユーザーIDとパスワードを入力してね。"}
   loginTab.addEventListener("click",()=>setAuthMode("login"));registerTab.addEventListener("click",()=>setAuthMode("register"));
@@ -47,7 +144,7 @@
   function updateOnline(){onlineCount.textContent="村にいる冒険者 "+(others.size+(started?1:0))+"人"}
   function blocked(x,y){if(x<70||y<70||x>worldW-70||y>worldH-70)return true;if(Math.hypot(x-(water.x+water.w/2),y-(water.y+water.h/2))<220)return true;return buildings.some(b=>x+12>b.x&&x-12<b.x+b.w&&y+8>b.y+32&&y-8<b.y+b.h)}
   const worldW=3000,worldH=2300;
-  window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();keys.add(k);if(k==="e"&&started)interact()});window.addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));window.addEventListener("blur",()=>keys.clear());
+  window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();keys.add(k);if(k==="e"&&started&&!battle)interact();if(k==="z"&&battle)battleAttack();if(k==="1"&&battle)battleMagic();if(k==="2"&&battle)battleItem()});window.addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));window.addEventListener("blur",()=>keys.clear());
   const keyMap={up:"arrowup",down:"arrowdown",left:"arrowleft",right:"arrowright"};document.querySelectorAll("[data-dir]").forEach(b=>{const k=keyMap[b.dataset.dir];b.addEventListener("pointerdown",e=>{e.preventDefault();keys.add(k)});["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>keys.delete(k)))});
   $("interact-button").addEventListener("click",interact);
   function interact(){let best=95,target=null;for(const b of buildings){const d=Math.hypot(player.x-(b.x+b.w/2),player.y-(b.y+b.h/2));if(d<best){best=d;target=b}}for(const n of npcs){const d=Math.hypot(player.x-n.x,player.y-n.y);if(d<best){best=d;target=n}}if(target?.name){if(target.role)say(target.name+"「こんにちは！ "+target.role+"をしているよ。」");else say(target.name+"：施設の準備を進めているよ。")}else say("草花が風に揺れている。リーフェルを探検しよう！")}
@@ -100,15 +197,54 @@
   function drawDecor(){}
   function render(){
     ctx.clearRect(0,0,W,H);
+    if(battle){drawBattle();return;}
     drawGround();
     buildings.forEach(drawHouse);
     npcs.forEach(n=>drawPixelPerson(n));
+    fieldEnemies.filter(e=>e.alive).forEach(e=>{const x=e.x-camera.x,y=e.y-camera.y;ellipse(x,y+7,e.boss?19:13,e.boss?7:5,"#3d4b37");ellipse(x,y-5,e.boss?17:12,e.boss?18:12,e.color);if(e.boss){rect(x-12,y-25,24,8,"#806044");}else{ellipse(x-4,y-8,2,3,"#26313a");ellipse(x+4,y-8,2,3,"#26313a");}ctx.fillStyle="#fff";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText(e.name,x,y-25);});
     for(const p of others.values())drawPixelPerson(p);
     drawPixelPerson(player,true);
   }
-  function update(dt){if(!started||!$("creation-panel").classList.contains("hidden"))return;let dx=0,dy=0;if(keys.has("w")||keys.has("arrowup"))dy--;if(keys.has("s")||keys.has("arrowdown"))dy++;if(keys.has("a")||keys.has("arrowleft"))dx--;if(keys.has("d")||keys.has("arrowright"))dx++;if(dx||dy){const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=player.x+dx*player.speed*dt,ny=player.y+dy*player.speed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";const now=performance.now();if(socket&&socket.connected&&now-lastMoveSent>80){lastMoveSent=now;socket.emit("player:move",{x:player.x,y:player.y,dir:player.dir})}}camera.x=Math.max(0,Math.min(worldW-W,player.x-W/2));camera.y=Math.max(0,Math.min(worldH-H,player.y-H/2))}
+  function update(dt){
+    if(!started||!$("creation-panel").classList.contains("hidden"))return;
+    if(battle){
+      if(battle.finished)return;
+      let dx=0;if(keys.has("a")||keys.has("arrowleft"))dx--;if(keys.has("d")||keys.has("arrowright"))dx++;
+      battle.playerX=Math.max(35,Math.min(W-35,battle.playerX+dx*260*dt));
+      if((keys.has(" ")||keys.has("w")||keys.has("arrowup"))&&battle.playerY<=0)battle.vy=390;
+      battle.playerY=Math.max(0,battle.playerY+battle.vy*dt);battle.vy-=980*dt;
+      battle.attackCooldown=Math.max(0,battle.attackCooldown-dt);
+      battle.defending=keys.has("x");
+      battle.enemyCooldown-=dt;
+      if(battle.enemyCooldown<=0){
+        const alive=battle.enemies.filter(e=>e.hp>0);
+        if(alive.length){const damage=alive.some(e=>e.boss)?14:alive.length*5;battle.hp=Math.max(0,battle.hp-(battle.defending?Math.ceil(damage*.35):damage));battle.enemyCooldown=1.25;if(battle.hp<=0){battle.finished=true;battleMessage="力尽きてしまった…";battleMessageUntil=performance.now()+1500;setTimeout(()=>{battle=null;player.x=1600;player.y=1300;saveCurrent();$("battle-controls").classList.add("hidden");$("mobile-controls").classList.remove("battle-hidden");say("町へ戻りました。戦闘の続きは今後実装します。");},1500);return;}}
+      }
+      if(battle.playerX>=W-38){
+        if(battle.enemies.some(e=>e.boss)){battle.playerX=W-40;say("ボス戦からは逃げられない！");}
+        else finishBattle("escape");
+      }
+      return;
+    }
+    let dx=0,dy=0;if(keys.has("w")||keys.has("arrowup"))dy--;if(keys.has("s")||keys.has("arrowdown"))dy++;if(keys.has("a")||keys.has("arrowleft"))dx--;if(keys.has("d")||keys.has("arrowright"))dx++;
+    if(dx||dy){const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=player.x+dx*player.speed*dt,ny=player.y+dy*player.speed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";const now=performance.now();if(socket&&socket.connected&&now-lastMoveSent>80){lastMoveSent=now;socket.emit("player:move",{x:player.x,y:player.y,dir:player.dir})}}
+    camera.x=Math.max(0,Math.min(worldW-W,player.x-W/2));camera.y=Math.max(0,Math.min(worldH-H,player.y-H/2));
+    const touched=fieldEnemies.find(e=>e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<32);if(touched)beginBattle(touched);
+  }
   function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
   document.querySelectorAll(".panel-tab").forEach(b=>b.addEventListener("click",()=>{}));
   $("open-adventurer").addEventListener("click",()=>{$("adventurer-panel").classList.remove("hidden")});$("close-adventurer").addEventListener("click",()=>$("adventurer-panel").classList.add("hidden"));
+
+  $("battle-attack").addEventListener("click",battleAttack);
+  $("battle-magic").addEventListener("click",battleMagic);
+  $("battle-item").addEventListener("click",battleItem);
+  const defendButton=$("battle-defend");
+  defendButton.addEventListener("pointerdown",e=>{e.preventDefault();keys.add("x")});
+  ["pointerup","pointercancel","pointerleave"].forEach(t=>defendButton.addEventListener(t,()=>keys.delete("x")));
+  document.querySelectorAll("[data-battle-key]").forEach(button=>{
+    const key=button.dataset.battleKey;
+    button.addEventListener("pointerdown",e=>{e.preventDefault();keys.add(key)});
+    ["pointerup","pointercancel","pointerleave"].forEach(t=>button.addEventListener(t,()=>keys.delete(key)));
+  });
   requestAnimationFrame(loop);
 })();
