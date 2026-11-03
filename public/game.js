@@ -152,47 +152,108 @@
   function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
   function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);ctx.fill()}
   function path(points,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0]-camera.x,p[1]-camera.y):ctx.moveTo(p[0]-camera.x,p[1]-camera.y));ctx.stroke()}
-  function drawGround(){
-    // Minimal flat-color map: keep the same world coordinates and collision areas.
-    rect(0,0,W,H,"#718b68");
-    // Simple river strip and banks, without texture or decoration.
-    path([[300,700],[400,930],[370,1200],[500,1420],[430,1690],[560,1900],[500,2200]],"#9a9878",104);
-    path([[300,700],[400,930],[370,1200],[500,1420],[430,1690],[560,1900],[500,2200]],"#5796a6",88);
-    // A quiet central square and plain paths.
-    ellipse(1600-camera.x,1320-camera.y,230,185,"#b5ad91");
-    path([[1600,1320],[1600,500]],"#b5ad91",74);
-    path([[1600,1320],[2600,1320]],"#b5ad91",74);
-    path([[1600,1320],[1600,2350]],"#b5ad91",74);
-    path([[1600,1320],[650,1320]],"#b5ad91",74);
-    // Simple farm area.
-    rect(1875-camera.x,2090-camera.y,270,145,"#8c7959");
+  // 32px tile renderer: every map surface is drawn on a square grid.
+  const TILE=32;
+  function tileRect(wx,wy,color,w=TILE,h=TILE){
+    const sx=Math.floor(wx-camera.x),sy=Math.floor(wy-camera.y);
+    rect(sx,sy,w,h,color);
   }
-  function drawTree(){}
+  function drawGround(){
+    rect(0,0,W,H,"#4d8248");
+    const left=Math.floor(camera.x/TILE)*TILE,top=Math.floor(camera.y/TILE)*TILE;
+    for(let wy=top;wy<camera.y+H+TILE;wy+=TILE){
+      for(let wx=left;wx<camera.x+W+TILE;wx+=TILE){
+        const v=hash(wx/TILE,wy/TILE);
+        tileRect(wx,wy,v>.82?"#5b914d":v>.35?"#548747":"#4e8044");
+        if(v>.91){tileRect(wx+7,wy+8,"#8eaa55",4,4);tileRect(wx+21,wy+22,"#3d713d",3,3);}
+        if(v<.08)tileRect(wx+14,wy+6,"#d6c36c",3,5);
+      }
+    }
+    // Winding river: square water tiles with stepped banks.
+    const river=[[300,650],[350,800],[420,950],[390,1110],[420,1260],[500,1400],[470,1570],[430,1740],[520,1900],[500,2180]];
+    for(let i=0;i<river.length-1;i++){
+      const [x1,y1]=river[i],[x2,y2]=river[i+1],steps=Math.max(1,Math.ceil(Math.hypot(x2-x1,y2-y1)/16));
+      for(let s=0;s<=steps;s++){const t=s/steps,x=Math.round((x1+(x2-x1)*t)/16)*16,y=Math.round((y1+(y2-y1)*t)/16)*16;
+        for(let oy=-64;oy<=64;oy+=16)for(let ox=-64;ox<=64;ox+=16){
+          if(ox*ox+oy*oy<=64*64){tileRect(x+ox,y+oy,"#b9a879",16,16);tileRect(x+ox+2,y+oy+2,"#397fa0",12,12);}
+        }
+      }
+    }
+    // Main cobblestone roads and smaller dirt lanes, snapped to 32px tiles.
+    const road=(x1,y1,x2,y2,width,color)=>{const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/16);for(let i=0;i<=n;i++){const t=i/n,x=Math.round((x1+(x2-x1)*t)/16)*16,y=Math.round((y1+(y2-y1)*t)/16)*16;for(let oy=-width/2;oy<=width/2;oy+=16)for(let ox=-width/2;ox<=width/2;ox+=16)tileRect(x+ox,y+oy,color,16,16);}};
+    road(1600,1320,1600,500,64,"#b8a77e");road(1600,1320,2600,1320,64,"#b8a77e");road(1600,1320,1600,2300,64,"#b8a77e");road(1600,1320,650,1320,64,"#b8a77e");
+    road(1600,1320,1100,900,32,"#a18a62");road(1600,1320,2050,900,32,"#a18a62");road(1600,1320,2050,1800,32,"#a18a62");
+    // Central plaza: square stone tiles and a patterned border.
+    for(let y=1192;y<=1448;y+=32)for(let x=1472;x<=1728;x+=32){
+      tileRect(x,y,((x+y)/32)%2===0?"#c9bd98":"#b9ad88");
+      tileRect(x+2,y+2,"#d6cba9",28,28);
+    }
+    for(let x=1472;x<=1728;x+=32){tileRect(x,1184,"#8b795b");tileRect(x,1448,"#8b795b");}
+    for(let y=1184;y<=1448;y+=32){tileRect(1472,y,"#8b795b");tileRect(1728,y,"#8b795b");}
+    // Farm plots, furrows and crops.
+    tileRect(1840,2048,"#9b7547",320,192);
+    for(let y=2064;y<2224;y+=32){tileRect(1856,y,"#765638",288,5);for(let x=1872;x<2128;x+=32){tileRect(x,y+9,"#5b913f",10,12);tileRect(x+4,y+5,"#c4a64d",4,4);}}
+    // Four bridges across the river, each built from square wooden planks.
+    drawBridge(390,930,0);drawBridge(430,1260,1);drawBridge(480,1680,0);drawBridge(510,1940,1);
+    // Fountain in the plaza, drawn as crisp concentric square basins.
+    tileRect(1552,1264,"#75654d",96,96);tileRect(1560,1272,"#d8d0ae",80,80);tileRect(1568,1280,"#347f9d",64,64);tileRect(1584,1296,"#62b4c0",32,32);tileRect(1592,1304,"#e6d89c",16,16);
+    // Flowers and shrubs on the green outskirts.
+    for(let i=0;i<90;i++){const x=250+Math.floor(hash(i,3)*2500),y=250+Math.floor(hash(i,9)*1900);if(x>1450&&x<1750&&y>1160&&y<1480)continue;tileRect(x,y,["#d8c66c","#e7a2a5","#f0dfb0"][i%3],4,4);tileRect(x+4,y+4,"#39733e",4,4);}
+  }
+  function drawBridge(x,y,vertical){
+    const sx=x-camera.x,sy=y-camera.y;
+    if(vertical){for(let i=0;i<5;i++){rect(sx+i*16-32,sy-42,12,84,"#81542f");rect(sx+i*16-32,sy-42,12,5,"#d2a36a");}}
+    else{for(let i=0;i<5;i++){rect(sx-42,sy+i*16-32,84,12,"#81542f");rect(sx-42,sy+i*16-32,5,12,"#d2a36a");}}
+  }
+  function drawTree(wx,wy){
+    const x=Math.round(wx-camera.x),y=Math.round(wy-camera.y);
+    if(x<-64||y<-64||x>W+64||y>H+64)return;
+    rect(x-5,y+8,10,19,"#76502f");rect(x-19,y-12,38,28,"#2f6338");rect(x-15,y-25,30,25,"#397844");rect(x-8,y-31,16,10,"#5a9850");
+    rect(x-13,y-9,7,6,"#75a64c");rect(x+6,y-20,6,6,"#75a64c");rect(x-2,y+12,4,8,"#9b7040");
+  }
   function drawHouse(b){
     const x=Math.round(b.x-camera.x),y=Math.round(b.y-camera.y),w=b.w,h=b.h;
     if(x<-220||y<-160||x>W+220||y>H+160)return;
-    // Buildings are intentionally reduced to clean blocks and readable labels.
-    rect(x,y,w,h,"#29364d");
-    rect(x+4,y+4,w-8,h-8,b.color);
-    rect(x+4,y+4,w-8,Math.max(12,Math.min(22,h*.18)),"#394a65");
-    ctx.fillStyle="#f3f5fa";
-    ctx.font="12px 'Noto Sans JP',sans-serif";
-    ctx.textAlign="center";
-    ctx.fillText(b.name,x+w/2,y-7);
+    const roof=b.type==="guild"?"#754238":b.type==="inn"?"#9a493b":b.type==="forge"?"#55535a":b.type==="market"?"#a34e3f":b.type==="farm"?"#8b6337":"#98533f";
+    // Ground shadow and timber foundation.
+    rect(x+8,y+24,w,h-10,"#344d35");rect(x+4,y+18,w-8,h-16,"#6d5039");
+    // Roof tiles are square, with a ridge and alternating tile highlights.
+    rect(x,y+8,w,Math.max(30,h*.43),"#54352e");
+    rect(x+4,y+4,w-8,Math.max(28,h*.43-4),roof);
+    for(let yy=y+10;yy<y+h*.43;yy+=12)for(let xx=x+8;xx<x+w-8;xx+=16){rect(xx,yy,12,5,((xx+yy)/4)%2?"#b56b4c":"#87483b");}
+    rect(x+w/2-5,y+5,10,h*.39,"#c17a53");
+    // Front wall, timber frame, windows, doorway and sign.
+    rect(x+12,y+h*.43,w-24,h*.48,"#d9b77d");rect(x+12,y+h*.43,w-24,6,"#f0d69b");
+    rect(x+18,y+h*.43,7,h*.48,"#765039");rect(x+w-25,y+h*.43,7,h*.48,"#765039");
+    rect(x+30,y+h*.53,22,20,"#654b39");rect(x+33,y+h*.535,16,14,"#8ac0bd");rect(x+40,y+h*.535,3,14,"#e4d5a6");
+    rect(x+w-52,y+h*.53,22,20,"#654b39");rect(x+w-49,y+h*.535,16,14,"#8ac0bd");rect(x+w-42,y+h*.535,3,14,"#e4d5a6");
+    rect(x+w/2-13,y+h*.64,26,h*.27,"#68452f");rect(x+w/2-8,y+h*.67,16,h*.24,"#a8784b");rect(x+w/2+5,y+h*.77,3,3,"#e5c76b");
+    rect(x+w/2-20,y+h*.42,40,8,"#6d4734");rect(x+w/2-16,y+h*.43,32,4,"#e2bd75");
+    ctx.fillStyle="#fff2c8";ctx.font="bold 12px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(b.name,x+w/2,y-7);
   }
-  function drawTreePatch(){}
+  function drawTreePatch(){
+    for(let i=0;i<110;i++){const x=160+Math.floor(hash(i,23)*2700),y=180+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<420|| (x>280&&x<620&&y>700&&y<2200))continue;drawTree(x,y);}
+  }
   function drawPixelPerson(p,isPlayer=false){
     const x=Math.round(p.x-camera.x),y=Math.round(p.y-camera.y);
-    if(x<-30||y<-40||x>W+30||y>H+30)return;
-    const coat=isPlayer?player.outfit:p.color;
-    // Simple readable character marker; no external sprites or image assets.
-    rect(x-7,y-10,14,18,coat);
-    rect(x-5,y-17,10,8,"#e1bd98");
-    rect(x-5,y-19,10,4,isPlayer?"#60452f":p.hair);
-    if(isPlayer){
-      ctx.fillStyle="#ffffff";ctx.font="11px 'Noto Sans JP',sans-serif";
-      ctx.textAlign="center";ctx.fillText(player.name,x,y-25);
-    }
+    if(x<-36||y<-48||x>W+36||y>H+36)return;
+    const coat=isPlayer?player.outfit:p.color,skin=isPlayer?({ "明るい肌":"#edc59d","小麦色":"#bd865e","褐色":"#87583f" }[player.skin]||"#edc59d"):"#e8bd91";
+    const hair=isPlayer?({"栗色":"#68412e","金色":"#d4ae4e","黒":"#332c2b","銀色":"#b9b9ae"}[player.hair]||"#68412e"):p.hair;
+    // Unique silhouette details by role: hat, apron, cape, beard, ears and tools.
+    const role=p.role||"冒険者",isGuard=role==="衛兵",isWorker=["鍛冶師","武器屋","道具屋","農家","宿屋","服飾職人","釣り人","薬草師","パン職人"].includes(role);
+    rect(x-8,y+8,16,5,"#344b35");rect(x-7,y-10,6,12,"#4b3a32");rect(x+1,y-10,6,12,"#4b3a32");
+    rect(x-7,y-20,14,12,coat);rect(x-9,y-15,4,9,coat);rect(x+5,y-15,4,9,coat);
+    rect(x-5,y-8,4,9,"#d8d0b4");rect(x+1,y-8,4,9,"#d8d0b4");
+    rect(x-6,y-32,12,12,skin);rect(x-7,y-35,14,5,hair);rect(x-8,y-31,3,8,hair);rect(x+5,y-31,3,8,hair);
+    rect(x-4,y-27,2,2,"#342d2b");rect(x+3,y-27,2,2,"#342d2b");rect(x-1,y-22,3,2,"#b36d59");
+    if(isGuard){rect(x-8,y-38,16,5,"#b9bfc0");rect(x-5,y-42,10,5,"#758a9b");rect(x-2,y-40,4,3,"#e7c76d");}
+    if(role==="鍛冶師"){rect(x-8,y-21,16,5,"#8a6a45");rect(x-10,y-35,20,5,"#4a403b");rect(x+9,y-12,4,15,"#9a9a9a");}
+    if(role==="農家"||role==="牧童"){rect(x-9,y-38,18,5,"#c19b55");rect(x-6,y-42,12,5,"#8c643d");rect(x+10,y-13,3,18,"#74502f");}
+    if(role==="受付"||role==="服飾職人"){rect(x-7,y-18,14,4,"#f0d4a0");rect(x-2,y-37,4,4,"#e4c45c");}
+    if(role==="宿屋"){rect(x-9,y-39,18,5,"#e2d1aa");rect(x-6,y-43,12,5,"#8b4938");}
+    if(role==="町長"){rect(x-8,y-19,16,4,"#d8c9a1");rect(x-7,y-39,14,5,"#625b72");rect(x-2,y-42,4,4,"#d6bd70");}
+    if(isPlayer){rect(x-10,y-39,20,4,"#e6c46a");ctx.fillStyle="#fff5d7";ctx.font="11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(player.name,x,y-48);}
+    else{ctx.fillStyle="#fff4d2";ctx.font="10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(p.name,x,y-45);}
   }
   function drawDecor(){}
   function render(){
