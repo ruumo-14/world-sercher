@@ -133,3 +133,12 @@ canvas{image-rendering:auto}
 .panel-content .stat{background:#273750;border:1px solid #465a79;border-radius:5px}
 .panel-content select{background:#172338;border:1px solid #596d8c;border-radius:5px}
 @media(max-width:650px){.game-shell{padding:9px}}
+
+.battle-controls{position:absolute;z-index:7;left:12px;right:12px;bottom:12px;display:flex;align-items:end;justify-content:space-between;gap:10px;pointer-events:none}
+.battle-controls.hidden{display:none}
+.battle-help{padding:8px 10px;background:#172338eF;border:1px solid #8fa9ce;border-radius:5px;color:#fff;font-size:12px}
+.battle-actions{display:flex;gap:7px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}
+.battle-actions button{padding:10px 13px;background:#344966;border:1px solid #9bb4d7;border-radius:5px;color:#fff;font-weight:700;cursor:pointer;touch-action:manipulation}
+.battle-actions button:active{background:#a9c5ef;color:#172338}
+.mobile-controls.battle-hidden{display:none}
+@media(max-width:650px){.battle-controls{bottom:6px;left:6px;right:6px;align-items:stretch;flex-direction:column}.battle-help{text-align:center}.battle-actions{justify-content:center}.battle-actions button{padding:9px 10px;font-size:12px}}
