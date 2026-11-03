@@ -236,24 +236,47 @@
   }
   function drawPixelPerson(p,isPlayer=false){
     const x=Math.round(p.x-camera.x),y=Math.round(p.y-camera.y);
-    if(x<-36||y<-48||x>W+36||y>H+36)return;
-    const coat=isPlayer?player.outfit:p.color,skin=isPlayer?({ "明るい肌":"#edc59d","小麦色":"#bd865e","褐色":"#87583f" }[player.skin]||"#edc59d"):"#e8bd91";
-    const hair=isPlayer?({"栗色":"#68412e","金色":"#d4ae4e","黒":"#332c2b","銀色":"#b9b9ae"}[player.hair]||"#68412e"):p.hair;
-    // Unique silhouette details by role: hat, apron, cape, beard, ears and tools.
-    const role=p.role||"冒険者",isGuard=role==="衛兵",isWorker=["鍛冶師","武器屋","道具屋","農家","宿屋","服飾職人","釣り人","薬草師","パン職人"].includes(role);
-    rect(x-8,y+8,16,5,"#344b35");rect(x-7,y-10,6,12,"#4b3a32");rect(x+1,y-10,6,12,"#4b3a32");
-    rect(x-7,y-20,14,12,coat);rect(x-9,y-15,4,9,coat);rect(x+5,y-15,4,9,coat);
-    rect(x-5,y-8,4,9,"#d8d0b4");rect(x+1,y-8,4,9,"#d8d0b4");
-    rect(x-6,y-32,12,12,skin);rect(x-7,y-35,14,5,hair);rect(x-8,y-31,3,8,hair);rect(x+5,y-31,3,8,hair);
-    rect(x-4,y-27,2,2,"#342d2b");rect(x+3,y-27,2,2,"#342d2b");rect(x-1,y-22,3,2,"#b36d59");
-    if(isGuard){rect(x-8,y-38,16,5,"#b9bfc0");rect(x-5,y-42,10,5,"#758a9b");rect(x-2,y-40,4,3,"#e7c76d");}
-    if(role==="鍛冶師"){rect(x-8,y-21,16,5,"#8a6a45");rect(x-10,y-35,20,5,"#4a403b");rect(x+9,y-12,4,15,"#9a9a9a");}
-    if(role==="農家"||role==="牧童"){rect(x-9,y-38,18,5,"#c19b55");rect(x-6,y-42,12,5,"#8c643d");rect(x+10,y-13,3,18,"#74502f");}
-    if(role==="受付"||role==="服飾職人"){rect(x-7,y-18,14,4,"#f0d4a0");rect(x-2,y-37,4,4,"#e4c45c");}
-    if(role==="宿屋"){rect(x-9,y-39,18,5,"#e2d1aa");rect(x-6,y-43,12,5,"#8b4938");}
-    if(role==="町長"){rect(x-8,y-19,16,4,"#d8c9a1");rect(x-7,y-39,14,5,"#625b72");rect(x-2,y-42,4,4,"#d6bd70");}
-    if(isPlayer){rect(x-10,y-39,20,4,"#e6c46a");ctx.fillStyle="#fff5d7";ctx.font="11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(player.name,x,y-48);}
-    else{ctx.fillStyle="#fff4d2";ctx.font="10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(p.name,x,y-45);}
+    if(x<-42||y<-54||x>W+42||y>H+42)return;
+    const coat=isPlayer?player.outfit:p.color;
+    const skin=isPlayer?({"明るい肌":"#edc59d","色白":"#f3d8bd","褐色肌":"#a96f4e","小麦色":"#bd865e"}[player.skin]||"#edc59d"):"#e8bd91";
+    const hair=isPlayer?({"栗色":"#68412e","黒髪":"#332c2b","金髪":"#d4ae4e","黒":"#332c2b","金色":"#d4ae4e","銀色":"#b9b9ae"}[player.hair]||"#68412e"):p.hair;
+    const role=p.role||"冒険者",species=isPlayer?player.species:(p.species||"人間");
+    const outline="#17131a";
+    // Every sprite part receives a dark 1-2px outline for strong separation from the map.
+    const pixel=(rx,ry,rw,rh,color,b=2)=>{rect(x+rx-b,y+ry-b,rw+2*b,rh+2*b,outline);rect(x+rx,y+ry,rw,rh,color);};
+    // Shadow, boots, legs, tunic and sleeves.
+    ellipse(x,y+14,12,4,"#293a2b");
+    pixel(-8,2,6,13,"#49352b");pixel(2,2,6,13,"#49352b");
+    pixel(-9,-12,18,18,coat);pixel(-13,-8,5,11,coat);pixel(8,-8,5,11,coat);
+    pixel(-6,4,5,5,"#d8d0b4",1);pixel(1,4,5,5,"#d8d0b4",1);
+    // Face, ears, hair and facial features.
+    pixel(-7,-31,14,14,skin);pixel(-10,-27,4,7,skin,1);pixel(6,-27,4,7,skin,1);
+    pixel(-8,-36,16,7,hair);pixel(-10,-32,4,9,hair,1);pixel(6,-32,4,9,hair,1);
+    pixel(-5,-25,3,4,"#25202a",1);pixel(3,-25,3,4,"#25202a",1);
+    pixel(-1,-19,3,2,"#a95e50",1);
+    // Hair silhouette and fringe give each adventurer a recognizable head shape.
+    pixel(-10,-39,7,5,hair,1);pixel(-3,-42,8,7,hair,1);pixel(4,-38,7,5,hair,1);
+    // Species traits remain subtle and readable.
+    if(species==="エルフ"||species==="妖精族"){pixel(-14,-27,6,4,"#d8a77d",1);pixel(8,-27,6,4,"#d8a77d",1);}
+    if(species==="竜人"){pixel(-8,-43,5,7,"#9a5b45",1);pixel(3,-43,5,7,"#9a5b45",1);}
+    if(species==="獣人"){pixel(-13,-29,5,8,hair,1);pixel(8,-29,5,8,hair,1);}
+    if(species==="妖精族"){pixel(-17,-8,5,16,"#9bd9df",1);pixel(12,-8,5,16,"#9bd9df",1);}
+    // Outfit details: belt, collar, gloves and small emblem.
+    pixel(-5,-13,10,4,"#e0bd73",1);pixel(-2,-12,4,3,"#68462e",1);
+    pixel(-4,-9,8,3,"#e5d4a8",1);
+    // Role-specific silhouettes and props.
+    if(role==="衛兵"){pixel(-10,-44,20,5,"#aab7c2");pixel(-5,-49,10,5,"#758a9b");pixel(-2,-47,4,3,"#e7c76d",1);}
+    if(role==="鍛冶師"){pixel(-11,-15,22,5,"#8a6a45");pixel(-13,-39,26,5,"#4a403b");pixel(11,-8,4,17,"#9a9a9a",1);}
+    if(role==="農家"||role==="牧童"){pixel(-11,-42,22,5,"#c19b55");pixel(-7,-47,14,5,"#8c643d");pixel(12,-8,3,20,"#74502f",1);}
+    if(role==="受付"||role==="服飾職人"){pixel(-7,-14,14,4,"#f0d4a0",1);pixel(-2,-44,4,4,"#e4c45c",1);}
+    if(role==="宿屋"){pixel(-11,-44,22,5,"#e2d1aa");pixel(-7,-49,14,5,"#8b4938");}
+    if(role==="町長"){pixel(-9,-14,18,4,"#d8c9a1",1);pixel(-8,-44,16,5,"#625b72");pixel(-2,-48,4,4,"#d6bd70",1);}
+    if(isPlayer){
+      pixel(-12,-46,24,4,"#e6c46a",1);
+      ctx.fillStyle="#fff5d7";ctx.font="11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(player.name,x,y-53);
+    } else {
+      ctx.fillStyle="#fff4d2";ctx.font="10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(p.name,x,y-51);
+    }
   }
   function drawDecor(){}
   function render(){
