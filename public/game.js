@@ -55,44 +55,56 @@
   function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
   function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);ctx.fill()}
   function path(points,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0]-camera.x,p[1]-camera.y):ctx.moveTo(p[0]-camera.x,p[1]-camera.y));ctx.stroke()}
-  function drawGround(){rect(0,0,W,H,"#6e9b57");for(let y=Math.floor(camera.y/32)*32-32;y<camera.y+H+32;y+=32)for(let x=Math.floor(camera.x/32)*32-32;x<camera.x+W+32;x+=32){const h=hash(x/32,y/32),sx=x-camera.x,sy=y-camera.y;if(h>.2){rect(sx+5,sy+8,2,5,h>.8?"#b5c77b":"#547f49");rect(sx+12,sy+17,2,4,"#88a95f")}if(h<.035){rect(sx+20,sy+20,4,3,"#e9d9a0");rect(sx+23,sy+18,3,3,"#d18b9a")}}
-    // Winding river, banks and bridge crossings
-    ctx.save();path([[300,700],[400,930],[370,1200],[500,1420],[430,1690],[560,1900],[500,2200]],"#c5b27c",112);path([[300,700],[400,930],[370,1200],[500,1420],[430,1690],[560,1900],[500,2200]],"#438fa0",88);path([[310,730],[405,940],[380,1200],[505,1420],[440,1690],[565,1900]],"#76c0bd",5);ctx.restore();
-    // central plaza and natural cobblestone roads
-    ellipse(1600-camera.x,1320-camera.y,250,205,"#a78e68");ellipse(1600-camera.x,1320-camera.y,230,185,"#c5b58b");
-    path([[1600,1320],[1600,500]],"#8c795e",112);path([[1600,1320],[1600,500]],"#d0bd91",96);path([[1600,1320],[2600,1320]],"#8c795e",112);path([[1600,1320],[2600,1320]],"#d0bd91",96);path([[1600,1320],[1600,2350]],"#8c795e",112);path([[1600,1320],[1600,2350]],"#d0bd91",96);path([[1600,1320],[650,1320]],"#8c795e",112);path([[1600,1320],[650,1320]],"#d0bd91",96);
-    // plaza fountain
-    if(atlasReady){ctx.drawImage(spriteAtlas,352,0,64,64,1550-camera.x,1260-camera.y,100,100)}else{ellipse(1600-camera.x,1320-camera.y,66,48,"#857b62");ellipse(1600-camera.x,1314-camera.y,58,40,"#5d9da5");ellipse(1600-camera.x,1307-camera.y,34,21,"#8ac9c2");rect(1591-camera.x,1265-camera.y,18,42,"#d4c49a");ellipse(1600-camera.x,1265-camera.y,12,7,"#e6d6ad");}
-    // farm plots
-    for(let i=0;i<5;i++){rect(1900-camera.x+i*48,2110-camera.y,40,100,"#8d7048");for(let j=0;j<4;j++){rect(1905-camera.x+i*48,2120-camera.y+j*22,30,4,"#557a3e");rect(1915-camera.x+i*48,2116-camera.y+j*22,5,8,"#80a954")}}
+  function drawGround(){
+    // Minimal flat-color map: keep the same world coordinates and collision areas.
+    rect(0,0,W,H,"#718b68");
+    // Simple river strip and banks, without texture or decoration.
+    path([[300,700],[400,930],[370,1200],[500,1420],[430,1690],[560,1900],[500,2200]],"#9a9878",104);
+    path([[300,700],[400,930],[370,1200],[500,1420],[430,1690],[560,1900],[500,2200]],"#5796a6",88);
+    // A quiet central square and plain paths.
+    ellipse(1600-camera.x,1320-camera.y,230,185,"#b5ad91");
+    path([[1600,1320],[1600,500]],"#b5ad91",74);
+    path([[1600,1320],[2600,1320]],"#b5ad91",74);
+    path([[1600,1320],[1600,2350]],"#b5ad91",74);
+    path([[1600,1320],[650,1320]],"#b5ad91",74);
+    // Simple farm area.
+    rect(1875-camera.x,2090-camera.y,270,145,"#8c7959");
   }
-  function drawTree(x,y,seed=0){const sx=Math.round(x-camera.x),sy=Math.round(y-camera.y);if(sx<-70||sy<-90||sx>W+70||sy>H+90)return;if(atlasReady){ctx.drawImage(spriteAtlas,128,0,48,64,sx-30,sy-62,60,80);return;}ellipse(sx,sy+17,22,8,"#476b3d");rect(sx-6,sy-12,12,35,"#795137");ellipse(sx,sy-28,28,24,"#356b43");}
-  function drawHouse(b){const x=Math.round(b.x-camera.x),y=Math.round(b.y-camera.y),w=b.w,h=b.h;if(x<-250||y<-220||x>W+250||y>H+220)return;
-    if(atlasReady){let sx=176,sy=0,sw=80,sh=80;
-      if(b.type==="guild"){sx=256;sy=0;sw=96;sh=80}
-      else if(b.type==="forge"){sx=240;sy=80;sw=64;sh=64}
-      else if(b.type==="market"){sx=160;sy=80;sw=64;sh=64}
-      else if(b.type==="inn"){sx=320;sy=80;sw=64;sh=64}
-      else if(b.type==="bank"){sx=176;sy=160;sw=50;sh=52}
-      else if(b.type==="farm"){sx=176;sy=0;sw=80;sh=80}
-      ctx.drawImage(spriteAtlas,sx,sy,sw,sh,x-10,y-12,w+20,h+30);
-      ctx.fillStyle="#fff1cf";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.strokeStyle="#493a2b";ctx.lineWidth=3;ctx.strokeText(b.name,x+w/2,y-8);ctx.fillText(b.name,x+w/2,y-8);return;
+  function drawTree(){}
+  function drawHouse(b){
+    const x=Math.round(b.x-camera.x),y=Math.round(b.y-camera.y),w=b.w,h=b.h;
+    if(x<-220||y<-160||x>W+220||y>H+160)return;
+    // Buildings are intentionally reduced to clean blocks and readable labels.
+    rect(x,y,w,h,"#29364d");
+    rect(x+4,y+4,w-8,h-8,b.color);
+    rect(x+4,y+4,w-8,Math.max(12,Math.min(22,h*.18)),"#394a65");
+    ctx.fillStyle="#f3f5fa";
+    ctx.font="12px 'Noto Sans JP',sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(b.name,x+w/2,y-7);
+  }
+  function drawTreePatch(){}
+  function drawPixelPerson(p,isPlayer=false){
+    const x=Math.round(p.x-camera.x),y=Math.round(p.y-camera.y);
+    if(x<-30||y<-40||x>W+30||y>H+30)return;
+    const coat=isPlayer?player.outfit:p.color;
+    // Simple readable character marker; no external sprites or image assets.
+    rect(x-7,y-10,14,18,coat);
+    rect(x-5,y-17,10,8,"#e1bd98");
+    rect(x-5,y-19,10,4,isPlayer?"#60452f":p.hair);
+    if(isPlayer){
+      ctx.fillStyle="#ffffff";ctx.font="11px 'Noto Sans JP',sans-serif";
+      ctx.textAlign="center";ctx.fillText(player.name,x,y-25);
     }
-    ellipse(x+w/2,y+h+8,w*.62,13,"#476b43");rect(x+8,y+36,w-16,h-36,"#69503d");rect(x+12,y+33,w-24,h-38,b.color);rect(x+20,y+44,w-40,h-55,"#d5bd91");
-    rect(x+8,y+h-16,w-16,13,"#87745a");ctx.beginPath();ctx.moveTo(x-13,y+48);ctx.lineTo(x+w/2,y-20);ctx.lineTo(x+w+13,y+48);ctx.closePath();ctx.fillStyle="#9b5b45";ctx.fill();
-    for(const wx of [x+24,x+w-52]){rect(wx,y+76,28,32,"#654535");rect(wx+4,y+80,20,24,"#8db9b2")}
-    rect(x+w/2-15,y+h-58,30,43,"#604231");ctx.fillStyle="#fff0ce";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.fillText(b.name,x+w/2,y-21);
   }
-  function drawTreePatch(){for(let i=0;i<70;i++){const x=250+(i*173)%2550,y=260+(i*293)%2050;if(x>1050&&x<2250&&y>700&&y<2050)continue;if(Math.hypot(x-water.x,y-water.y)<350)continue;drawTree(x,y,i)}}
-  function drawPixelPerson(p,isPlayer=false){const x=Math.round(p.x-camera.x),y=Math.round(p.y-camera.y);if(x<-40||y<-65||x>W+40||y>H+45)return;
-    if(atlasReady){ctx.save();if(!isPlayer)ctx.filter="hue-rotate("+(p.id*31%360)+"deg)";const sx=isPlayer?416:448;ctx.drawImage(spriteAtlas,sx,0,32,48,x-18,y-47,36,54);ctx.restore();
-      if(isPlayer){ctx.fillStyle="#fff3d5";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText(player.name,x,y-53)}return;}
-    const coat=isPlayer?player.outfit:p.color,hair=isPlayer?(player.hair==="金髪"?"#d6b65e":player.hair==="黒髪"?"#302b2b":"#704a35"):p.hair;
-    ellipse(x,y+12,13,5,"#3d603d");rect(x-9,y-8,18,14,coat);rect(x-7,y-23,14,14,"#dfb58e");rect(x-8,y-25,16,6,hair);
-    if(isPlayer){ctx.fillStyle="#fff3d5";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText(player.name,x,y-34)}
-  }
-  function drawDecor(){for(let i=0;i<20;i++){const x=900+(i*97)%1100,y=800+(i*139)%1000;ellipse(x-camera.x,y-camera.y,5,3,["#d9c17a","#e2a0a3","#c8d49a"][i%3])}for(let i=0;i<8;i++){const x=1460+i*40-camera.x,y=1280-camera.y;rect(x,y,2,10,"#e5d29c");ellipse(x,y-2,5,4,"#f0d88c")}}
-  function render(){ctx.clearRect(0,0,W,H);drawGround();drawTreePatch();drawDecor();buildings.forEach(drawHouse);npcs.forEach(n=>drawPixelPerson(n));for(const p of others.values())drawPixelPerson(p);drawPixelPerson(player,true);
+  function drawDecor(){}
+  function render(){
+    ctx.clearRect(0,0,W,H);
+    drawGround();
+    buildings.forEach(drawHouse);
+    npcs.forEach(n=>drawPixelPerson(n));
+    for(const p of others.values())drawPixelPerson(p);
+    drawPixelPerson(player,true);
   }
   function update(dt){if(!started||!$("creation-panel").classList.contains("hidden"))return;let dx=0,dy=0;if(keys.has("w")||keys.has("arrowup"))dy--;if(keys.has("s")||keys.has("arrowdown"))dy++;if(keys.has("a")||keys.has("arrowleft"))dx--;if(keys.has("d")||keys.has("arrowright"))dx++;if(dx||dy){const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=player.x+dx*player.speed*dt,ny=player.y+dy*player.speed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";const now=performance.now();if(socket&&socket.connected&&now-lastMoveSent>80){lastMoveSent=now;socket.emit("player:move",{x:player.x,y:player.y,dir:player.dir})}}camera.x=Math.max(0,Math.min(worldW-W,player.x-W/2));camera.y=Math.max(0,Math.min(worldH-H,player.y-H/2))}
   function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
