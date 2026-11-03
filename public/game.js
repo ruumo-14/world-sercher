@@ -61,27 +61,33 @@
     ellipse(1600-camera.x,1320-camera.y,250,205,"#a78e68");ellipse(1600-camera.x,1320-camera.y,230,185,"#c5b58b");
     path([[1600,1320],[1600,500]],"#8c795e",112);path([[1600,1320],[1600,500]],"#d0bd91",96);path([[1600,1320],[2600,1320]],"#8c795e",112);path([[1600,1320],[2600,1320]],"#d0bd91",96);path([[1600,1320],[1600,2350]],"#8c795e",112);path([[1600,1320],[1600,2350]],"#d0bd91",96);path([[1600,1320],[650,1320]],"#8c795e",112);path([[1600,1320],[650,1320]],"#d0bd91",96);
     // plaza fountain
-    ellipse(1600-camera.x,1320-camera.y,66,48,"#857b62");ellipse(1600-camera.x,1314-camera.y,58,40,"#5d9da5");ellipse(1600-camera.x,1307-camera.y,34,21,"#8ac9c2");rect(1591-camera.x,1265-camera.y,18,42,"#d4c49a");ellipse(1600-camera.x,1265-camera.y,12,7,"#e6d6ad");
+    if(atlasReady){ctx.drawImage(spriteAtlas,352,0,64,64,1550-camera.x,1260-camera.y,100,100)}else{ellipse(1600-camera.x,1320-camera.y,66,48,"#857b62");ellipse(1600-camera.x,1314-camera.y,58,40,"#5d9da5");ellipse(1600-camera.x,1307-camera.y,34,21,"#8ac9c2");rect(1591-camera.x,1265-camera.y,18,42,"#d4c49a");ellipse(1600-camera.x,1265-camera.y,12,7,"#e6d6ad");}
     // farm plots
     for(let i=0;i<5;i++){rect(1900-camera.x+i*48,2110-camera.y,40,100,"#8d7048");for(let j=0;j<4;j++){rect(1905-camera.x+i*48,2120-camera.y+j*22,30,4,"#557a3e");rect(1915-camera.x+i*48,2116-camera.y+j*22,5,8,"#80a954")}}
   }
-  function drawTree(x,y,seed=0){const sx=x-camera.x,sy=y-camera.y;ellipse(sx,sy+17,22,8,"#476b3d");rect(sx-6,sy-12,12,35,"#795137");rect(sx-3,sy-10,4,27,"#a9784d");ellipse(sx,sy-28,28,24,"#356b43");ellipse(sx-17,sy-16,19,18,"#447e4a");ellipse(sx+17,sy-16,18,18,"#4d894c");ellipse(sx-8,sy-39,13,10,"#79a95b");ellipse(sx+13,sy-32,12,9,"#6b9d55");rect(sx-15,sy-22,8,4,"#80b366")}
-  function drawHouse(b){const x=b.x-camera.x,y=b.y-camera.y,w=b.w,h=b.h;if(x<-250||y<-220||x>W+250||y>H+220)return;
+  function drawTree(x,y,seed=0){const sx=Math.round(x-camera.x),sy=Math.round(y-camera.y);if(sx<-70||sy<-90||sx>W+70||sy>H+90)return;if(atlasReady){ctx.drawImage(spriteAtlas,128,0,48,64,sx-30,sy-62,60,80);return;}ellipse(sx,sy+17,22,8,"#476b3d");rect(sx-6,sy-12,12,35,"#795137");ellipse(sx,sy-28,28,24,"#356b43");}
+  function drawHouse(b){const x=Math.round(b.x-camera.x),y=Math.round(b.y-camera.y),w=b.w,h=b.h;if(x<-250||y<-220||x>W+250||y>H+220)return;
+    if(atlasReady){let sx=176,sy=0,sw=80,sh=80;
+      if(b.type==="guild"){sx=256;sy=0;sw=96;sh=80}
+      else if(b.type==="forge"){sx=240;sy=80;sw=64;sh=64}
+      else if(b.type==="market"){sx=160;sy=80;sw=64;sh=64}
+      else if(b.type==="inn"){sx=320;sy=80;sw=64;sh=64}
+      else if(b.type==="bank"){sx=176;sy=160;sw=50;sh=52}
+      else if(b.type==="farm"){sx=176;sy=0;sw=80;sh=80}
+      ctx.drawImage(spriteAtlas,sx,sy,sw,sh,x-10,y-12,w+20,h+30);
+      ctx.fillStyle="#fff1cf";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.strokeStyle="#493a2b";ctx.lineWidth=3;ctx.strokeText(b.name,x+w/2,y-8);ctx.fillText(b.name,x+w/2,y-8);return;
+    }
     ellipse(x+w/2,y+h+8,w*.62,13,"#476b43");rect(x+8,y+36,w-16,h-36,"#69503d");rect(x+12,y+33,w-24,h-38,b.color);rect(x+20,y+44,w-40,h-55,"#d5bd91");
-    // timber beams, stone foundation and gabled roof
-    rect(x+8,y+h-16,w-16,13,"#87745a");for(let k=0;k<4;k++)rect(x+18+k*(w-36)/3,y+43,6,h-61,"#765039");rect(x+16,y+75,w-32,5,"#765039");
-    ctx.beginPath();ctx.moveTo(x-13,y+48);ctx.lineTo(x+w/2,y-20);ctx.lineTo(x+w+13,y+48);ctx.closePath();ctx.fillStyle="#704438";ctx.fill();ctx.strokeStyle="#49362f";ctx.lineWidth=5;ctx.stroke();
-    ctx.beginPath();ctx.moveTo(x+12,y+43);ctx.lineTo(x+w/2,y-10);ctx.lineTo(x+w-12,y+43);ctx.closePath();ctx.fillStyle="#9b5b45";ctx.fill();
-    for(const wx of [x+24,x+w-52]){rect(wx,y+76,28,32,"#654535");rect(wx+4,y+80,20,24,"#8db9b2");rect(wx+13,y+80,3,24,"#e1c995");rect(wx+4,y+90,20,3,"#e1c995")}
-    rect(x+w/2-15,y+h-58,30,43,"#604231");rect(x+w/2-10,y+h-53,20,38,"#956342");rect(x+w/2+5,y+h-34,3,3,"#e8c87d");
-    rect(x+w/2-42,y-35,84,19,"#384c38");ctx.fillStyle="#fff0ce";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.fillText(b.name,x+w/2,y-21);
-    if(b.type==="guild"){rect(x+w/2-20,y-3,40,13,"#d8c17e");rect(x+w/2-4,y-8,8,22,"#f4e5b6")}
-    if(b.type==="forge"){ellipse(x+w-25,y+h-30,9,9,"#ed9955");}
+    rect(x+8,y+h-16,w-16,13,"#87745a");ctx.beginPath();ctx.moveTo(x-13,y+48);ctx.lineTo(x+w/2,y-20);ctx.lineTo(x+w+13,y+48);ctx.closePath();ctx.fillStyle="#9b5b45";ctx.fill();
+    for(const wx of [x+24,x+w-52]){rect(wx,y+76,28,32,"#654535");rect(wx+4,y+80,20,24,"#8db9b2")}
+    rect(x+w/2-15,y+h-58,30,43,"#604231");ctx.fillStyle="#fff0ce";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.fillText(b.name,x+w/2,y-21);
   }
   function drawTreePatch(){for(let i=0;i<70;i++){const x=250+(i*173)%2550,y=260+(i*293)%2050;if(x>1050&&x<2250&&y>700&&y<2050)continue;if(Math.hypot(x-water.x,y-water.y)<350)continue;drawTree(x,y,i)}}
-  function drawPixelPerson(p,isPlayer=false){const x=Math.round(p.x-camera.x),y=Math.round(p.y-camera.y);if(x<-35||y<-50||x>W+35||y>H+35)return;const coat=isPlayer?player.outfit:p.color,hair=isPlayer?(player.hair==="金髪"?"#d6b65e":player.hair==="黒髪"?"#302b2b":"#704a35"):p.hair;
-    ellipse(x,y+12,13,5,"#3d603d");rect(x-7,y+3,5,7,"#58483d");rect(x+2,y+3,5,7,"#58483d");rect(x-9,y-8,18,14,"#263f4c");rect(x-8,y-9,16,12,coat);rect(x-4,y-7,8,11,"#e4c68d");
-    rect(x-7,y-23,14,14,isPlayer&&player.skin==="褐色肌"?"#b87953":isPlayer&&player.skin==="色白"?"#f0d3b2":"#dfb58e");rect(x-8,y-25,16,6,hair);rect(x-9,y-21,4,8,hair);rect(x+5,y-21,4,7,hair);rect(x-4,y-18,2,2,"#44352e");rect(x+3,y-18,2,2,"#44352e");rect(x-7,y+1,5,3,"#e0c08c");if(isPlayer&&player.accessory==="帽子")rect(x-11,y-29,22,5,"#b68c4f");
+  function drawPixelPerson(p,isPlayer=false){const x=Math.round(p.x-camera.x),y=Math.round(p.y-camera.y);if(x<-40||y<-65||x>W+40||y>H+45)return;
+    if(atlasReady){ctx.save();if(!isPlayer)ctx.filter="hue-rotate("+(p.id*31%360)+"deg)";const sx=isPlayer?416:448;ctx.drawImage(spriteAtlas,sx,0,32,48,x-18,y-47,36,54);ctx.restore();
+      if(isPlayer){ctx.fillStyle="#fff3d5";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText(player.name,x,y-53)}return;}
+    const coat=isPlayer?player.outfit:p.color,hair=isPlayer?(player.hair==="金髪"?"#d6b65e":player.hair==="黒髪"?"#302b2b":"#704a35"):p.hair;
+    ellipse(x,y+12,13,5,"#3d603d");rect(x-9,y-8,18,14,coat);rect(x-7,y-23,14,14,"#dfb58e");rect(x-8,y-25,16,6,hair);
     if(isPlayer){ctx.fillStyle="#fff3d5";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText(player.name,x,y-34)}
   }
   function drawDecor(){for(let i=0;i<20;i++){const x=900+(i*97)%1100,y=800+(i*139)%1000;ellipse(x-camera.x,y-camera.y,5,3,["#d9c17a","#e2a0a3","#c8d49a"][i%3])}for(let i=0;i<8;i++){const x=1460+i*40-camera.x,y=1280-camera.y;rect(x,y,2,10,"#e5d29c");ellipse(x,y-2,5,4,"#f0d88c")}}
