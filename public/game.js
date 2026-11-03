@@ -157,43 +157,25 @@
   const TILE=32, DEPTH=.68;
   function project(wx,wy){return{x:Math.round(W/2+(wx-camera.x)),y:Math.round(H/2+(wy-camera.y)*DEPTH)};}
   function poly(points,fill,stroke="#29202a",line=2){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}}
-  // World-anchored ground tiles: tile coordinates never depend on screen position.
-  function tile(wx,wy,fill){
-    const p=project(wx,wy),g=ctx.createLinearGradient(p.x,p.y-12,p.x,p.y+12);
-    g.addColorStop(0,"#ffffff12");g.addColorStop(.55,fill);g.addColorStop(1,"#14271822");
-    ctx.fillStyle=g;ctx.fillRect(p.x-16,p.y-12,32,24);
-  }
-  // Disable the former random one-pixel speckles that caused visual noise.
+  // Smooth world-anchored grass without tile seams or random speckles.
+  function tile(wx,wy,fill){const p=project(wx,wy);ellipse(p.x,p.y,19,13,fill);}
   function specks(){}
   function drawGround(){
-    rect(0,0,W,H,"#31563a");
-    const gx0=Math.floor((camera.x-W/2)/TILE)*TILE;
-    const gx1=camera.x+W/2+TILE;
-    const gy0=Math.floor((camera.y-H/(2*DEPTH))/TILE)*TILE;
-    const gy1=camera.y+H/(2*DEPTH)+TILE;
+    rect(0,0,W,H,"#477b46");
+    const gx0=Math.floor((camera.x-W/2-64)/TILE)*TILE,gx1=camera.x+W/2+64;
+    const gy0=Math.floor((camera.y-H/(2*DEPTH)-64)/TILE)*TILE,gy1=camera.y+H/(2*DEPTH)+64;
     for(let wy=gy0;wy<=gy1;wy+=TILE)for(let wx=gx0;wx<=gx1;wx+=TILE){
-      const p=project(wx,wy);
-      const v=hash(Math.floor(wx/TILE),Math.floor(wy/TILE));
-      const base=v>.82?"#5b8c4c":v>.38?"#4a7b43":"#3d6e3c";
-      tile(wx,wy,base);
-      // Broad, restrained grass blades and occasional flower clusters.
-      if(v>.91){ellipse(p.x-5,p.y+1,2,4,"#86a95c");ellipse(p.x+4,p.y-2,2,3,"#a6b86a");}
-      if(v>.975){ellipse(p.x+2,p.y+2,2,2,"#e8d18b");}
+      const p=project(wx,wy),v=hash(Math.floor(wx/TILE),Math.floor(wy/TILE));
+      ellipse(p.x,p.y,22,15,v>.72?"#56864b":v>.35?"#4e8047":"#477842");
+      if(v>.91){ellipse(p.x-6,p.y+1,5,3,"#679451");ellipse(p.x+7,p.y-3,4,3,"#679451");}
     }
-    // River runs vertically along the western side, with pixel ripples and sandy banks.
-    for(let y=650;y<2200;y+=24){const bend=390+Math.sin(y/150)*65;for(let x=bend-80;x<=bend+80;x+=32){const p=project(x,y),g=ctx.createLinearGradient(p.x,p.y-11,p.x,p.y+11);g.addColorStop(0,"#5599ad");g.addColorStop(.55,"#347c9e");g.addColorStop(1,"#286581");ctx.fillStyle=g;ctx.fillRect(p.x-16,p.y-11,32,22);}}
-    for(let y=650;y<2200;y+=32){const bend=390+Math.sin(y/150)*65;for(const x of [bend-100,bend+100]){const p=project(x,y);rect(p.x-16,p.y-12,32,24,"#b69b6b");rect(p.x-16,p.y-12,32,2,"#d4bd88");rect(p.x-16,p.y+10,32,2,"#8f805d");}}
-    // Broad north-south and east-west cobblestone roads.
-    const road=(x1,y1,x2,y2,width,color)=>{const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/24);for(let i=0;i<=n;i++){const t=i/n,cx=x1+(x2-x1)*t,cy=y1+(y2-y1)*t;for(let o=-width/2;o<=width/2;o+=32){const p=project(cx+(x2===x1?o:0),cy+(y2===y1?o:0));rect(p.x-16,p.y-12,32,24,color);rect(p.x-10,p.y-7,12,2,"#d7c9a6");rect(p.x+5,p.y+3,7,2,"#83775f");}}};
+    for(let y=650;y<2200;y+=24){const bend=390+Math.sin(y/150)*65;for(let x=bend-80;x<=bend+80;x+=32){const p=project(x,y);ellipse(p.x,p.y,19,14,"#347c9e");}}
+    for(let y=650;y<2200;y+=32){const bend=390+Math.sin(y/150)*65;for(const x of [bend-100,bend+100]){const p=project(x,y);ellipse(p.x,p.y,19,14,"#b69b6b");}}
+    const road=(x1,y1,x2,y2,width,color)=>{const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/24);for(let i=0;i<=n;i++){const t=i/n,cx=x1+(x2-x1)*t,cy=y1+(y2-y1)*t;for(let o=-width/2;o<=width/2;o+=32){const p=project(cx+(x2===x1?o:0),cy+(y2===y1?o:0));ellipse(p.x,p.y,19,14,color);}}};
     road(1600,500,1600,2300,96,"#a99b7c");road(650,1320,2600,1320,96,"#a99b7c");
     road(1600,1320,1100,900,48,"#927c5b");road(1600,1320,2050,900,48,"#927c5b");road(1600,1320,2050,1800,48,"#927c5b");
-    for(let y=1192;y<=1448;y+=32)for(let x=1472;x<=1728;x+=32){
-      const p=project(x,y),tone=((x/32+y/32)%2===0)?"#c9bd9b":"#b4a787";
-      rect(p.x-16,p.y-12,32,24,tone);
-      rect(p.x-16,p.y-12,32,1,"#e5dbc0");rect(p.x-16,p.y+11,32,1,"#81775f");
-      rect(p.x-16,p.y-12,1,24,"#81775f");
-    }
-    for(let y=2048;y<2240;y+=32)for(let x=1840;x<2160;x+=32){const p=project(x,y);rect(p.x-16,p.y-12,32,24,"#82613d");rect(p.x-7,p.y-5,15,4,"#5d873e");rect(p.x+3,p.y-8,4,3,"#a4b75d");}
+    for(let y=1192;y<=1448;y+=32)for(let x=1472;x<=1728;x+=32){const p=project(x,y);ellipse(p.x,p.y,19,14,((x/32+y/32)%2===0)?"#c9bd9b":"#b4a787");}
+    for(let y=2048;y<2240;y+=32)for(let x=1840;x<2160;x+=32){const p=project(x,y);ellipse(p.x,p.y,19,14,"#82613d");}
     drawBridge(390,930);drawBridge(430,1260);drawBridge(480,1680);drawBridge(510,1940);
     const f=project(1600,1320);ellipse(f.x,f.y+12,48,13,"#786c58");rect(f.x-37,f.y-25,74,39,"#bcb39a");rect(f.x-31,f.y-20,62,28,"#d1c7a9");rect(f.x-24,f.y-15,48,18,"#347e9d");rect(f.x-4,f.y-35,8,22,"#d7cfb4");rect(f.x-2,f.y-41,4,7,"#f1dc9a");
   }
@@ -226,13 +208,9 @@
     poly([{x:x-w/2-13,y:eaveY},{x:x-3,y:ridgeY},{x:x+w/2+13,y:eaveY},{x:x+w/2+8,y:roofFront},{x:x,y:roofFront+18},{x:x-w/2-8,y:roofFront}], "#392827","#251d20",4);
     poly([{x:x-w/2-9,y:eaveY-2},{x:x-3,y:ridgeY+5},{x:x-1,y:roofFront+5},{x:x-w/2+3,y:roofFront+3}],lit,"#50302a",2);
     poly([{x:x-1,y:ridgeY+5},{x:x+w/2+9,y:eaveY-2},{x:x+w/2+5,y:roofFront+2},{x:x,y:roofFront+18}],roof,"#392725",2);
-    // Continuous roof courses and clean ridge lines, without broken pixel flecks.
-    ctx.save();ctx.strokeStyle="#a85c4d";ctx.lineWidth=3;ctx.lineCap="round";ctx.lineJoin="round";
-    for(let row=0;row<5;row++){
-      const inset=row*3,yy=eaveY-3-row*7;
-      ctx.beginPath();ctx.moveTo(x-w/2+10+inset,yy+18);ctx.lineTo(x-3,yy-48);ctx.lineTo(x+w/2-10-inset,yy+18);ctx.stroke();
-    }
-    ctx.restore();
+    // Solid clean roof planes; remove broken shingle strokes.
+    poly([{x:x-w/2-9,y:eaveY-2},{x:x-3,y:ridgeY+5},{x:x-1,y:roofFront+5},{x:x-w/2+3,y:roofFront+3}],lit,"#50302a",2);
+    poly([{x:x-1,y:ridgeY+5},{x:x+w/2+9,y:eaveY-2},{x:x+w/2+5,y:roofFront+2},{x:x,y:roofFront+18}],roof,"#392725",2);
     rect(x-w/2-12,roofFront-1,w+24,5,"#4a3029");
     rect(x-w/2-12,roofFront+3,w+24,2,"#b8784f");
     // Warm windows, shutters and centered wooden door.
@@ -243,34 +221,37 @@
     ctx.fillStyle="#fff0ca";ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(b.name,x,y-91);
   }
   function drawPixelPerson(p,isPlayer=false){
-    const q=project(p.x,p.y),x=q.x,y=q.y;if(x<-45||y<-100||x>W+45||y>H+40)return;
-    const coat=isPlayer?player.outfit:p.color,skin=isPlayer?({"明るい肌":"#edc59d","小麦色":"#bd865e","褐色":"#87583f"}[player.skin]||"#edc59d"):"#e8bd91";
-    const hair=isPlayer?({"栗色":"#68412e","金色":"#d4ae4e","黒":"#332c2b","銀色":"#b9b9ae"}[player.hair]||"#68412e"):p.hair;
-    const dir=isPlayer?player.dir:(p.dir||"down"),faceNorth=dir==="up",faceSide=dir.includes("left")||dir.includes("right"),left=dir.includes("left"),ink="#17131a";
-    ellipse(x,y+5,13,5,"#26382b");
-    const px=(rx,ry,rw,rh,c)=>{rect(x+rx-2,y+ry-2,rw+4,rh+4,ink);rect(x+rx,y+ry,rw,rh,c);};
-    // Distinct boots and legs, with small highlights.
-    px(-8,-2,6,9,"#49352b");px(2,-2,6,9,"#49352b");rect(x-7,y+4,4,2,"#b58a55");rect(x+3,y+4,4,2,"#b58a55");
-    // Cloak silhouette behind shoulders.
-    px(-12,-25,24,21,isPlayer?"#31558a":"#76564a");px(-9,-22,18,17,coat);
-    // Sleeves and hands.
-    px(-14,-20,5,12,coat);px(9,-20,5,12,coat);px(-15,-9,5,4,skin);px(10,-9,5,4,skin);
-    // Tunic, seam, belt and buckle.
-    px(-10,-22,20,20,coat);rect(x-7,y-18,3,10,"#f0d8ad");rect(x+4,y-17,2,9,"#344e78");px(-9,-5,18,4,"#d6b66d");px(-2,-6,4,5,"#80502d");
-    // Neck and ears.
-    px(-4,-29,8,6,skin);px(-10,-47,20,19,skin);px(-13,-41,4,8,skin);px(9,-41,4,8,skin);
-    // Face direction changes with movement.
-    if(faceNorth){rect(x-6,y-43,12,4,hair);rect(x-8,y-39,16,8,hair);rect(x-6,y-35,4,2,"#b98b60");}
-    else if(faceSide){rect(x+(left?-8:3),y-39,5,4,"#28232b");rect(x+(left?-10:5),y-33,3,3,"#d98c7d");}
-    else{rect(x-6,y-39,3,4,"#f4e2bd");rect(x+4,y-39,3,4,"#f4e2bd");rect(x-5,y-38,2,3,"#314d82");rect(x+5,y-38,2,3,"#314d82");rect(x-7,y-32,3,2,"#d98c7d");rect(x+5,y-32,3,2,"#d98c7d");rect(x-1,y-29,3,2,"#a45f50");}
-    // Hair silhouette and separate locks.
-    px(-11,-51,22,7,hair);px(-13,-46,5,12,hair);px(8,-46,5,10,hair);px(-9,-57,9,8,hair);px(-2,-60,10,9,hair);px(5,-55,9,7,hair);
-    rect(x-7,y-51,4,3,"#a77a52");rect(x+2,y-54,4,3,"#b88b5b");
-    if(isPlayer&&player.species==="エルフ"){poly([{x:x-12,y:y-41},{x:x-24,y:y-47},{x:x-12,y:y-34}],skin,ink,2);poly([{x:x+12,y:y-41},{x:x+24,y:y-47},{x:x+12,y:y-34}],skin,ink,2);}
-    if(isPlayer&&player.species==="竜人"){px(-10,-57,6,8,"#a45f49");px(5,-57,6,8,"#a45f49");}
-    if(isPlayer&&player.species==="獣人"){px(-15,-43,6,9,hair);px(9,-43,6,9,hair);}
-    if(isPlayer){rect(x-11,y-66,22,5,"#e3c16c");rect(x-5,y-65,10,2,"#fff0b8");}
-    ctx.fillStyle="#fff4d8";ctx.font=isPlayer?"11px 'Noto Sans JP',sans-serif":"10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(isPlayer?player.name:p.name,x,y-72);
+    const q=project(p.x,p.y),x=q.x,y=q.y;
+    if(x<-50||y<-110||x>W+50||y>H+45)return;
+    const ink="#211923",female=!isPlayer&&[0,2,8,14,16,18,19,21,23,26,31,32].includes(p.id);
+    const skin=isPlayer?"#f0c9a2":"#edc39b",hair=isPlayer?"#493126":(female?"#e5bd58":(p.hair||"#60412f"));
+    const coat=isPlayer?"#713aa0":(female?"#3267a5":p.color);
+    const px=(rx,ry,rw,rh,color)=>{rect(x+rx-2,y+ry-2,rw+4,rh+4,ink);rect(x+rx,y+ry,rw,rh,color);};
+    ellipse(x,y+7,14,5,"#30452f");
+    px(-9,-1,6,10,"#49352f");px(3,-1,6,10,"#49352f");
+    rect(x-9,y+6,7,3,"#d1a66c");rect(x+3,y+6,7,3,"#d1a66c");
+    px(-13,-27,26,23,isPlayer?"#552c82":coat);
+    if(female){px(-11,-25,22,24,"#3267a5");px(-13,-22,4,12,"#274f88");px(9,-22,4,12,"#274f88");}
+    else{px(-11,-25,22,22,coat);px(-14,-21,5,13,coat);px(9,-21,5,13,coat);}
+    if(isPlayer){rect(x-9,y-19,18,2,"#e8c56d");rect(x-2,y-15,4,9,"#e8c56d");rect(x-9,y-7,18,2,"#d8b45d");}
+    else if(female){rect(x-2,y-18,4,16,"#d9c27c");rect(x-8,y-7,16,2,"#e4c77c");}
+    else{rect(x-8,y-8,16,3,"#c5a35e");rect(x-2,y-8,4,4,"#f0d48a");}
+    px(-4,-32,8,6,skin);px(-10,-50,20,20,skin);px(-12,-43,3,7,skin);px(9,-43,3,7,skin);
+    if(p.dir==="up"&&!isPlayer){rect(x-9,y-49,18,12,hair);}
+    else{rect(x-6,y-42,3,4,"#fff0d2");rect(x+4,y-42,3,4,"#fff0d2");rect(x-5,y-41,2,3,"#38527a");rect(x+5,y-41,2,3,"#38527a");rect(x-1,y-33,3,2,"#a95e54");}
+    if(isPlayer){
+      // Original young adventurer: blue wrapped turban, purple cloak and tunic.
+      px(-12,-56,24,8,"#244f9c");px(-10,-61,20,7,"#326ac0");
+      rect(x-9,y-55,18,2,"#79a6e4");rect(x-5,y-60,13,2,"#8bb5ed");
+      px(7,-59,7,8,"#244f9c");rect(x+8,y-54,4,2,"#e6c46d");
+      rect(x-8,y-27,4,19,"#8e5ac0");rect(x+5,y-27,4,19,"#8e5ac0");
+      rect(x-11,y-65,22,3,"#1c3e7e");rect(x-3,y-63,7,2,"#e9c56b");
+    }else if(female){
+      // Blonde twin braids and a blue fantasy dress.
+      px(-12,-55,24,8,"#e5bd58");px(-14,-48,5,15,"#d9a844");px(9,-48,5,15,"#d9a844");
+      for(let i=0;i<3;i++){rect(x-15,y-39+i*5,5,4,i%2?"#f0d16d":"#c99438");rect(x+10,y-39+i*5,5,4,i%2?"#f0d16d":"#c99438");}
+      rect(x-13,y-24,3,3,"#f4dc87");rect(x+10,y-24,3,3,"#f4dc87");
+    }else{px(-12,-56,24,8,hair);px(-14,-49,5,12,hair);px(9,-49,5,11,hair);rect(x-8,y-57,7,3,"#9b704b");rect(x+2,y-58,7,3,"#9b704b");}
   }
   function render(){
     ctx.clearRect(0,0,W,H);if(battle){drawBattle();return;}drawGround();
