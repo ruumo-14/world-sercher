@@ -231,5 +231,17 @@
   function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
   document.querySelectorAll(".panel-tab").forEach(b=>b.addEventListener("click",()=>{}));
   $("open-adventurer").addEventListener("click",()=>{$("adventurer-panel").classList.remove("hidden")});$("close-adventurer").addEventListener("click",()=>$("adventurer-panel").classList.add("hidden"));
+
+  $("battle-attack").addEventListener("click",battleAttack);
+  $("battle-magic").addEventListener("click",battleMagic);
+  $("battle-item").addEventListener("click",battleItem);
+  const defendButton=$("battle-defend");
+  defendButton.addEventListener("pointerdown",e=>{e.preventDefault();keys.add("x")});
+  ["pointerup","pointercancel","pointerleave"].forEach(t=>defendButton.addEventListener(t,()=>keys.delete("x")));
+  document.querySelectorAll("[data-battle-key]").forEach(button=>{
+    const key=button.dataset.battleKey;
+    button.addEventListener("pointerdown",e=>{e.preventDefault();keys.add(key)});
+    ["pointerup","pointercancel","pointerleave"].forEach(t=>button.addEventListener(t,()=>keys.delete(key)));
+  });
   requestAnimationFrame(loop);
 })();
