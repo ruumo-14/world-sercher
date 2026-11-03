@@ -51,3 +51,22 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;image-rendering:aut
 .hud-right{display:flex;align-items:center;gap:8px;pointer-events:auto}
 #logout-button{border:1px solid #78916b;border-radius:6px;padding:7px 10px;background:#102019d9;color:#fff4df;font:12px 'Noto Sans JP',sans-serif;cursor:pointer}
 @media(max-width:650px){.auth-card{padding:16px 18px}.auth-card .intro{margin-bottom:12px}.auth-card .small-note{font-size:9px}}
+
+#open-adventurer{border:1px solid #d2b777;border-radius:6px;padding:7px 10px;background:#d5ad5f;color:#263323;font:700 12px 'Noto Sans JP',sans-serif;cursor:pointer}
+.adventurer-panel{position:absolute;z-index:5;inset:12px;overflow:auto;padding:18px;background:#14251ff2;border:2px solid #b89d5d;border-radius:12px;box-shadow:0 10px 35px #000a}
+.adventurer-panel.hidden{display:none}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.panel-head h2{font-size:20px;margin:0}
+.panel-close,.panel-tab,.panel-action{border:1px solid #71866c;border-radius:6px;background:#294334;color:#f4f1df;padding:8px 12px;font:12px 'Noto Sans JP',sans-serif;cursor:pointer}
+.panel-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
+.panel-tab.active{background:#e4c47c;color:#263323;border-color:#f4d995}
+.panel-content{font-size:13px;line-height:1.7;color:#e7efdf}
+.panel-content h3{margin:8px 0;color:#f4d58c}
+.panel-content .stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.panel-content .stat{padding:10px;background:#20382b;border:1px solid #456151;border-radius:7px}
+.panel-content .stat strong{display:block;font-size:18px;color:#f4d58c}
+.panel-content .action-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #3b5545}
+.panel-content select{max-width:100%;padding:8px;background:#14231c;color:white;border:1px solid #617b64;border-radius:6px}
+.panel-content .muted{color:#a9bdb0;font-size:11px}
+.panel-message{min-height:18px;color:#f4d58c;font-size:12px;margin:8px 0 0}
+@media(max-width:650px){.adventurer-panel{inset:5px;padding:12px}.panel-content .stat-grid{grid-template-columns:1fr 1fr}.panel-head h2{font-size:17px}#open-adventurer{font-size:10px;padding:6px}}
