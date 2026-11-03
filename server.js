@@ -64,6 +64,8 @@ async function initializeDatabase(){
  if(!pool){console.warn("DATABASE_URL is not set. Account features are disabled.");return;}
  await pool.query("CREATE TABLE IF NOT EXISTS game_users(id BIGSERIAL PRIMARY KEY,username VARCHAR(16) NOT NULL,username_lower VARCHAR(16) NOT NULL UNIQUE,password_hash TEXT NOT NULL,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
  await pool.query("CREATE TABLE IF NOT EXISTS game_saves(user_id BIGINT PRIMARY KEY REFERENCES game_users(id) ON DELETE CASCADE,character_name VARCHAR(12) NOT NULL DEFAULT '冒険者',x DOUBLE PRECISION NOT NULL DEFAULT 1600,y DOUBLE PRECISION NOT NULL DEFAULT 1370,level INTEGER NOT NULL DEFAULT 1,gold INTEGER NOT NULL DEFAULT 0,game_data JSONB NOT NULL DEFAULT '{}'::jsonb,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+ // Upgrade older installations too: CREATE TABLE IF NOT EXISTS does not add columns to an existing table.
+ await pool.query("ALTER TABLE game_saves ADD COLUMN IF NOT EXISTS game_data JSONB NOT NULL DEFAULT '{}'::jsonb");
  console.log("Account database is ready.");
 }
 io.use(async(socket,next)=>{
