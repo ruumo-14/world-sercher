@@ -260,6 +260,7 @@
     ctx.clearRect(0,0,W,H);
     if(battle){drawBattle();return;}
     drawGround();
+    drawTreePatch();
     buildings.forEach(drawHouse);
     npcs.forEach(n=>drawPixelPerson(n));
     fieldEnemies.filter(e=>e.alive).forEach(e=>{const x=e.x-camera.x,y=e.y-camera.y;ellipse(x,y+7,e.boss?19:13,e.boss?7:5,"#3d4b37");ellipse(x,y-5,e.boss?17:12,e.boss?18:12,e.color);if(e.boss){rect(x-12,y-25,24,8,"#806044");}else{ellipse(x-4,y-8,2,3,"#26313a");ellipse(x+4,y-8,2,3,"#26313a");}ctx.fillStyle="#fff";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText(e.name,x,y-25);});
