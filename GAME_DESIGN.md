@@ -117,3 +117,10 @@ Initial 12 jobs:
 - Implemented as a read-only prototype: an adventurer panel showing some agreed species/job/skill/equipment/world rules.
 - Not yet implemented as playable systems: job-guild location checks and daily job changes, real XP awards from actions, skill-book learning and training, equipment/material inventory and enhancement, appearance services, species rebirth, full NPC schedules/stories/affinity, home interactions, trading/auction, rankings, complete world/region streaming, combat, quests, and minigames.
 - The redesigned Riefel is a visual/gameplay prototype, not the final world map. Villagers currently have fixed positions and simple proximity dialogue; their daily schedules, inter-NPC routines, individual stories, affinity, and quest chains are not yet playable. The player sprite uses procedural pixel shapes and the appearance choices are saved, but species-specific sprite anatomy, full eight-direction animation frames, detailed sprite sheets, and bespoke illustrated assets are future work.
+
+
+## Original pixel-art asset integration (2026-11-03)
+- Added `public/assets/riefel-atlas.svg`, a hand-authored original pixel-art atlas for grass, cobblestone, flower patches, river tile, trees, cottage, guild hall, fountain, player/NPC sprites, bridge, market stall, forge, inn, furniture, and two original creature concepts.
+- The Riefel canvas now loads the atlas and uses its building, tree, fountain, player, and NPC sprites when available; procedural fallbacks remain if the asset fails to load.
+- The sprite atlas is designed around a medium-sized character scale and crisp pixel rendering. It is original artwork, not extracted from Dragon Quest or another game.
+- This is an initial asset integration, not a complete final art pack. It does not yet provide full 8-direction animation frames, all seven species-specific bodies, every facility as a unique sprite, interiors, or a complete monster roster. These should be added as separate original assets in later passes.
