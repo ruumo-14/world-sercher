@@ -140,26 +140,23 @@
 
   function renderStatus() {
     const job=data.activeJob || "未選択";
-    const home=data.home || {};
-    return section("キャラクター",[
-      row("種族",data.species,"全7種族。能力差は小さく、全職業・全地域を利用可能"),
-      row("プレイヤーレベル",data.level+" / "+CAPS.player,"経験値 "+data.playerXp+" / "+xpNeed(data.level)),
-      row("現在の職業",job),
-      row("所持通貨",data.gold+" GOLD","全世界共通通貨"),
-      row("自宅",home.owned ? (home.town||"リーフェル")+"の自宅":"未取得","家具・収納・生産設備は今後実装")
-    ].join(""))+
-    section("成長システム",[
-      row("プレイヤーレベル上限","Lv."+CAPS.player,"討伐・クエスト中心。探索・採集・生産でも少量獲得"),
-      row("職業レベル上限","Lv."+CAPS.job,"職業ごとに経験値を個別保存"),
-      row("スキル上限","Lv."+CAPS.skill,"職業別スキルと全職業共通スキル"),
-      row("装備強化上限","+"+CAPS.enhancement,"装備品1個ずつ個別に強化")
-    ].join(""))+
-    section("キャラクター外見",[
-      row("髪型・髪色",data.appearance.hairstyle+" / "+data.appearance.hairColor),
-      row("肌・目",data.appearance.skinColor+" / "+data.appearance.eyeColor),
-      row("顔・服装",data.appearance.face+" / "+data.appearance.outfit),
-      empty("外見変更は理髪店・仕立て屋などの専用施設で行う予定。装備を変えても見た目の衣装は変化しません。")
-    ].join(""));
+    const activeSkills=JOB_SKILLS[job]||[];
+    const jobRec=jobRecord(job);
+    const xp=xpNeed(data.level);
+    const jobXp=xpNeed(jobRec.level);
+    const pct=Math.min(100,Math.round(data.playerXp/xp*100));
+    const jpct=Math.min(100,Math.round((Number(jobRec.xp)||0)/jobXp*100));
+    const gear=data.equipment.length?data.equipment.slice(0,6).map((item,i)=>typeof item==="string"?item:(item.name||"装備"+(i+1))):["武器","頭防具","胴防具","盾","脚防具","靴"];
+    const skills=activeSkills.slice(0,3).map(name=>'<div class="dash-skill"><span class="dash-skill-icon">✦</span><div><b>'+esc(name)+'</b><small>能力を高める職業スキル</small></div><strong>Lv. '+skillLevel(data.jobSkills[job],name)+' / 10</strong></div>').join("");
+    const common=COMMON_SKILLS.slice(0,2).map(name=>'<div class="dash-skill"><span class="dash-skill-icon common">✧</span><div><b>'+esc(name)+'</b><small>全職業で使える共通スキル</small></div><strong>Lv. '+skillLevel(data.commonSkills,name)+' / 10</strong></div>').join("");
+    return '<div class="adventure-dashboard">'+
+      '<section class="dash-card dash-profile"><div class="dash-card-title"><span>✦</span> ステータス</div><div class="dash-profile-body"><div class="dash-portrait"><div class="portrait-cape"></div><div class="portrait-hair"></div><div class="portrait-face"><i></i><i></i></div><div class="portrait-body"></div><div class="portrait-belt"></div><div class="portrait-boots"></div></div><div class="dash-profile-info"><h3>'+esc(window.worldPlayerName||"冒険者")+'</h3><p>種族：'+esc(data.species)+'</p><strong>Lv. '+data.level+'</strong><div class="dash-bar"><i style="width:'+pct+'%"></i></div><small>EXP '+(Number(data.playerXp)||0)+' / '+xp+'</small><div class="dash-vital">HP <b>320 / 320</b></div><div class="dash-bar hp"><i style="width:100%"></i></div><div class="dash-vital">MP <b>120 / 120</b></div><div class="dash-bar mp"><i style="width:100%"></i></div></div></div></section>'+
+      '<section class="dash-card dash-job"><div class="dash-card-title"><span>⚒</span> 職業</div><div class="dash-job-main"><div class="dash-job-icon">⚔</div><div><h3>'+esc(job)+'</h3><strong>Lv. '+jobRec.level+'</strong></div><button type="button" class="dash-disabled" disabled>職業変更<br>(1日1回)</button></div><div class="dash-bar job"><i style="width:'+jpct+'%"></i></div><p class="dash-exp">EXP '+(Number(jobRec.xp)||0)+' / '+jobXp+'</p><p>職業の経験を積んで、専門能力を高めよう。</p></section>'+
+      '<section class="dash-card dash-equipment"><div class="dash-card-title"><span>🛡</span> 装備</div><div class="dash-gear-layout"><div class="dash-gear-grid">'+gear.map((name,i)=>'<div class="dash-gear-slot"><span>'+["⚔","⛑","🦺","🛡","👖","🥾"][i]+'</span><small>'+esc(name)+'</small></div>').join("")+'</div><div class="dash-gear-detail"><b>装備一覧</b><p>装備品は個別に所持・強化します。</p><small>強化上限 +'+CAPS.enhancement+'</small><button type="button" class="dash-action" data-dash-tab="equipment">装備を見る</button></div></div></section>'+
+      '<section class="dash-card dash-skills"><div class="dash-card-title"><span>✧</span> スキル</div><h4>職業スキル（'+esc(job)+'）</h4>'+(skills||empty("職業を選ぶとスキルが表示されます。"))+'<h4>共通スキル</h4>'+common+'</section>'+
+      '<div class="dash-tip">ⓘ 各メニューで、キャラクターの成長や装備の確認ができます。</div>'+
+      '<div class="dash-wallet">🪙 '+(Number(data.gold)||0).toLocaleString("ja-JP")+' G</div>'+
+      '</div>';
   }
 
   function renderJobs() {
