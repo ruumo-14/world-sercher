@@ -47,6 +47,18 @@ app.post("/api/save",requireDatabase,async(req,res)=>{
  try{await pool.query("UPDATE game_saves SET character_name=$1,x=$2,y=$3,updated_at=NOW() WHERE user_id=$4",[cleanName(req.body.name),Math.max(12,Math.min(WORLD.width-12,x)),Math.max(12,Math.min(WORLD.height-12,y)),req.session.userId]);res.json({ok:true});}
  catch(err){console.error("save error",err);res.status(500).json({error:"データを保存できませんでした。"});}
 });
+app.get("/api/game-data",requireDatabase,async(req,res)=>{
+ if(!req.session.userId)return res.status(401).json({error:"ログインが必要です。"});
+ try{const r=await pool.query("SELECT game_data FROM game_saves WHERE user_id=$1",[req.session.userId]);res.json({gameData:r.rows[0]?.game_data||{}});}
+ catch(err){console.error("game data read error",err);res.status(500).json({error:"冒険者データを読み込めませんでした。"});}
+});
+app.post("/api/game-data",requireDatabase,async(req,res)=>{
+ if(!req.session.userId)return res.status(401).json({error:"ログインが必要です。"});
+ const data=req.body&&req.body.gameData;
+ if(!data||typeof data!=="object"||Array.isArray(data)||Buffer.byteLength(JSON.stringify(data),"utf8")>20000)return res.status(400).json({error:"冒険者データの形式が正しくありません。"});
+ try{await pool.query("UPDATE game_saves SET game_data=$1::jsonb,updated_at=NOW() WHERE user_id=$2",[JSON.stringify(data),req.session.userId]);res.json({ok:true});}
+ catch(err){console.error("game data save error",err);res.status(500).json({error:"冒険者データを保存できませんでした。"});}
+});
 app.post("/api/logout",(req,res)=>req.session.destroy(err=>{if(err)return res.status(500).json({error:"ログアウトできませんでした。"});res.clearCookie("connect.sid",{httpOnly:true,sameSite:"lax",secure:process.env.NODE_ENV==="production"});res.json({ok:true});}));
 async function initializeDatabase(){
  if(!pool){console.warn("DATABASE_URL is not set. Account features are disabled.");return;}
