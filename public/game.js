@@ -152,139 +152,130 @@
   function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
   function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);ctx.fill()}
   function path(points,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0]-camera.x,p[1]-camera.y):ctx.moveTo(p[0]-camera.x,p[1]-camera.y));ctx.stroke()}
-  // Isometric 16-bit JRPG renderer. World coordinates stay orthogonal;
-  // only their presentation is projected into a 2:1 diamond grid.
+  // Isometric hand-crafted pixel-art renderer. Orthogonal world coordinates
+  // are projected to a 2:1 diamond grid; sprites remain crisp pixel art.
   const TILE=32, ISO_X=.50, ISO_Y=.25;
-  function project(wx,wy){
-    const dx=wx-camera.x,dy=wy-camera.y;
-    return {x:Math.round(W/2+(dx-dy)*ISO_X),y:Math.round(H/2+(dx+dy)*ISO_Y)};
-  }
-  function poly(points,fill,stroke="#211a20",line=2){
-    ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
-    ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}
-  }
-  function diamond(wx,wy,fill){
-    const p=project(wx,wy),rx=TILE*ISO_X,ry=TILE*ISO_Y;
-    poly([{x:p.x,y:p.y-ry},{x:p.x+rx,y:p.y},{x:p.x,y:p.y+ry},{x:p.x-rx,y:p.y}],fill,null);
-  }
+  function project(wx,wy){const dx=wx-camera.x,dy=wy-camera.y;return{x:Math.round(W/2+(dx-dy)*ISO_X),y:Math.round(H/2+(dx+dy)*ISO_Y)};}
+  function poly(points,fill,stroke="#29202a",line=2){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}}
+  function diamond(wx,wy,fill,edge=null){const p=project(wx,wy),rx=16,ry=8;poly([{x:p.x,y:p.y-ry},{x:p.x+rx,y:p.y},{x:p.x,y:p.y+ry},{x:p.x-rx,y:p.y}],fill,edge,1);}
+  function speckle(wx,wy,seed,count,palette,spread=25){for(let i=0;i<count;i++){const v=hash(seed,i),u=hash(seed+19,i),q=project(wx+(v-.5)*spread,wy+(u-.5)*spread);rect(q.x,q.y,1+(i%3===0?1:0),1,palette[i%palette.length]);}}
   function drawGround(){
-    rect(0,0,W,H,"#315c3a");
-    const span=1250;
-    for(let gy=-span;gy<=span;gy+=TILE)for(let gx=-span;gx<=span;gx+=TILE){
-      const wx=camera.x+gx,wy=camera.y+gy,p=project(wx,wy);
-      if(p.x<-40||p.y<-20||p.x>W+40||p.y>H+30)continue;
-      const v=hash(Math.floor(wx/TILE),Math.floor(wy/TILE));
-      diamond(wx,wy,v>.82?"#56894c":v>.36?"#477b43":"#3f713e");
-      if(v>.91){const q=project(wx+8,wy+5);rect(q.x-2,q.y-1,4,3,"#d6c36c");}
-      if(v<.07){const q=project(wx-6,wy+7);rect(q.x-2,q.y-1,4,3,"#86a85a");}
+    rect(0,0,W,H,"#294d36");
+    for(let gy=-1400;gy<=1400;gy+=32)for(let gx=-1400;gx<=1400;gx+=32){
+      const wx=camera.x+gx,wy=camera.y+gy,p=project(wx,wy);if(p.x<-24||p.y<-12||p.x>W+24||p.y>H+16)continue;
+      const v=hash(Math.floor(wx/32),Math.floor(wy/32)),base=v>.78?"#57884a":v>.36?"#477b43":"#3e703e";
+      diamond(wx,wy,base);
+      if(v>.86){speckle(wx,wy,Math.floor(wx+wy),3,["#82a65a","#a3b96a","#d1bd70"]);const f=project(wx+6,wy-5);rect(f.x,f.y,2,2,"#e4d18a");}
+      else if(v<.12){speckle(wx,wy,Math.floor(wx-wy),4,["#315e38","#65904a","#789c50"]);}
+      if(v>.52&&v<.58){const q=project(wx-7,wy+4);rect(q.x,q.y,3,1,"#b5a36b");}
     }
-    // Curving river as blue diamond tiles with layered sandy banks.
+    // River with sandy, pebbled banks and hand-placed highlights.
     const river=[[300,650],[350,800],[420,950],[390,1110],[420,1260],[500,1400],[470,1570],[430,1740],[520,1900],[500,2180]];
-    for(let i=0;i<river.length-1;i++){
-      const [x1,y1]=river[i],[x2,y2]=river[i+1],n=Math.ceil(Math.hypot(x2-x1,y2-y1)/24);
+    for(let i=0;i<river.length-1;i++){const [x1,y1]=river[i],[x2,y2]=river[i+1],n=Math.ceil(Math.hypot(x2-x1,y2-y1)/22);
       for(let j=0;j<=n;j++){const t=j/n,cx=Math.round((x1+(x2-x1)*t)/32)*32,cy=Math.round((y1+(y2-y1)*t)/32)*32;
         for(let oy=-96;oy<=96;oy+=32)for(let ox=-96;ox<=96;ox+=32)if(ox*ox+oy*oy<12000){
-          diamond(cx+ox,cy+oy,"#b69b68");diamond(cx+ox,cy+oy,"#347b9d");
+          diamond(cx+ox,cy+oy,"#b99b69");diamond(cx+ox,cy+oy,"#347b9d");
+          const q=project(cx+ox+5,cy+oy-3);rect(q.x,q.y,5,1,"#79b7bd");const peb=project(cx+ox-6,cy+oy+5);rect(peb.x,peb.y,2,2,"#d3bd87");
         }
       }
     }
-    // Cobblestone roads and dirt lanes.
-    const road=(x1,y1,x2,y2,width,color)=>{const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/24);for(let i=0;i<=n;i++){const t=i/n,cx=Math.round((x1+(x2-x1)*t)/32)*32,cy=Math.round((y1+(y2-y1)*t)/32)*32;for(let oy=-width/2;oy<=width/2;oy+=32)for(let ox=-width/2;ox<=width/2;ox+=32)diamond(cx+ox,cy+oy,color);}};
-    road(1600,1320,1600,500,96,"#a99a78");road(1600,1320,2600,1320,96,"#a99a78");road(1600,1320,1600,2300,96,"#a99a78");road(1600,1320,650,1320,96,"#a99a78");
-    road(1600,1320,1100,900,48,"#8e795a");road(1600,1320,2050,900,48,"#8e795a");road(1600,1320,2050,1800,48,"#8e795a");
-    // Central plaza.
-    for(let y=1192;y<=1448;y+=32)for(let x=1472;x<=1728;x+=32)diamond(x,y,((x+y)/32)%2===0?"#c7b995":"#b4a783");
-    // Farm rows.
-    for(let y=2048;y<2240;y+=32)for(let x=1840;x<2160;x+=32){diamond(x,y,"#89633e");const p=project(x,y);rect(p.x-5,p.y-2,10,4,"#5a873e");}
-    // Bridges over the river.
+    const road=(x1,y1,x2,y2,width,color)=>{const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/22);for(let i=0;i<=n;i++){const t=i/n,cx=Math.round((x1+(x2-x1)*t)/32)*32,cy=Math.round((y1+(y2-y1)*t)/32)*32;for(let oy=-width/2;oy<=width/2;oy+=32)for(let ox=-width/2;ox<=width/2;ox+=32){diamond(cx+ox,cy+oy,color);const q=project(cx+ox+6,cy+oy-4);rect(q.x,q.y,5,1,"#d2c39c");rect(q.x-4,q.y+5,3,1,"#82775f");}}};
+    road(1600,1320,1600,500,96,"#aaa080");road(1600,1320,2600,1320,96,"#aaa080");road(1600,1320,1600,2300,96,"#aaa080");road(1600,1320,650,1320,96,"#aaa080");
+    road(1600,1320,1100,900,48,"#927c5b");road(1600,1320,2050,900,48,"#927c5b");road(1600,1320,2050,1800,48,"#927c5b");
+    for(let y=1192;y<=1448;y+=32)for(let x=1472;x<=1728;x+=32){diamond(x,y,((x+y)/32)%2===0?"#c8bd9d":"#b2a584");const q=project(x+5,y-4);rect(q.x,q.y,7,1,"#e1d7b7");}
+    for(let y=2048;y<2240;y+=32)for(let x=1840;x<2160;x+=32){diamond(x,y,"#80603e");const q=project(x,y);rect(q.x-5,q.y-2,10,4,"#5c843d");rect(q.x-2,q.y-5,3,3,"#a4b75d");}
     drawBridge(390,930);drawBridge(430,1260);drawBridge(480,1680);drawBridge(510,1940);
-    // Raised fountain with a visible stone rim.
     const f=project(1600,1320);
-    poly([{x:f.x,y:f.y-30},{x:f.x+48,y:f.y-6},{x:f.x,y:f.y+18},{x:f.x-48,y:f.y-6}],"#88775b","#30252a",3);
-    poly([{x:f.x,y:f.y-27},{x:f.x+39,y:f.y-6},{x:f.x,y:f.y+13},{x:f.x-39,y:f.y-6}],"#c9c2a7","#4b4140",2);
-    poly([{x:f.x,y:f.y-19},{x:f.x+27,y:f.y-5},{x:f.x,y:f.y+9},{x:f.x-27,y:f.y-5}],"#347e9d","#243e52",2);
-    rect(f.x-4,f.y-28,8,20,"#d8d0ad");rect(f.x-2,f.y-33,4,6,"#e7d28b");
+    poly([{x:f.x,y:f.y-32},{x:f.x+50,y:f.y-7},{x:f.x,y:f.y+19},{x:f.x-50,y:f.y-7}],"#756b59","#342d2b",3);
+    poly([{x:f.x,y:f.y-28},{x:f.x+41,y:f.y-7},{x:f.x,y:f.y+13},{x:f.x-41,y:f.y-7}],"#d1c6a6","#665b4a",2);
+    poly([{x:f.x,y:f.y-20},{x:f.x+28,y:f.y-6},{x:f.x,y:f.y+8},{x:f.x-28,y:f.y-6}],"#347e9d","#243e52",2);
+    rect(f.x-4,f.y-29,8,20,"#d9d0b5");rect(f.x-2,f.y-35,4,7,"#f1dc9a");
   }
-  function drawBridge(wx,wy){
-    const p=project(wx,wy);
-    poly([{x:p.x-40,y:p.y-14},{x:p.x,y:p.y-34},{x:p.x+40,y:p.y-14},{x:p.x,y:p.y+6}],"#76502f","#211a20",3);
-    for(let i=-2;i<=2;i++){const x=p.x+i*14;poly([{x:x-6,y:p.y-18},{x:x+2,y:p.y-22},{x:x+2,y:p.y-2},{x:x-6,y:p.y+2}],i%2?"#c28b50":"#a97442","#4a3026",1);}
-    rect(p.x-44,p.y-23,4,22,"#d3a66b");rect(p.x+40,p.y-23,4,22,"#d3a66b");
+  function drawBridge(wx,wy){const p=project(wx,wy);poly([{x:p.x-42,y:p.y-13},{x:p.x,y:p.y-35},{x:p.x+42,y:p.y-13},{x:p.x,y:p.y+8}],"#65452e","#29202a",3);for(let i=-3;i<=3;i++){const x=p.x+i*12;poly([{x:x-5,y:p.y-18},{x:x+2,y:p.y-22},{x:x+2,y:p.y-2},{x:x-5,y:p.y+2}],i%2?"#c18a4e":"#9d693d","#563a2a",1);rect(x-4,p.y-16,3,13,"#d6a56a");}rect(p.x-46,p.y-25,4,24,"#d2a36b");rect(p.x+42,p.y-25,4,24,"#d2a36b");}
+  function drawTree(wx,wy,index=0){
+    const p=project(wx,wy),x=p.x,y=p.y;if(x<-75||y<-110||x>W+75||y>H+100)return;
+    const variant=index%4,leaf=[["#285a36","#397a42","#65954c"],["#315d3d","#4c8549","#83a35a"],["#315a42","#54834c","#a0a15a"],["#3d6539","#6a8e48","#b5a45c"]][variant];
+    ellipse(x+3,y+5,21,8,"#263b2b");
+    // Trunk and branch pixels.
+    poly([{x:x-5,y:y-20},{x:x+5,y:y-20},{x:x+8,y:y+9},{x:x-7,y:y+9}], "#79502f","#35271f",2);
+    rect(x-14,y-37,8,4,"#79502f");rect(x+6,y-48,8,4,"#79502f");
+    // Layered, irregular foliage silhouette with dark ink outline.
+    poly([{x:x-3,y:y-103},{x:x+20,y:y-82},{x:x+27,y:y-57},{x:x+20,y:y-34},{x:x-20,y:y-31},{x:x-29,y:y-55},{x:x-22,y:y-81}],leaf[0],"#1e3427",3);
+    poly([{x:x-2,y:y-108},{x:x+17,y:y-88},{x:x+20,y:y-65},{x:x-18,y:y-59},{x:x-23,y:y-83}],leaf[1],"#263d2a",2);
+    poly([{x:x-2,y:y-105},{x:x+8,y:y-88},{x:x+1,y:y-72},{x:x-13,y:y-77}],leaf[2],null);
+    for(let i=0;i<13;i++){const ox=Math.round((hash(index,i)-.5)*42),oy=-94+Math.round(hash(index+8,i)*53),c=leaf[i%3],sx=x+ox,sy=y+oy;rect(sx,sy,3+(i%3),2,c);if(i%4===0)rect(sx+2,sy+3,2,2,"#b3b36a");}
+    rect(x-8,y-20,4,5,"#9c7040");rect(x+4,y-28,3,4,"#a3b15d");
   }
-  function drawTree(wx,wy){
-    const p=project(wx,wy),x=p.x,y=p.y;
-    if(x<-70||y<-100||x>W+70||y>H+100)return;
-    ellipse(x,y+3,17,7,"#293f2c");
-    poly([{x:x,y:y-66},{x:x+26,y:y-36},{x:x+15,y:y-8},{x:x-15,y:y-8},{x:x-26,y:y-36}],"#285b37","#1b3025",3);
-    poly([{x:x,y:y-82},{x:x+23,y:y-51},{x:x+13,y:y-26},{x:x-13,y:y-26},{x:x-23,y:y-51}],"#397b42","#1b3025",3);
-    poly([{x:x,y:y-91},{x:x+13,y:y-69},{x:x+8,y:y-48},{x:x-8,y:y-48},{x:x-13,y:y-69}],"#5a984e","#263e2b",2);
-    rect(x-3,y-12,6,15,"#76502f");rect(x-13,y-54,8,5,"#83a94e");rect(x+6,y-72,7,5,"#8caf55");
+  function drawHouse(b,index=0){
+    const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;if(x<-230||y<-220||x>W+230||y>H+200)return;
+    const w=Math.max(72,b.w*.72),wallH=Math.max(52,b.h*.48),type=b.type;
+    const palette=type==="guild"?{roof:"#6b3b35",light:"#b96b4e",wall:"#d6b17c",side:"#a77b58"}:type==="forge"?{roof:"#45464e",light:"#77747a",wall:"#a18b70",side:"#786b5c"}:type==="inn"?{roof:"#79423a",light:"#c27451",wall:"#e0bc83",side:"#b28b60"}:type==="market"?{roof:"#9b4d3e",light:"#d17b51",wall:"#e0c08d",side:"#b48a61"}:type==="farm"?{roof:"#6f5836",light:"#a17a48",wall:"#c7a16d",side:"#9b7650"}:type==="bank"?{roof:"#59616b",light:"#92959a",wall:"#c9c0a4",side:"#918b7b"}:{roof:index%3===0?"#78433a":index%3===1?"#586b56":"#785b43",light:index%3===0?"#bf7250":index%3===1?"#8ca16c":"#b28a58",wall:index%2?"#d6bd91":"#c59b70",side:"#987653"};
+    const roof=palette.roof;
+    ellipse(x,y+19,w*.62,16,"#26392a");
+    // Stone foundation, front and side walls with separate masonry.
+    poly([{x:x-w/2,y:y-8},{x:x,y:y-35},{x:x+w/2,y:y-8},{x:x,y:y+20}], "#756b59","#342a28",3);
+    poly([{x:x-w/2,y:y-8},{x:x,y:y+20},{x:x,y:y+wallH},{x:x-w/2,y:y+wallH-27}],palette.wall,"#352923",3);
+    poly([{x:x,y:y+20},{x:x+w/2,y:y-8},{x:x+w/2,y:y+wallH-27},{x:x,y:y+wallH}],palette.side,"#352923",3);
+    // Wall brick courses and timber framing, each house receives a different pattern.
+    for(let row=0;row<4;row++)for(let col=0;col<5;col++){const xx=x-w/2+10+col*(w/10)+(row%2?5:0),yy=y+28+row*11;if(xx<x-7){rect(xx,yy,7,2,row%2?"#a9815e":"#e0c18e");}}
+    for(let k=0;k<3;k++){const bx=x-w/2+16+k*(w/3);poly([{x:bx,y:y+22},{x:bx+7,y:y+26},{x:bx+7,y:y+wallH-8},{x:bx,y:y+wallH-12}], "#69452f",null);}
+    // Asymmetric roof shapes: gable ridge, shingles and carved eaves.
+    poly([{x:x-w/2-12,y:y-8},{x:x-4,y:y-76-(index%3)*5},{x:x+w/2+12,y:y-8},{x:x,y:y+27}], "#3d2928","#251d20",4);
+    poly([{x:x-w/2-8,y:y-10},{x:x-4,y:y-70-(index%3)*5},{x:x-2,y:y-29},{x:x-w/2+4,y:y+2}],palette.light,"#51302a",2);
+    poly([{x:x-2,y:y-29},{x:x-4,y:y-70-(index%3)*5},{x:x+w/2+8,y:y-10},{x:x+2,y:y+2}],roof,"#392725",2);
+    for(let row=0;row<5;row++)for(let col=0;col<6;col++){const xx=x-w/2+8+col*(w/6)+(row%2?4:0),yy=y-15-row*10+Math.abs(col-2.5)*7;rect(xx,yy,Math.max(5,w/13),3,(row+col)%3===0?"#df9a69":(row+col)%2?"#995044":"#743d37");rect(xx,yy+3,Math.max(5,w/13),1,"#56352e");}
+    // Glowing windows with wood shutters and warm indoor light.
+    const winY=y+Math.round(wallH*.48);
+    for(const side of [-1,1]){const wx=x+side*w*.29;rect(wx-9,winY-9,19,22,"#493329");rect(wx-6,winY-6,13,16,"#e6ad58");rect(wx-4,winY-4,9,12,"#ffe2a0");rect(wx-1,winY-6,2,16,"#754b30");rect(wx-8,winY-10,4,23,"#805234");rect(wx+6,winY-10,4,23,"#805234");}
+    // Door, stone step and hanging sign unique to facility.
+    poly([{x:x-11,y:y+wallH-27},{x:x+11,y:y+wallH-27},{x:x+11,y:y+wallH+2},{x:x-11,y:y+wallH+2}],"#50352a","#2c211e",2);
+    rect(x-7,y+wallH-23,14,23,"#95643d");rect(x+3,y+wallH-12,2,2,"#e5c56b");rect(x-16,y+wallH+3,32,5,"#b4a58a");
+    rect(x-15,y+wallH-32,30,4,"#70472f");rect(x-12,y+wallH-30,24,2,"#e1bd7a");
+    // Chimney and smoke for forge/inn; hanging sign varies by building.
+    if(type==="forge"||type==="inn"){rect(x+w*.22,y-74,13,30,"#6e4a3b");rect(x+w*.22-2,y-77,17,5,"#44332f");}
+    const sign=project(b.x+b.w/2,b.y+b.h/2-60);rect(sign.x-9,sign.y-5,18,10,type==="guild"?"#d6b56e":"#70452f");rect(sign.x-6,sign.y-2,12,4,"#e7d7a5");
+    ctx.fillStyle="#fff0ca";ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(b.name,x,y-86);
   }
-  function drawHouse(b){
-    const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;
-    if(x<-220||y<-200||x>W+220||y>H+180)return;
-    const w=Math.max(66,b.w*.62),h=Math.max(48,b.h*.45),roof=b.type==="guild"?"#754238":b.type==="inn"?"#91463a":b.type==="forge"?"#4f5056":b.type==="market"?"#a44d3f":"#98533f";
-    // Ground shadow and raised stone foundation.
-    ellipse(x,y+12,w*.62,h*.45,"#263d2b");
-    poly([{x:x-w/2,y:y-10},{x:x,y:y-34},{x:x+w/2,y:y-10},{x:x,y:y+14}],"#8b8068","#342b2a",3);
-    // Front and side walls give the house visible volume.
-    poly([{x:x-w/2,y:y-10},{x:x,y:y+14},{x:x,y:y+75},{x:x-w/2,y:y+48}],"#c39b6d","#382a27",3);
-    poly([{x:x,y:y+14},{x:x+w/2,y:y-10},{x:x+w/2,y:y+48},{x:x,y:y+75}],"#9d7655","#382a27",3);
-    // Deep pitched roof, ridge and individual roof rows.
-    poly([{x:x-w/2-9,y:y-10},{x:x,y:y-65},{x:x+w/2+9,y:y-10},{x:x,y:y+17}],"#4c302c","#211a20",4);
-    poly([{x:x-w/2-5,y:y-12},{x:x,y:y-60},{x:x-3,y:y-28},{x:x-w/2+5,y:y+1}],"#b55f48","#382323",2);
-    poly([{x:x+3,y:y-28},{x:x,y:y-60},{x:x+w/2+5,y:y-12},{x:x,y:y+1}],"#874238","#382323",2);
-    for(let row=0;row<3;row++)for(let col=0;col<4;col++){const xx=x-w/2+12+col*(w/8),yy=y-17-row*11+Math.abs(col-1.5)*8;rect(xx,yy,Math.max(7,w/10),4,row%2?"#d08058":"#a95343");}
-    // Timber beams, windows and entrance.
-    poly([{x:x-18,y:y+3},{x:x-5,y:y+10},{x:x-5,y:y+70},{x:x-18,y:y+63}],"#60412e",null);
-    poly([{x:x+5,y:y+10},{x:x+18,y:y+3},{x:x+18,y:y+63},{x:x+5,y:y+70}],"#67442e",null);
-    rect(x-34,y+24,13,17,"#49372e");rect(x-32,y+26,9,12,"#8fc0bd");rect(x+21,y+24,13,17,"#49372e");rect(x+23,y+26,9,12,"#8fc0bd");
-    rect(x-7,y+39,14,35,"#563a2b");rect(x-4,y+43,8,29,"#a8794b");rect(x+3,y+56,2,2,"#e5c76b");
-    ctx.fillStyle="#fff0c8";ctx.font="bold 12px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(b.name,x,y-76);
-  }
-  function drawTreePatch(){
-    for(let i=0;i<110;i++){const x=160+Math.floor(hash(i,23)*2700),y=180+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<420||(x>280&&x<620&&y>700&&y<2200))continue;drawTree(x,y);}
-  }
+  function drawTreePatch(){for(let i=0;i<110;i++){const x=160+Math.floor(hash(i,23)*2700),y=180+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<420||(x>280&&x<620&&y>700&&y<2200))continue;drawTree(x,y,i);}}
   function drawPixelPerson(p,isPlayer=false){
-    const q=project(p.x,p.y),x=q.x,y=q.y;
-    if(x<-45||y<-100||x>W+45||y>H+40)return;
+    const q=project(p.x,p.y),x=q.x,y=q.y;if(x<-55||y<-115||x>W+55||y>H+45)return;
     const coat=isPlayer?player.outfit:p.color,skin=isPlayer?({"明るい肌":"#edc59d","小麦色":"#bd865e","褐色":"#87583f"}[player.skin]||"#edc59d"):"#e8bd91";
     const hair=isPlayer?({"栗色":"#68412e","金色":"#d4ae4e","黒":"#332c2b","銀色":"#b9b9ae"}[player.hair]||"#68412e"):p.hair;
-    const role=p.role||"冒険者",species=isPlayer?player.species:"人間",outline="#17131a";
-    // Shadow and black-outlined 2.5-head-tall sprite.
-    ellipse(x,y+2,12,5,"#25372a");
-    const px=(rx,ry,rw,rh,c)=>{rect(x+rx-2,y+ry-2,rw+4,rh+4,outline);rect(x+rx,y+ry,rw,rh,c);};
-    // Boots and legs.
-    px(-8,-1,6,10,"#49352b");px(2,-1,6,10,"#49352b");
-    // Tunic, sleeves, belt, cape.
-    px(-10,-17,20,18,coat);px(-14,-15,5,11,coat);px(9,-15,5,11,coat);
-    px(-7,-3,14,3,"#d9bd78");px(-2,-3,4,3,"#69472f");
-    // Head, ears, face and hair silhouette.
-    px(-8,-38,16,16,skin);px(-11,-33,4,7,skin);px(7,-33,4,7,skin);
-    px(-10,-43,20,8,hair);px(-12,-39,5,12,hair);px(7,-39,5,12,hair);
-    px(-8,-47,8,7,hair);px(-2,-50,9,8,hair);px(5,-45,8,6,hair);
-    px(-5,-32,3,4,"#28232b");px(3,-32,3,4,"#28232b");px(-1,-25,3,2,"#a95e50");
-    if(species==="エルフ"||species==="妖精族"){px(-16,-34,7,4,"#d8a77d");px(9,-34,7,4,"#d8a77d");}
-    if(species==="竜人"){px(-9,-50,5,8,"#9a5b45");px(4,-50,5,8,"#9a5b45");}
-    if(species==="獣人"){px(-14,-36,5,8,hair);px(9,-36,5,8,hair);}
-    if(role==="衛兵"){px(-11,-51,22,5,"#aab7c2");px(-5,-56,10,5,"#758a9b");}
-    if(role==="鍛冶師"){px(-12,-19,24,5,"#8a6a45");px(13,-12,4,17,"#999");}
-    if(role==="農家"||role==="牧童"){px(-12,-50,24,5,"#c19b55");px(13,-12,3,19,"#74502f");}
-    if(role==="受付"||role==="服飾職人"){px(-2,-53,4,5,"#e4c45c");}
-    if(role==="宿屋"){px(-12,-51,24,5,"#e2d1aa");}
-    if(role==="町長"){px(-9,-52,18,5,"#625b72");}
-    if(isPlayer){px(-12,-55,24,4,"#e6c46a");}
-    ctx.fillStyle="#fff4d2";ctx.font=isPlayer?"11px 'Noto Sans JP',sans-serif":"10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(isPlayer?player.name:p.name,x,y-64);
+    const role=p.role||"冒険者",species=isPlayer?player.species:"人間",ink="#17131b";
+    ellipse(x+2,y+3,13,5,"#26382b");
+    // Detailed 2.5-head pixel sprite: silhouette ink, layered hair, cloth folds and accessories.
+    const px=(rx,ry,rw,rh,c,edge=ink)=>{rect(x+rx-2,y+ry-2,rw+4,rh+4,edge);rect(x+rx,y+ry,rw,rh,c);};
+    // Cape behind body and boots.
+    px(-12,-27,7,24,isPlayer?"#31558a":"#70504a");px(7,-27,7,24,isPlayer?"#31558a":"#70504a");
+    px(-9,-2,7,10,"#49352b");px(2,-2,7,10,"#49352b");rect(x-8,y+4,5,2,"#b58a55");rect(x+3,y+4,5,2,"#b58a55");
+    // Tunic with shaded folds, belt, buckle and shoulder guards.
+    px(-11,-22,22,20,coat);px(-15,-19,6,12,coat);px(9,-19,6,12,coat);
+    rect(x-8,y-18,3,10,"#fff0ca");rect(x+5,y-17,2,9,"#243f69");px(-8,-5,16,4,"#d6b66d");px(-2,-6,4,5,"#80502d");
+    px(-12,-22,5,7,"#b1a08a");px(7,-22,5,7,"#b1a08a");
+    // Neck, face, ears, eyes and cheek pixels.
+    px(-4,-28,8,6,skin);px(-9,-45,18,19,skin);px(-12,-40,4,8,skin);px(8,-40,4,8,skin);
+    rect(x-6,y-39,3,4,"#f4e2bd");rect(x+4,y-39,3,4,"#f4e2bd");rect(x-5,y-38,2,3,"#314d82");rect(x+5,y-38,2,3,"#314d82");
+    rect(x-7,y-32,3,2,"#d98c7d");rect(x+5,y-32,3,2,"#d98c7d");rect(x-1,y-29,3,2,"#a45f50");
+    // Distinct layered hairstyle rather than a square cap.
+    px(-11,-49,22,7,hair);px(-13,-44,5,12,hair);px(8,-44,5,10,hair);px(-9,-54,9,8,hair);px(-2,-58,10,9,hair);px(5,-52,9,7,hair);
+    rect(x-7,y-49,4,3,"#a77a52");rect(x+2,y-52,4,3,"#b88b5b");
+    if(species==="エルフ"||species==="妖精族"){poly([{x:x-12,y:y-40},{x:x-25,y:y-46},{x:x-12,y:y-34}],skin,ink,2);poly([{x:x+12,y:y-40},{x:x+25,y:y-46},{x:x+12,y:y-34}],skin,ink,2);}
+    if(species==="竜人"){px(-10,-55,6,8,"#a45f49");px(5,-55,6,8,"#a45f49");}
+    if(species==="獣人"){px(-15,-42,6,9,hair);px(9,-42,6,9,hair);}
+    if(role==="衛兵"){px(-11,-57,22,5,"#aeb9c4");px(-5,-62,10,5,"#718596");rect(x-2,y-61,4,3,"#e6c36d");}
+    if(role==="鍛冶師"){px(-13,-24,26,5,"#805c3c");rect(x+14,y-18,4,18,"#8c8f91");rect(x+12,y-21,8,5,"#b9b9b5");}
+    if(role==="農家"||role==="牧童"){px(-13,-56,26,5,"#c39b55");px(-5,-61,10,5,"#8c633c");}
+    if(role==="受付"||role==="服飾職人"){rect(x-2,y-59,4,6,"#e6c46a");rect(x-5,y-24,10,3,"#f2dfbd");}
+    if(role==="宿屋"){px(-13,-57,26,5,"#e5d5ad");px(-7,-62,14,5,"#8b4938");}
+    if(role==="町長"){px(-10,-57,20,5,"#625b72");rect(x-2,y-60,4,4,"#dfc57c");}
+    if(isPlayer){rect(x-11,y-65,22,5,"#e3c16c");rect(x-5,y-64,10,2,"#fff0b8");}
+    ctx.fillStyle="#fff4d8";ctx.font=isPlayer?"11px 'Noto Sans JP',sans-serif":"10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(isPlayer?player.name:p.name,x,y-72);
   }
-  function drawDecor(){}
   function render(){
-    ctx.clearRect(0,0,W,H);
-    if(battle){drawBattle();return;}
-    drawGround();
-    // Painter's order: distant scenery first, then depth-sorted objects and people.
+    ctx.clearRect(0,0,W,H);if(battle){drawBattle();return;}drawGround();
     const objects=[];
-    for(const b of buildings)objects.push({depth:b.x+b.y+b.w+b.h,draw:()=>drawHouse(b)});
-    for(let i=0;i<110;i++){const x=160+Math.floor(hash(i,23)*2700),y=180+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<420||(x>280&&x<620&&y>700&&y<2200))continue;objects.push({depth:x+y,draw:()=>drawTree(x,y)});}
+    for(let i=0;i<buildings.length;i++){const b=buildings[i];objects.push({depth:b.x+b.y+b.w+b.h,draw:()=>drawHouse(b,i)});}
+    for(let i=0;i<110;i++){const x=160+Math.floor(hash(i,23)*2700),y=180+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<420||(x>280&&x<620&&y>700&&y<2200))continue;objects.push({depth:x+y-40,draw:()=>drawTree(x,y,i)});}
     for(const n of npcs)objects.push({depth:n.x+n.y,draw:()=>drawPixelPerson(n)});
     for(const p of others.values())objects.push({depth:p.x+p.y,draw:()=>drawPixelPerson(p)});
     objects.push({depth:player.x+player.y,draw:()=>drawPixelPerson(player,true)});
