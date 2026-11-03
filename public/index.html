@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#172b24">
-  <title>WORLD SERCHER</title>
+  <title>アステリアの冒険</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <main id="app">
-    <header class="topbar"><div class="brand"><span class="brand-mark">✦</span><span>WORLD SERCHER</span></div><div class="online"><span class="online-dot"></span><span id="online-count">接続中...</span></div></header>
+    <header class="topbar"><div class="brand"><span class="brand-mark">✦</span><span>アステリアの冒険</span></div><div class="online"><span class="online-dot"></span><span id="online-count">接続中...</span></div></header>
     <section class="game-shell">
-      <div class="game-heading"><div><p class="eyebrow">A WORLD OF YOUR OWN</p><h1>リーフェル — 川辺の町</h1></div><div class="location-chip">🌿 アステリア大陸・中央南部</div></div>
+      <div class="game-heading"><div><h1>リーフェル — 川辺の町</h1></div><div class="location-chip">🌿 アステリア大陸・中央南部</div></div>
       <div class="canvas-wrap">
         <canvas id="game" width="960" height="600" aria-label="オリジナルのドット絵で描かれたリーフェルの町"></canvas>
         <div id="start-panel" class="overlay"><div class="start-card auth-card">
-          <div class="crest">✦</div><p class="eyebrow">WELCOME, ADVENTURER</p><h2>WORLD SERCHER</h2><p class="intro">リーフェルから、あなただけの冒険を始めよう。</p>
+          <div class="crest">✦</div><h2>アステリアの冒険</h2><p class="intro">リーフェルから、あなただけの冒険を始めよう。</p>
           <div class="auth-tabs"><button id="login-tab" class="auth-tab active" type="button">ログイン</button><button id="register-tab" class="auth-tab" type="button">新規登録</button></div>
           <form id="auth-form"><label for="account-name">ユーザーID</label><input id="account-name" maxlength="16" autocomplete="username" required placeholder="3〜16文字">
             <div id="character-name-wrap" class="auth-extra hidden"><label for="character-name">ゲーム内の名前</label><input id="character-name" maxlength="12" autocomplete="nickname" placeholder="冒険者"></div>
@@ -24,7 +24,7 @@
           <p id="auth-message" class="auth-message" role="status" aria-live="polite">初めて遊ぶ場合は新規登録してね。</p><p class="small-note">パスワードは安全な方法でハッシュ化して保存します。</p>
         </div></div>
         <div id="creation-panel" class="overlay hidden"><div class="start-card creation-card">
-          <p class="eyebrow">CREATE YOUR ADVENTURER</p><h2>キャラクターメイキング</h2><p class="intro">種族や外見を選んで、リーフェルへ旅立とう。</p>
+          <h2>キャラクターメイキング</h2><p class="intro">種族や外見を選んで、リーフェルへ旅立とう。</p>
           <form id="creation-form">
             <label for="create-name">冒険者の名前</label><input id="create-name" maxlength="12" required placeholder="名前">
             <div class="creation-grid">
@@ -44,7 +44,7 @@
         <div class="hud"><div class="hud-player"><span class="avatar">☺</span><span id="hud-name">冒険者</span></div><div class="hud-right"><div class="hud-help">移動：WASD / ↑↓←→（斜め移動対応）　調べる：E</div><button id="open-adventurer" type="button">冒険者メニュー</button><button id="logout-button" type="button">ログアウト</button></div></div>
       </div>
       <div id="mobile-controls" class="mobile-controls" aria-label="移動ボタン"><div class="dpad"><button data-dir="up" aria-label="上">▲</button><div><button data-dir="left" aria-label="左">◀</button><button data-dir="down" aria-label="下">▼</button><button data-dir="right" aria-label="右">▶</button></div></div><button id="interact-button" class="interact-button">調べる</button></div>
-      <section id="adventurer-panel" class="adventurer-panel hidden" aria-label="冒険者メニュー"><div class="panel-head"><div><p class="eyebrow">ADVENTURER RECORD</p><h2>冒険者メニュー</h2></div><button id="close-adventurer" class="panel-close" type="button">閉じる ✕</button></div><nav class="panel-tabs"><button class="panel-tab active" data-tab="status">ステータス</button><button class="panel-tab" data-tab="job">職業</button><button class="panel-tab" data-tab="skills">スキル</button><button class="panel-tab" data-tab="equipment">装備</button><button class="panel-tab" data-tab="world">世界・NPC</button></nav><div id="panel-content" class="panel-content"></div><p id="panel-message" class="panel-message" role="status"></p></section>
+      <section id="adventurer-panel" class="adventurer-panel hidden" aria-label="冒険者メニュー"><div class="panel-head"><div><h2>冒険者メニュー</h2></div><button id="close-adventurer" class="panel-close" type="button">閉じる ✕</button></div><nav class="panel-tabs"><button class="panel-tab active" data-tab="status">ステータス</button><button class="panel-tab" data-tab="job">職業</button><button class="panel-tab" data-tab="skills">スキル</button><button class="panel-tab" data-tab="equipment">装備</button><button class="panel-tab" data-tab="world">世界・NPC</button></nav><div id="panel-content" class="panel-content"></div><p id="panel-message" class="panel-message" role="status"></p></section>
       <footer class="bottom-info"><span>✦ 友達と同じ世界で冒険できる試作版</span><span id="connection-state">サーバーに接続しています</span></footer>
     </section>
   </main>
