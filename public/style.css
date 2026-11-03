@@ -154,3 +154,82 @@ img, canvas, .tile {
   image-rendering: crisp-edges;
 }
 #game { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+
+/* Adventurer menu: original classic-JRPG status screen inspired by the supplied layout. */
+.adventurer-panel{inset:10px;padding:12px;background:#101d31;border:3px solid #b6a06c;box-shadow:0 0 0 2px #172b45,0 12px 32px #000b;display:flex;flex-direction:column;overflow:hidden}
+.panel-head{min-height:42px;padding:0 4px 8px;border-bottom:1px solid #536985}
+.panel-head .eyebrow{display:none}
+.panel-head h2{font-size:22px;color:#fff2c8;text-shadow:2px 2px #172338}
+.panel-close{background:#263d5d;border:2px solid #8da9ce;color:#fff;padding:8px 13px}
+.panel-tabs{display:flex;flex-direction:column;position:absolute;left:12px;top:68px;bottom:12px;width:170px;overflow:auto;padding:0 8px 0 0;margin:0;border-right:2px solid #526a8c;gap:7px}
+.panel-tab{min-height:48px;text-align:left;padding:8px 10px;background:#253b59;border:2px solid #607b9d;color:#fff;font-size:14px;box-shadow:inset 0 -3px #172943}
+.panel-tab::before{content:"✦";display:inline-block;width:25px;color:#f4d27b;font-size:18px}
+.panel-tab.active{background:#0879d1;border-color:#8de0ff;box-shadow:inset 0 0 0 2px #164e91,0 0 12px #20aaff;color:white}
+.panel-content{margin-left:180px;flex:1;min-height:0;overflow:auto;padding:2px 3px 8px}
+.panel-message{display:none}
+.adventure-dashboard{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto;gap:10px;position:relative;padding:2px 4px 26px}
+.dash-card{position:relative;min-width:0;padding:10px;background:#1b2c46;border:2px solid #8199b8;border-radius:8px;box-shadow:inset 0 0 0 2px #101e34,0 3px 0 #091426;color:#f4f4ee}
+.dash-card-title{margin:-2px -2px 9px;padding:5px 10px;background:#075ba4;border:2px solid #83d9ff;border-radius:7px;color:#fff;font-weight:800;font-size:16px;letter-spacing:.06em;text-shadow:1px 2px #16375d}
+.dash-card-title span{color:#ffdf69;font-size:20px;margin-right:8px}
+.dash-profile-body{display:flex;align-items:center;gap:12px;min-height:190px}
+.dash-portrait{position:relative;flex:0 0 126px;height:174px;background:#233c60;border:2px solid #536e94;border-radius:6px;overflow:hidden;image-rendering:pixelated}
+.dash-portrait:after{content:"";position:absolute;left:14px;right:14px;bottom:9px;height:10px;border:2px solid #4fd4ff;border-radius:50%;box-shadow:0 0 12px #26aaff}
+.dash-portrait div{position:absolute;image-rendering:pixelated;border:2px solid #17151a}
+.portrait-cape{left:25px;top:77px;width:78px;height:75px;background:#234d87;clip-path:polygon(20% 0,80% 0,100% 100%,0 100%)}
+.portrait-hair{left:37px;top:22px;width:52px;height:48px;background:#805033;clip-path:polygon(0 35%,10% 0,32% 15%,48% 0,70% 15%,100% 8%,95% 65%,80% 100%,15% 100%)}
+.portrait-face{left:43px;top:39px;width:42px;height:43px;background:#edc49a;border-radius:3px}
+.portrait-face i{position:absolute;top:18px;width:5px;height:7px;background:#17151a;border:0}
+.portrait-face i:first-child{left:8px}.portrait-face i:last-child{right:8px}
+.portrait-body{left:38px;top:79px;width:54px;height:57px;background:#3975b5;clip-path:polygon(20% 0,80% 0,100% 100%,0 100%)}
+.portrait-belt{left:38px;top:119px;width:54px;height:8px;background:#bd914d}
+.portrait-boots{left:42px;top:134px;width:18px;height:27px;background:#765039;box-shadow:25px 0 #765039}
+.dash-profile-info{flex:1;min-width:0}
+.dash-profile-info h3{font-size:19px;margin:0 0 4px;color:#fff}
+.dash-profile-info p{margin:3px 0 8px;color:#dce5f3}
+.dash-profile-info>strong{font-size:20px}
+.dash-profile-info>small{display:block;text-align:right;color:#e1e8f2;font-size:10px}
+.dash-bar{height:12px;margin:5px 0 3px;border:2px solid #8da1bb;border-radius:8px;background:#101a2a;overflow:hidden}
+.dash-bar i{display:block;height:100%;background:#19d4a2;border-right:2px solid #b5ffeb}
+.dash-bar.hp i{background:#1de0a5}.dash-bar.mp i{background:#27a9ed}.dash-bar.job i{background:#f3c52e}
+.dash-vital{display:flex;justify-content:space-between;margin-top:5px;color:#e7f0ff}
+.dash-vital b{color:#fff;font-size:14px}
+.dash-job-main{display:flex;align-items:center;gap:10px}
+.dash-job-icon{display:grid;place-items:center;width:62px;height:62px;background:#273e5d;border:2px solid #8099b8;border-radius:7px;font-size:37px;color:#fff}
+.dash-job-main h3{margin:0;font-size:20px}.dash-job-main strong{font-size:18px}
+.dash-disabled{margin-left:auto;padding:8px 10px;background:#2c4668;border:2px solid #9ab8da;border-radius:7px;color:#e9f2ff;font-weight:700;font-size:12px}
+.dash-exp{text-align:right;margin:2px 0 8px;font-size:11px;color:#dce6f5}
+.dash-job>p:last-child{color:#d6dfeb;font-size:12px;margin:9px 0 0}
+.dash-gear-layout{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.dash-gear-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.dash-gear-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:61px;background:#14243b;border:2px solid #647c9b;border-radius:6px;text-align:center}
+.dash-gear-slot span{font-size:24px;filter:drop-shadow(1px 2px #000)}
+.dash-gear-slot small{font-size:9px;color:#e3eaf5;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dash-gear-detail{padding:7px;background:#14243b;border:2px solid #647c9b;border-radius:6px}
+.dash-gear-detail p,.dash-gear-detail small{font-size:11px;color:#d6e1f0}
+.dash-action{display:block;width:100%;padding:7px;margin-top:7px;background:#0875c8;border:2px solid #8bdcff;border-radius:6px;color:white;font-weight:800}
+.dash-skills h4{margin:5px 0;color:#f7dfa0;border-bottom:1px solid #536985;padding-bottom:4px}
+.dash-skill{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid #435773}
+.dash-skill-icon{display:grid;place-items:center;flex:0 0 36px;height:36px;background:#075da4;border:2px solid #87d8ff;border-radius:6px;color:#ffe27a;font-size:22px}
+.dash-skill-icon.common{background:#285e80}
+.dash-skill div{flex:1;min-width:0}.dash-skill b{display:block;font-size:12px}.dash-skill small{display:block;color:#cbd7e7;font-size:9px}
+.dash-skill strong{font-size:10px;white-space:nowrap}
+.dash-tip{grid-column:1/-1;position:absolute;left:4px;bottom:0;color:#fff1c9;font-size:11px;text-shadow:1px 1px #101a2a}
+.dash-wallet{position:absolute;right:5px;bottom:0;color:#ffdf75;font-weight:800;font-size:14px}
+@media(max-width:760px){
+ .adventurer-panel{inset:4px;padding:7px}
+ .panel-head{min-height:34px}.panel-head h2{font-size:16px}
+ .panel-tabs{left:7px;top:52px;bottom:7px;width:105px;padding-right:5px;gap:5px}
+ .panel-tab{min-height:42px;padding:5px;font-size:10px}.panel-tab::before{width:15px;font-size:13px}
+ .panel-content{margin-left:110px;padding:0}
+ .adventure-dashboard{grid-template-columns:1fr;gap:7px;padding-bottom:22px}
+ .dash-card{padding:7px}.dash-card-title{font-size:13px;padding:3px 7px}
+ .dash-profile-body{min-height:135px;gap:7px}.dash-portrait{flex-basis:88px;height:128px;transform-origin:top left}
+ .dash-profile-info h3{font-size:15px}.dash-profile-info p{font-size:10px}.dash-profile-info>strong{font-size:16px}
+ .dash-job-main h3{font-size:15px}.dash-job-icon{width:45px;height:45px;font-size:27px}
+ .dash-gear-slot{min-height:48px}.dash-gear-slot span{font-size:18px}
+ .dash-skills .dash-skill{gap:5px}.dash-skill-icon{flex-basis:28px;height:28px;font-size:17px}
+ .dash-tip{font-size:9px}.dash-wallet{font-size:11px}
+}
+img,canvas,.tile{image-rendering:pixelated;image-rendering:crisp-edges}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges}
