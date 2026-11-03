@@ -218,7 +218,7 @@
     rect(x-12,y+h-18,24,35,"#493126");rect(x-8,y+h-14,16,31,"#95643d");rect(x+4,y+h-5,2,2,"#f0ce72");rect(x-18,y+h+17,36,5,"#b4a58a");
     if(type==="forge"||type==="inn"){rect(x+w*.23,y-70,13,29,"#6e4a3b");rect(x+w*.23-2,y-74,17,5,"#44332f");}
     rect(x-11,y-82,22,10,type==="guild"?"#d6b56e":"#70452f");rect(x-8,y-79,16,3,"#e7d7a5");
-    ctx.fillStyle="#fff0ca";ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(b.name,x,y-91);
+    ctx.fillStyle="#fff0ca";ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";
   }
   function drawPixelPerson(p,isPlayer=false){
     const q=project(p.x,p.y),x=q.x,y=q.y;
@@ -262,7 +262,7 @@
     for(const p of others.values())objects.push({depth:p.y,draw:()=>drawPixelPerson(p)});
     objects.push({depth:player.y,draw:()=>drawPixelPerson(player,true)});
     objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
-    fieldEnemies.filter(e=>e.alive).forEach(e=>{const p=project(e.x,e.y);ellipse(p.x,p.y+5,13,5,"#25372a");ellipse(p.x,p.y-10,12,12,e.color);ellipse(p.x-4,p.y-13,2,3,"#20252b");ellipse(p.x+4,p.y-13,2,3,"#20252b");ctx.fillStyle="#fff";ctx.font="11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(e.name,p.x,p.y-29);});
+    fieldEnemies.filter(e=>e.alive).forEach(e=>{const p=project(e.x,e.y);ellipse(p.x,p.y+5,13,5,"#25372a");ellipse(p.x,p.y-10,12,12,e.color);ellipse(p.x-4,p.y-13,2,3,"#20252b");ellipse(p.x+4,p.y-13,2,3,"#20252b");ctx.fillStyle="#fff";ctx.font="11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";});
   }
   function update(dt){
     if(!started||!$("creation-panel").classList.contains("hidden"))return;
