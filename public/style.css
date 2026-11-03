@@ -142,3 +142,7 @@ canvas{image-rendering:auto}
 .battle-actions button:active{background:#a9c5ef;color:#172338}
 .mobile-controls.battle-hidden{display:none}
 @media(max-width:650px){.battle-controls{bottom:6px;left:6px;right:6px;align-items:stretch;flex-direction:column}.battle-help{text-align:center}.battle-actions{justify-content:center}.battle-actions button{padding:9px 10px;font-size:12px}}
+
+.battle-move{display:flex;gap:6px;pointer-events:auto}
+.battle-move button{padding:10px 13px;background:#344966;border:1px solid #9bb4d7;border-radius:5px;color:#fff;font-weight:700;touch-action:none}
+@media(max-width:650px){.battle-controls{gap:6px}.battle-move{justify-content:center}.battle-move button{padding:8px 12px}}
