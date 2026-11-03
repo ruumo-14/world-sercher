@@ -1,15 +1,8 @@
-# WORLD SERCHER
+# WORLD SERCHER — アステリア世界
 
-ドット絵のファンタジー世界を自由に探索するオンラインゲームの開発プロジェクトです。
+オリジナルの16ビット風ドット絵で描く、友達と一緒に探索できるファンタジーオンラインRPGです。昔ながらの家庭用RPGの温かい色使いや冒険感を参考にしつつ、キャラクター・モンスター・町・マップ・UIはすべてオリジナルで制作します。
 
-## 現在の試作版
-- はじまりの町と周辺の草原を探索
-- 矢印キー / WASD で移動、E キーで施設を調べる
-- スマートフォン・タブレット向けの移動ボタン
-- Node.js + Express + Socket.IO によるサーバーとプレイヤー位置共有の土台
-- `/health` でサーバー状態を確認
-
-## ローカル起動
+## 起動
 
 ```bash
 npm install
@@ -19,32 +12,36 @@ npm start
 ブラウザで `http://localhost:3000` を開きます。
 
 ## Render
-Render の Web Service で公開できる構成です。
+
 - Build Command: `npm install`
 - Start Command: `npm start`
 - Environment: Node
+- 必須環境変数: `DATABASE_URL`, `SESSION_SECRET`
 
-サーバーの公開設定やデータベース接続は、ゲームの基礎部分を確認してから設定します。
+`DATABASE_URL` はPostgreSQLの接続文字列です。`SESSION_SECRET` はRender上で十分に長いランダム文字列を設定してください。どちらもGitHubへ書き込まないでください。
 
-## 今後の開発予定
-1. キャラクター・マップ・操作の改善
-2. 職業、レベル、スキル、装備
-3. 採集、クラフト、アイテム、レア度
-4. 自宅、施設、個人ショップ
-5. 市場・オークション、共通通貨
-6. ランキング、ミニゲーム、友達との交流
-7. セーブデータとアカウント管理
+## 現在の試作版に含まれるもの
 
-※現在は開発初期の試作版です。データ保存、アカウント、ランキング、取引などはまだ実装されていません。
+- アカウント登録・ログイン（bcryptによるパスワードハッシュ化）
+- PostgreSQLを使ったセッション・キャラクター情報の保存
+- Socket.IOによるログイン中プレイヤーの位置共有
+- 8方向移動、衝突判定、PC・タブレット・スマートフォン向け操作
+- リーフェルの町と周辺の探索
+- キャラクター種族・外見の初期設定と保存
+- 冒険者情報パネル（種族・職業・スキル・装備・世界設定）
+- 敵シンボルに接触して始まる横スクロール型の戦闘試作
+- オリジナルのピクセルアート素材
 
+## 決定済みのゲーム仕様
 
-## Account and save database setup
+詳細は [GAME_DESIGN.md](GAME_DESIGN.md) を参照してください。アステリア世界、8つの地域、7種族、12職業、成長上限、NPC6人の個別物語、任意の共通物語、自宅・取引・ランキングなど、これまでに決めた内容を記録しています。
 
-The account system requires a PostgreSQL database. Set these environment variables on the Render Web Service:
+## まだ開発が必要な機能
 
-- `DATABASE_URL`: the PostgreSQL connection string from your database provider. Keep it secret.
-- `SESSION_SECRET`: a long random secret generated in Render. Do not commit it to GitHub.
+現在は土台と一部の試作です。職業変更のサーバー判定、経験値の実報酬、スキル書・スキル強化、装備と素材の完全な所持管理・強化、NPCの生活スケジュール・好感度・物語、クエスト、自宅機能、プレイヤー間取引、ランキング、広大な地域の接続・読み込み、戦闘報酬とセーブ連携などは、順番に実装する必要があります。設計書に書かれていることが、すべて現時点で遊べるという意味ではありません。
 
-The server creates the account and save tables automatically at startup. Passwords are stored as bcrypt hashes, not plaintext. Player name and position are saved automatically; more game progress fields can be added as those systems are implemented.
+## セキュリティ
 
-Do not use a local SQLite file on Render Free for account saves: its filesystem is ephemeral.
+- パスワードは平文保存しません。
+- `DATABASE_URL` と `SESSION_SECRET` を公開しないでください。
+- Render Freeの一時ファイルシステムにセーブデータを保存しないでください。PostgreSQLを使用します。
