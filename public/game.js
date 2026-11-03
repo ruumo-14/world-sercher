@@ -152,9 +152,9 @@
   function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
   function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);ctx.fill()}
   function path(points,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0]-camera.x,p[1]-camera.y):ctx.moveTo(p[0]-camera.x,p[1]-camera.y));ctx.stroke()}
-  // North-at-top, front-facing top-down quarter view (not isometric).
-  // World X maps to screen X; world Y maps to screen Y with a mild depth squash.
-  const TILE=32, DEPTH=.78;
+  // Gentle front-facing quarter view: north stays at the top, with a modest
+  // camera elevation. Character sprite proportions and screen-facing shapes stay unchanged.
+  const TILE=32, DEPTH=.68;
   function project(wx,wy){return{x:Math.round(W/2+(wx-camera.x)),y:Math.round(H/2+(wy-camera.y)*DEPTH)};}
   function poly(points,fill,stroke="#29202a",line=2){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}}
   function tile(wx,wy,fill){const p=project(wx,wy);rect(p.x-16,p.y-13,32,26,fill);}
@@ -202,10 +202,21 @@
     for(let row=0;row<5;row++)for(let col=0;col<Math.floor(w/13);col++){const xx=x-w/2+5+col*13+(row%2?6:0),yy=y+row*10;rect(xx,yy,8,2,row%2?"#a77e58":"#ead0a0");}
     // Timber framing.
     rect(x-w/2+8,y-16,6,h+18,"#68462f");rect(x+w/2-14,y-16,6,h+18,"#68462f");rect(x-3,y-16,6,h+18,"#68462f");
-    // Roof with shingle rows; front eave remains horizontal.
-    poly([{x:x-w/2-12,y:y-21},{x:x-3,y:y-72-(index%3)*4},{x:x+w/2+12,y:y-21}],roof,"#281e20",4);
-    poly([{x:x-w/2-8,y:y-23},{x:x-3,y:y-65-(index%3)*4},{x:x+w/2+8,y:y-23}],lit,"#50302a",2);
-    for(let row=0;row<4;row++)for(let col=0;col<7;col++){const xx=x-w/2+6+col*(w/7),yy=y-27-row*9+Math.abs(col-3)*6;rect(xx,yy,Math.max(6,w/10),3,(row+col)%3===0?"#e0a06c":(row+col)%2?"#995044":"#743d37");}
+    // Raised pitched roof: broad visible roof plane, dark eaves and a side plane
+    // create depth while keeping the facade and door straight-on.
+    const ridgeY=y-82-(index%3)*4, eaveY=y-19, roofFront=y-7;
+    poly([{x:x-w/2-13,y:eaveY},{x:x-3,y:ridgeY},{x:x+w/2+13,y:eaveY},{x:x+w/2+8,y:roofFront},{x:x,y:roofFront+18},{x:x-w/2-8,y:roofFront}], "#392827","#251d20",4);
+    poly([{x:x-w/2-9,y:eaveY-2},{x:x-3,y:ridgeY+5},{x:x-1,y:roofFront+5},{x:x-w/2+3,y:roofFront+3}],lit,"#50302a",2);
+    poly([{x:x-1,y:ridgeY+5},{x:x+w/2+9,y:eaveY-2},{x:x+w/2+5,y:roofFront+2},{x:x,y:roofFront+18}],roof,"#392725",2);
+    // Individual shingle courses follow the roof slope.
+    for(let row=0;row<5;row++)for(let col=0;col<8;col++){
+      const t=(col+.5)/8,xx=x-w/2+5+t*(w-10),slope=Math.abs(t-.5)*2;
+      const yy= y-25-row*8-slope*42;
+      rect(xx,yy,Math.max(5,w/12),3,(row+col)%4===0?"#e0a06c":(row+col)%2?"#995044":"#743d37");
+      if((row+col)%3===0)rect(xx+2,yy+3,Math.max(3,w/18),1,"#d18b5c");
+    }
+    rect(x-w/2-12,roofFront-1,w+24,5,"#4a3029");
+    rect(x-w/2-12,roofFront+3,w+24,2,"#b8784f");
     // Warm windows, shutters and centered wooden door.
     const wy=y+Math.round(h*.38);for(const s of [-1,1]){const wx=x+s*w*.29;rect(wx-10,wy-11,20,25,"#493329");rect(wx-7,wy-8,14,19,"#e6ad58");rect(wx-5,wy-6,10,15,"#ffe2a0");rect(wx-1,wy-8,2,18,"#754b30");rect(wx-12,wy-12,4,26,"#805234");rect(wx+8,wy-12,4,26,"#805234");}
     rect(x-12,y+h-18,24,35,"#493126");rect(x-8,y+h-14,16,31,"#95643d");rect(x+4,y+h-5,2,2,"#f0ce72");rect(x-18,y+h+17,36,5,"#b4a58a");
