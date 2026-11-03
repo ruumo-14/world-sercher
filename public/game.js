@@ -11,7 +11,7 @@
   const socket=typeof io==="function"?io({autoConnect:false}):null;
   const town={x:1600,y:1300};
   const buildings=[
-    ["冒険者ギルド",1350,830,190,145,"#d5b47b","guild"],["武器屋",1080,1120,150,120,"#bd8860","shop"],["鍛冶屋",1260,1110,150,125,"#8c6b59","forge"],["道具屋",1790,1100,155,125,"#c48e5e","shop"],["宿屋",1990,1300,180,140,"#b77d57","inn"],["酒場",1970,1510,150,120,"#98664e","inn"],["市場",1740,1570,180,120,"#c19a62","market"],["銀行",1510,1640,140,115,"#b5a17a","bank"],["町長の家",1220,1450,165,130,"#a78a71","home"],["あなたの家",1450,1840,175,140,"#9a7eaa","home"],["服飾店",990,1450,145,120,"#b77b8b","shop"],["農家の作業小屋",1810,1810,150,120,"#a18b57","farm"],["理髪店",2080,1080,130,110,"#a6a1a0","shop"],["仕立て屋",2110,1640,145,115,"#a87989","shop"],["訓練所",930,900,155,120,"#8c9a72","guild"],["住民の家",1030,650,125,100,"#b48a62","home"],["住民の家",1190,610,130,105,"#a98268","home"],["住民の家",1840,650,130,105,"#b58e67","home"],["住民の家",2020,720,125,100,"#a67f60","home"],["住民の家",2280,980,125,105,"#b18c69","home"],["住民の家",2320,1830,135,105,"#a67f60","home"],["住民の家",2070,2030,135,105,"#b58e67","home"],["住民の家",1200,1970,130,105,"#ad8967","home"],["住民の家",980,1810,130,105,"#b18c69","home"]
+    ["冒険者ギルド",1880,820,190,145,"#d5b47b","guild"],["武器屋",1120,1030,150,120,"#bd8860","shop"],["鍛冶屋",1200,1650,150,125,"#8c6b59","forge"],["道具屋",2070,1030,155,125,"#c48e5e","shop"],["宿屋",2180,1510,180,140,"#b77d57","inn"],["酒場",2180,1770,150,120,"#98664e","inn"],["市場",1900,1780,180,120,"#c19a62","market"],["銀行",1810,2010,140,115,"#b5a17a","bank"],["町長の家",1110,1510,165,130,"#a78a71","home"],["あなたの家",1270,1940,175,140,"#9a7eaa","home"],["服飾店",930,1510,145,120,"#b77b8b","shop"],["農家の作業小屋",2050,2070,150,120,"#a18b57","farm"],["理髪店",2310,1030,130,110,"#a6a1a0","shop"],["仕立て屋",2350,1770,145,115,"#a87989","shop"],["訓練所",900,820,155,120,"#8c9a72","guild"],["住民の家",790,570,125,100,"#b48a62","home"],["住民の家",1010,570,130,105,"#a98268","home"],["住民の家",2110,570,130,105,"#b58e67","home"],["住民の家",2320,650,125,100,"#a67f60","home"],["住民の家",2470,930,125,105,"#b18c69","home"],["住民の家",2470,1900,135,105,"#a67f60","home"],["住民の家",2220,2070,135,105,"#b58e67","home"],["住民の家",1020,2050,130,105,"#ad8967","home"],["住民の家",790,1810,130,105,"#b18c69","home"]
   ].map(([name,x,y,w,h,color,type])=>({name,x,y,w,h,color,type}));
   const npcDefs=[
     ["エミリア","受付",1460,955,"#c86d83","#8a513b"],["ガルド","鍛冶師",1330,1250,"#7c8790","#51443b"],["ミーナ","道具屋",1850,1230,"#d58d57","#6b4936"],["ノア","農家",1880,1880,"#82a65f","#78543b"],["ロイド","宿屋",2040,1430,"#b88b62","#68472f"],["アルベルト","町長",1300,1570,"#7d8caa","#75604b"],
@@ -181,7 +181,13 @@
     const road=(x1,y1,x2,y2,width,color)=>{const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/24);for(let i=0;i<=n;i++){const t=i/n,cx=x1+(x2-x1)*t,cy=y1+(y2-y1)*t;for(let o=-width/2;o<=width/2;o+=32){const p=project(cx+(x2===x1?o:0),cy+(y2===y1?o:0));ellipse(p.x,p.y,19,14,color);}}};
     road(1600,500,1600,2300,96,"#a99b7c");road(650,1320,2600,1320,96,"#a99b7c");
     road(1600,1320,1100,900,48,"#927c5b");road(1600,1320,2050,900,48,"#927c5b");road(1600,1320,2050,1800,48,"#927c5b");
-    for(let y=1192;y<=1448;y+=32)for(let x=1472;x<=1728;x+=32){const p=project(x,y);ellipse(p.x,p.y,19,14,((x/32+y/32)%2===0)?"#c9bd9b":"#b4a787");}
+    // Continuous square-cut stone paving: every cell touches its neighbours, with fine grout and no gaps.
+    for(let wy=1168;wy<1488;wy+=32)for(let wx=1440;wx<1760;wx+=32){
+      const a=project(wx,wy),b=project(wx+32,wy),c=project(wx+32,wy+32),d=project(wx,wy+32);
+      const shade=((wx/32+wy/32)%2===0)?"#c8bea5":"#bdb397";
+      poly([{x:a.x,y:a.y},{x:b.x,y:b.y},{x:c.x,y:c.y},{x:d.x,y:d.y}],shade,"#9f967f",1);
+      const hi=project(wx+3,wy+3);rect(hi.x,hi.y,22,1,"#ded5bd");
+    }
     for(let y=2048;y<2240;y+=32)for(let x=1840;x<2160;x+=32){const p=project(x,y);ellipse(p.x,p.y,19,14,"#82613d");}
     drawBridge(390,930);drawBridge(430,1260);drawBridge(480,1680);drawBridge(510,1940);
     drawFountain(1600,1320);
@@ -266,14 +272,14 @@
     const ink="#211923",female=!isPlayer&&[0,2,8,14,16,18,19,21,23,26,31,32].includes(p.id);
     const skin=isPlayer?"#f0c9a2":"#edc39b",hair=isPlayer?"#493126":(female?"#e5bd58":(p.hair||"#60412f"));
     const coat=isPlayer?"#713aa0":(female?"#3267a5":p.color);
-    const px=(rx,ry,rw,rh,color)=>{rect(x+rx-2,y+ry-2,rw+4,rh+4,ink);rect(x+rx,y+ry,rw,rh,color);};
+    const px=(rx,ry,rw,rh,color)=>{rect(x+rx-1,y+ry-1,rw+2,rh+2,"#493b35");rect(x+rx,y+ry,rw,rh,color);};
     ellipse(x,y+7,14,5,"#30452f");
     px(-9,-1,6,10,"#49352f");px(3,-1,6,10,"#49352f");
     rect(x-9,y+6,7,3,"#d1a66c");rect(x+3,y+6,7,3,"#d1a66c");
     px(-13,-27,26,23,isPlayer?"#552c82":coat);
     if(female){px(-11,-25,22,24,"#3267a5");px(-13,-22,4,12,"#274f88");px(9,-22,4,12,"#274f88");}
     else{px(-11,-25,22,22,coat);px(-14,-21,5,13,coat);px(9,-21,5,13,coat);}
-    if(isPlayer){rect(x-9,y-19,18,2,"#e8c56d");rect(x-2,y-15,4,9,"#e8c56d");rect(x-9,y-7,18,2,"#d8b45d");}
+    if(isPlayer){rect(x-9,y-19,18,2,"#e8c56d");rect(x-2,y-15,4,9,"#e8c56d");rect(x-9,y-7,18,2,"#d8b45d");rect(x-11,y-25,3,16,"#8f5bc4");rect(x+8,y-25,3,16,"#8f5bc4");rect(x-5,y-24,10,2,"#a978d0");}
     else if(female){rect(x-2,y-18,4,16,"#d9c27c");rect(x-8,y-7,16,2,"#e4c77c");}
     else{rect(x-8,y-8,16,3,"#c5a35e");rect(x-2,y-8,4,4,"#f0d48a");}
     px(-4,-32,8,6,skin);px(-10,-50,20,20,skin);px(-12,-43,3,7,skin);px(9,-43,3,7,skin);
@@ -293,14 +299,21 @@
       rect(x-13,y-24,3,3,"#f4dc87");rect(x+10,y-24,3,3,"#f4dc87");
     }else{px(-12,-56,24,8,hair);px(-14,-49,5,12,hair);px(9,-49,5,11,hair);rect(x-8,y-57,7,3,"#9b704b");rect(x+2,y-58,7,3,"#9b704b");}
   }
+  function drawPlayerName(p){
+    const q=project(p.x,p.y);
+    const label=(p.name||"冒険者").slice(0,12);
+    ctx.save();ctx.font="11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.lineJoin="round";ctx.lineWidth=3;ctx.strokeStyle="rgba(24,30,39,.88)";ctx.strokeText(label,q.x,q.y-78);
+    ctx.fillStyle="#fff8df";ctx.fillText(label,q.x,q.y-78);ctx.restore();
+  }
   function render(){
     ctx.clearRect(0,0,W,H);if(battle){drawBattle();return;}drawGround();
     const objects=[];
     for(const b of buildings)objects.push({depth:b.y+b.h,draw:()=>drawHouse(b,buildings.indexOf(b))});
     for(let i=0;i<110;i++){const x=160+Math.floor(hash(i,23)*2700),y=180+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<420||(x>280&&x<620&&y>700&&y<2200))continue;objects.push({depth:y,draw:()=>drawTree(x,y,i)});}
     for(const n of npcs)objects.push({depth:n.y,draw:()=>drawPixelPerson(n)});
-    for(const p of others.values())objects.push({depth:p.y,draw:()=>drawPixelPerson(p)});
-    objects.push({depth:player.y,draw:()=>drawPixelPerson(player,true)});
+    for(const p of others.values())objects.push({depth:p.y,draw:()=>{drawPixelPerson(p);drawPlayerName(p)}});
+    objects.push({depth:player.y,draw:()=>{drawPixelPerson(player,true);drawPlayerName(player)}});
     objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
     fieldEnemies.filter(e=>e.alive).forEach(e=>{const p=project(e.x,e.y);ellipse(p.x,p.y+5,13,5,"#25372a");ellipse(p.x,p.y-10,12,12,e.color);ellipse(p.x-4,p.y-13,2,3,"#20252b");ellipse(p.x+4,p.y-13,2,3,"#20252b");ctx.fillStyle="#fff";ctx.font="11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";});
   }
