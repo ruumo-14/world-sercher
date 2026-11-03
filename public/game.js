@@ -1,325 +1,96 @@
 "use strict";
-
 (() => {
-  const canvas = document.getElementById("game");
-  // Render the 960x600 world into a 480x300 buffer, then upscale with nearest-neighbour filtering.
-  // This gives the prototype a crisp, retro pixel-art presentation without heavy image assets.
-  canvas.width = 480;
-  canvas.height = 300;
-  const ctx = canvas.getContext("2d");
-  ctx.scale(0.5, 0.5);
-  ctx.imageSmoothingEnabled = false;
-  const startPanel = document.getElementById("start-panel");
-  const authForm=document.getElementById("auth-form"),accountNameInput=document.getElementById("account-name"),passwordInput=document.getElementById("account-password"),characterNameInput=document.getElementById("character-name"),characterNameWrap=document.getElementById("character-name-wrap"),authMessage=document.getElementById("auth-message"),authSubmit=document.getElementById("auth-submit"),loginTab=document.getElementById("login-tab"),registerTab=document.getElementById("register-tab"),logoutButton=document.getElementById("logout-button");
-  const notice=document.getElementById("notice"),onlineCount=document.getElementById("online-count"),connectionState=document.getElementById("connection-state"),hudName=document.getElementById("hud-name");
-  const VIEW_W = 960;
-  const VIEW_H = 600;
-  const TILE = 48;
-  const world = { width: 3200, height: 2400 };
-  const player = { id: null, name: "冒険者", x: 1600, y: 1370, speed: 190, color: "#f2c078" };
-  const others = new Map();
-  const keys = new Set();
-  const buildings = [
-    { x: 1320, y: 1080, w: 190, h: 145, name: "町長の家", color: "#9b7655" },
-    { x: 1600, y: 1000, w: 220, h: 170, name: "道具屋", color: "#8b6250" },
-    { x: 1900, y: 1110, w: 190, h: 145, name: "宿屋", color: "#a77b4f" },
-    { x: 1460, y: 1510, w: 210, h: 155, name: "あなたの家", color: "#876a9c" },
-    { x: 1850, y: 1510, w: 190, h: 145, name: "工房", color: "#8c7650" }
+  const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
+  const W=960,H=600; canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=false;
+  const $=id=>document.getElementById(id);
+  const startPanel=$("start-panel"),authForm=$("auth-form"),accountName=$("account-name"),password=$("account-password"),characterName=$("character-name"),nameWrap=$("character-name-wrap"),authMessage=$("auth-message"),authSubmit=$("auth-submit"),loginTab=$("login-tab"),registerTab=$("register-tab"),notice=$("notice"),hudName=$("hud-name"),onlineCount=$("online-count"),connectionState=$("connection-state");
+  const player={id:null,name:"冒険者",x:1600,y:1300,speed:155,dir:"down",species:"人間",hair:"栗色",skin:"明るい肌",eyes:"青",style:"旅人",outfit:"#4f78a5",accessory:"なし"};
+  const others=new Map(),keys=new Set();let started=false,authMode="login",gameData={},camera={x:0,y:0},lastMoveSent=0,noticeTimer=null,lastFrame=0;
+  const socket=typeof io==="function"?io({autoConnect:false}):null;
+  const town={x:1600,y:1300};
+  const buildings=[
+    ["冒険者ギルド",1350,830,190,145,"#d5b47b","guild"],["武器屋",1080,1120,150,120,"#bd8860","shop"],["鍛冶屋",1260,1110,150,125,"#8c6b59","forge"],["道具屋",1790,1100,155,125,"#c48e5e","shop"],["宿屋",1990,1300,180,140,"#b77d57","inn"],["酒場",1970,1510,150,120,"#98664e","inn"],["市場",1740,1570,180,120,"#c19a62","market"],["銀行",1510,1640,140,115,"#b5a17a","bank"],["町長の家",1220,1450,165,130,"#a78a71","home"],["あなたの家",1450,1840,175,140,"#9a7eaa","home"],["服飾店",990,1450,145,120,"#b77b8b","shop"],["農家の作業小屋",1810,1810,150,120,"#a18b57","farm"],["理髪店",2080,1080,130,110,"#a6a1a0","shop"],["仕立て屋",2110,1640,145,115,"#a87989","shop"],["訓練所",930,900,155,120,"#8c9a72","guild"]
+  ].map(([name,x,y,w,h,color,type])=>({name,x,y,w,h,color,type}));
+  const npcDefs=[
+    ["エミリア","受付",1460,955,"#c86d83","#8a513b"],["ガルド","鍛冶師",1330,1250,"#7c8790","#51443b"],["ミーナ","道具屋",1850,1230,"#d58d57","#6b4936"],["ノア","農家",1880,1880,"#82a65f","#78543b"],["ロイド","宿屋",2040,1430,"#b88b62","#68472f"],["アルベルト","町長",1300,1570,"#7d8caa","#75604b"],
+    ["セラ","武器屋",1130,1245,"#bd6e68","#513b32"],["トーマス","銀行員",1550,1740,"#8b9b9a","#564536"],["リナ","服飾職人",1030,1570,"#c47a9b","#684638"],["バルド","衛兵",900,1190,"#758b6d","#4a392f"],["ユリウス","衛兵",2210,1370,"#758b6d","#4a392f"],["マルタ","市場商人",1780,1690,"#d2a65f","#67452f"],
+    ["ピノ","農家",1920,1950,"#8aa75f","#754c37"],["カイ","釣り人",650,1500,"#7399a9","#5a4535"],["メル","花屋",900,1680,"#d58c9b","#654337"],["オスカー","大工",1160,1780,"#b8895e","#60432f"],
+    ["ユナ","住民",1240,700,"#d58c9b","#604333"],["レオ","子ども",1530,720,"#d6ae72","#62432f"],["ミオ","子ども",1670,720,"#d58c9b","#62432f"],["ハンナ","住民",2260,900,"#b7a16e","#644a36"],["エド","住民",2310,1760,"#8097a1","#514136"],["フローラ","住民",1130,1900,"#b97c91","#624333"],["ジン","住民",1340,2010,"#b28b60","#513b2d"],["サラ","住民",2160,1900,"#d3a16c","#694835"],
+    ["旅人アレン","旅人",720,950,"#7892b4","#4e392d"],["商人ベラ","旅商人",2380,1120,"#bd8b63","#614330"],["旅人ノル","旅人",700,1800,"#829a91","#53402e"],["行商人リック","行商人",2370,1580,"#b88c5e","#60432f"],["衛兵ロウ","衛兵",1600,600,"#718a6c","#48392e"],["衛兵ミラ","衛兵",2470,1430,"#718a6c","#48392e"],["羊飼いテオ","牧童",2030,2040,"#a58c5d","#624630"],["釣り人ネネ","釣り人",520,1580,"#7196a5","#654832"],["薬草師イリス","薬草師",850,1900,"#83a66d","#634735"],["パン屋オットー","パン職人",1700,1900,"#c38a61","#64442f"],["吟遊詩人ルカ","旅芸人",1780,780,"#a68bb8","#563d32"],["見習い冒険者","冒険者",1450,760,"#6e9ca9","#503c32"]
   ];
-  const socket = typeof io === "function" ? io({ autoConnect: false }) : null;
-  let started = false;
-  let authMode = "login";
-  let saveTimer = 0;
-  let lastTime = 0;
-  let lastSent = 0;
-  let noticeTimer = null;
-  let camera = { x: 0, y: 0 };
-
-  function showNotice(message) {
-    notice.textContent = message;
-    notice.classList.add("show");
-    clearTimeout(noticeTimer);
-    noticeTimer = setTimeout(() => notice.classList.remove("show"), 2300);
-  }
-
-  function blocked(x, y) {
-    const radius = 13;
-    if (x < radius || y < radius || x > world.width - radius || y > world.height - radius) return true;
-    return buildings.some(b => x + radius > b.x && x - radius < b.x + b.w && y + radius > b.y + 28 && y - radius < b.y + b.h);
-  }
-
-  function setAuthMode(mode){
-    authMode=mode;const registering=mode==="register";
-    loginTab.classList.toggle("active",!registering);registerTab.classList.toggle("active",registering);
-    characterNameWrap.classList.toggle("hidden",!registering);passwordInput.autocomplete=registering?"new-password":"current-password";
-    passwordInput.minLength=registering?10:1;authSubmit.innerHTML=registering?"アカウントを作成 <span>✦</span>":"ログイン <span>▶</span>";
-    authMessage.textContent=registering?"ユーザーIDと10文字以上のパスワードを設定してね。":"登録済みのユーザーIDとパスワードを入力してね。";
-  }
+  const npcs=npcDefs.map((n,i)=>({id:i,name:n[0],role:n[1],x:n[2],y:n[3],color:n[4],hair:n[5],phase:(i%5)*.7}));
+  const water={x:460,y:1350,w:470,h:850};
+  const pathPoints=[[-150,1300],[2800,1300],[1600,360],[1600,2360],[460,1350],[2700,1350]];
+  function say(t){notice.textContent=t;notice.classList.add("show");clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>notice.classList.remove("show"),2600)}
+  function setAuthMode(mode){authMode=mode;const reg=mode==="register";loginTab.classList.toggle("active",!reg);registerTab.classList.toggle("active",reg);nameWrap.classList.toggle("hidden",!reg);password.autocomplete=reg?"new-password":"current-password";password.minLength=reg?10:1;authSubmit.textContent=reg?"アカウントを作成 ✦":"ログイン ▶";authMessage.textContent=reg?"ユーザーIDと10文字以上のパスワードを設定してね。":"登録済みのユーザーIDとパスワードを入力してね。"}
   loginTab.addEventListener("click",()=>setAuthMode("login"));registerTab.addEventListener("click",()=>setAuthMode("register"));
-  async function enterWorld(profile){
-    player.name=profile.name||"冒険者";player.x=Number(profile.x)||1600;player.y=Number(profile.y)||1370;hudName.textContent=player.name;
-    started=true;startPanel.classList.add("hidden");window.dispatchEvent(new Event("world:entered"));if(socket)socket.connect();showNotice("おかえりなさい！ 前回の冒険データを読み込んだよ。");
+  async function readGameData(){try{const r=await fetch("/api/game-data",{credentials:"same-origin"});if(r.ok){const j=await r.json();gameData=j.gameData||{}}}catch(e){gameData={}}}
+  async function saveGameData(){try{await fetch("/api/game-data",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({gameData})})}catch(e){}}
+  function openCreation(){const panel=$("creation-panel");if(panel)panel.classList.remove("hidden")}
+  function closeCreation(){const panel=$("creation-panel");if(panel)panel.classList.add("hidden")}
+  function initCreation(){
+    const form=$("creation-form");if(!form)return;
+    form.addEventListener("submit",async e=>{e.preventDefault();player.name=($("create-name").value.trim()||"冒険者").slice(0,12);player.species=$("create-species").value;player.hair=$("create-hair").value;player.skin=$("create-skin").value;player.eyes=$("create-eyes").value;player.style=$("create-style").value;player.outfit=$("create-color").value;player.accessory=$("create-accessory").value;
+      gameData.characterCreated=true;gameData.species=player.species;gameData.appearance={hair:player.hair,skin:player.skin,eyes:player.eyes,style:player.style,color:player.outfit,accessory:player.accessory};await saveGameData();await saveCurrent();hudName.textContent=player.name;closeCreation();showNotice("ようこそ、リーフェルへ！");});
   }
-  authForm.addEventListener("submit",async event=>{
-    event.preventDefault();authSubmit.disabled=true;authMessage.textContent="確認しています...";
-    const payload={username:accountNameInput.value.trim(),password:passwordInput.value,characterName:characterNameInput.value.trim()||accountNameInput.value.trim()};
-    try{const response=await fetch(authMode==="register"?"/api/register":"/api/login",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify(payload)});
-      const result=await response.json();if(!response.ok)throw new Error(result.error||"処理に失敗しました。");passwordInput.value="";await enterWorld(result.profile);
-    }catch(error){authMessage.textContent=error.message||"通信に失敗しました。";}finally{authSubmit.disabled=false;}
-  });
-  async function saveCurrent(){if(!started)return;try{await fetch("/api/save",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:player.name,x:player.x,y:player.y})});}catch(_error){}}
-  logoutButton.addEventListener("click",async()=>{await saveCurrent();if(socket)socket.disconnect();await fetch("/api/logout",{method:"POST",credentials:"same-origin"});location.reload();});
-  setInterval(()=>{if(started)saveCurrent();},10000);window.addEventListener("pagehide",saveCurrent);
-  async function checkExistingLogin(){try{const response=await fetch("/api/me",{credentials:"same-origin"});const result=await response.json();if(response.ok&&result.loggedIn)await enterWorld(result.profile);else if(!response.ok)authMessage.textContent=result.error||"アカウント機能の準備が必要です。";}catch(_error){authMessage.textContent="サーバーに接続できません。再読み込みしてね。";}}
-  checkExistingLogin();
-  if (socket) {
-    socket.on("connect", () => {
-      connectionState.textContent = "サーバー接続済み";
-      onlineCount.textContent = "オンライン";
-      if (started) socket.emit("player:join");
-    });
-    socket.on("disconnect", () => {
-      connectionState.textContent = "再接続を待っています";
-      onlineCount.textContent = "接続が切れました";
-    });
-    socket.on("world:init", data => {
-      if (data && data.world) Object.assign(world, data.world);
-      (data.players || []).forEach(p => others.set(p.id, p));
-      updateOnline();
-    });
-    socket.on("player:ready", data => { player.id=data.id; player.x=data.x; player.y=data.y; player.name=data.name; });
-    socket.on("player:joined", p => { others.set(p.id, p); updateOnline(); showNotice(p.name + " が冒険に参加したよ！"); });
-    socket.on("player:moved", p => { const old = others.get(p.id); if (old) Object.assign(old, p); });
-    socket.on("player:left", id => { others.delete(id); updateOnline(); });
-    socket.on("connect_error", error => { connectionState.textContent="ログイン接続エラー"; showNotice(error.message||"接続できませんでした。"); });
-  } else {
-    connectionState.textContent = "オフライン表示";
-    onlineCount.textContent = "サーバー未接続";
+  async function enterWorld(profile){player.name=profile.name||"冒険者";player.x=Number(profile.x)||1600;player.y=Number(profile.y)||1300;hudName.textContent=player.name;started=true;await readGameData();if(!gameData.characterCreated){$("create-name").value=player.name;openCreation()}else{const a=gameData.appearance||{};player.species=gameData.species||"人間";player.hair=a.hair||"栗色";player.skin=a.skin||"明るい肌";player.eyes=a.eyes||"青";player.style=a.style||"旅人";player.outfit=a.color||"#4f78a5";player.accessory=a.accessory||"なし";startPanel.classList.add("hidden");if(socket)socket.connect();}window.dispatchEvent(new Event("world:entered"));}
+  initCreation();
+  authForm.addEventListener("submit",async e=>{e.preventDefault();authSubmit.disabled=true;authMessage.textContent="確認しています...";const payload={username:accountName.value.trim(),password:password.value,characterName:characterName.value.trim()||accountName.value.trim()};try{const r=await fetch(authMode==="register"?"/api/register":"/api/login",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify(payload)});const j=await r.json();if(!r.ok)throw new Error(j.error||"処理に失敗しました");password.value="";await enterWorld(j.profile)}catch(err){authMessage.textContent=err.message||"通信に失敗しました"}finally{authSubmit.disabled=false}});
+  async function saveCurrent(){if(!started)return;try{await fetch("/api/save",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:player.name,x:player.x,y:player.y})})}catch(e){}}
+  $("logout-button").addEventListener("click",async()=>{await saveCurrent();if(socket)socket.disconnect();await fetch("/api/logout",{method:"POST",credentials:"same-origin"});location.reload()});
+  setInterval(()=>{if(started)saveCurrent()},10000);window.addEventListener("pagehide",saveCurrent);
+  async function checkLogin(){try{const r=await fetch("/api/me",{credentials:"same-origin"}),j=await r.json();if(r.ok&&j.loggedIn)await enterWorld(j.profile);else if(!r.ok)authMessage.textContent=j.error||"アカウント機能を確認してね"}catch(e){authMessage.textContent="サーバーに接続できません。再読み込みしてね。"}}
+  checkLogin();
+  if(socket){socket.on("connect",()=>{connectionState.textContent="サーバー接続済み";if(started&&!$("creation-panel")?.classList.contains("hidden"))return;socket.emit("player:join")});socket.on("disconnect",()=>{connectionState.textContent="再接続を待っています"});socket.on("world:init",d=>{if(d?.world){};(d.players||[]).forEach(p=>others.set(p.id,p));updateOnline()});socket.on("player:ready",p=>{player.id=p.id;player.x=p.x;player.y=p.y;player.name=p.name});socket.on("player:joined",p=>{others.set(p.id,p);updateOnline();say(p.name+" が村にやってきた！")});socket.on("player:moved",p=>{const o=others.get(p.id);if(o)Object.assign(o,p)});socket.on("player:left",id=>{others.delete(id);updateOnline()});socket.on("connect_error",e=>{connectionState.textContent="接続エラー";say(e.message||"接続できません")})}else connectionState.textContent="オフライン表示";
+  function updateOnline(){onlineCount.textContent="村にいる冒険者 "+(others.size+(started?1:0))+"人"}
+  function blocked(x,y){if(x<70||y<70||x>worldW-70||y>worldH-70)return true;if(Math.hypot(x-(water.x+water.w/2),y-(water.y+water.h/2))<220)return true;return buildings.some(b=>x+12>b.x&&x-12<b.x+b.w&&y+8>b.y+32&&y-8<b.y+b.h)}
+  const worldW=3000,worldH=2500;
+  window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();keys.add(k);if(k==="e"&&started)interact()});window.addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));window.addEventListener("blur",()=>keys.clear());
+  const keyMap={up:"arrowup",down:"arrowdown",left:"arrowleft",right:"arrowright"};document.querySelectorAll("[data-dir]").forEach(b=>{const k=keyMap[b.dataset.dir];b.addEventListener("pointerdown",e=>{e.preventDefault();keys.add(k)});["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>keys.delete(k)))});
+  $("interact-button").addEventListener("click",interact);
+  function interact(){let best=95,target=null;for(const b of buildings){const d=Math.hypot(player.x-(b.x+b.w/2),player.y-(b.y+b.h/2));if(d<best){best=d;target=b}}for(const n of npcs){const d=Math.hypot(player.x-n.x,player.y-n.y);if(d<best){best=d;target=n}}if(target?.name){if(target.role)say(target.name+"「こんにちは！ "+target.role+"をしているよ。」");else say(target.name+"：施設の準備を進めているよ。")}else say("草花が風に揺れている。リーフェルを探検しよう！")}
+  function hash(x,y){let n=(x*374761393+y*668265263)|0;n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967295}
+  function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+  function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);ctx.fill()}
+  function path(points,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0]-camera.x,p[1]-camera.y):ctx.moveTo(p[0]-camera.x,p[1]-camera.y));ctx.stroke()}
+  function drawGround(){rect(0,0,W,H,"#6e9b57");for(let y=Math.floor(camera.y/32)*32-32;y<camera.y+H+32;y+=32)for(let x=Math.floor(camera.x/32)*32-32;x<camera.x+W+32;x+=32){const h=hash(x/32,y/32),sx=x-camera.x,sy=y-camera.y;if(h>.2){rect(sx+5,sy+8,2,5,h>.8?"#b5c77b":"#547f49");rect(sx+12,sy+17,2,4,"#88a95f")}if(h<.035){rect(sx+20,sy+20,4,3,"#e9d9a0");rect(sx+23,sy+18,3,3,"#d18b9a")}}
+    // Winding river, banks and bridge crossings
+    ctx.save();path([[300,700],[400,930],[370,1200],[500,1420],[430,1690],[560,1900],[500,2200]],"#c5b27c",112);path([[300,700],[400,930],[370,1200],[500,1420],[430,1690],[560,1900],[500,2200]],"#438fa0",88);path([[310,730],[405,940],[380,1200],[505,1420],[440,1690],[565,1900]],"#76c0bd",5);ctx.restore();
+    // central plaza and natural cobblestone roads
+    ellipse(1600-camera.x,1320-camera.y,250,205,"#a78e68");ellipse(1600-camera.x,1320-camera.y,230,185,"#c5b58b");
+    path([[1600,1320],[1600,500]],"#8c795e",112);path([[1600,1320],[1600,500]],"#d0bd91",96);path([[1600,1320],[2600,1320]],"#8c795e",112);path([[1600,1320],[2600,1320]],"#d0bd91",96);path([[1600,1320],[1600,2350]],"#8c795e",112);path([[1600,1320],[1600,2350]],"#d0bd91",96);path([[1600,1320],[650,1320]],"#8c795e",112);path([[1600,1320],[650,1320]],"#d0bd91",96);
+    // plaza fountain
+    ellipse(1600-camera.x,1320-camera.y,66,48,"#857b62");ellipse(1600-camera.x,1314-camera.y,58,40,"#5d9da5");ellipse(1600-camera.x,1307-camera.y,34,21,"#8ac9c2");rect(1591-camera.x,1265-camera.y,18,42,"#d4c49a");ellipse(1600-camera.x,1265-camera.y,12,7,"#e6d6ad");
+    // farm plots
+    for(let i=0;i<5;i++){rect(1900-camera.x+i*48,2110-camera.y,40,100,"#8d7048");for(let j=0;j<4;j++){rect(1905-camera.x+i*48,2120-camera.y+j*22,30,4,"#557a3e");rect(1915-camera.x+i*48,2116-camera.y+j*22,5,8,"#80a954")}}
   }
-
-  function updateOnline() {
-    onlineCount.textContent = "オンライン " + (others.size + (started ? 1 : 0)) + "人";
+  function drawTree(x,y,seed=0){const sx=x-camera.x,sy=y-camera.y;ellipse(sx,sy+17,22,8,"#476b3d");rect(sx-6,sy-12,12,35,"#795137");rect(sx-3,sy-10,4,27,"#a9784d");ellipse(sx,sy-28,28,24,"#356b43");ellipse(sx-17,sy-16,19,18,"#447e4a");ellipse(sx+17,sy-16,18,18,"#4d894c");ellipse(sx-8,sy-39,13,10,"#79a95b");ellipse(sx+13,sy-32,12,9,"#6b9d55");rect(sx-15,sy-22,8,4,"#80b366")}
+  function drawHouse(b){const x=b.x-camera.x,y=b.y-camera.y,w=b.w,h=b.h;if(x<-250||y<-220||x>W+250||y>H+220)return;
+    ellipse(x+w/2,y+h+8,w*.62,13,"#476b43");rect(x+8,y+36,w-16,h-36,"#69503d");rect(x+12,y+33,w-24,h-38,b.color);rect(x+20,y+44,w-40,h-55,"#d5bd91");
+    // timber beams, stone foundation and gabled roof
+    rect(x+8,y+h-16,w-16,13,"#87745a");for(let k=0;k<4;k++)rect(x+18+k*(w-36)/3,y+43,6,h-61,"#765039");rect(x+16,y+75,w-32,5,"#765039");
+    ctx.beginPath();ctx.moveTo(x-13,y+48);ctx.lineTo(x+w/2,y-20);ctx.lineTo(x+w+13,y+48);ctx.closePath();ctx.fillStyle="#704438";ctx.fill();ctx.strokeStyle="#49362f";ctx.lineWidth=5;ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+12,y+43);ctx.lineTo(x+w/2,y-10);ctx.lineTo(x+w-12,y+43);ctx.closePath();ctx.fillStyle="#9b5b45";ctx.fill();
+    for(const wx of [x+24,x+w-52]){rect(wx,y+76,28,32,"#654535");rect(wx+4,y+80,20,24,"#8db9b2");rect(wx+13,y+80,3,24,"#e1c995");rect(wx+4,y+90,20,3,"#e1c995")}
+    rect(x+w/2-15,y+h-58,30,43,"#604231");rect(x+w/2-10,y+h-53,20,38,"#956342");rect(x+w/2+5,y+h-34,3,3,"#e8c87d");
+    rect(x+w/2-42,y-35,84,19,"#384c38");ctx.fillStyle="#fff0ce";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.fillText(b.name,x+w/2,y-21);
+    if(b.type==="guild"){rect(x+w/2-20,y-3,40,13,"#d8c17e");rect(x+w/2-4,y-8,8,22,"#f4e5b6")}
+    if(b.type==="forge"){ellipse(x+w-25,y+h-30,9,9,"#ed9955");}
   }
-
-  window.addEventListener("keydown", e => {
-    const key = e.key.toLowerCase();
-    if (["arrowup","arrowdown","arrowleft","arrowright"," "].includes(key)) e.preventDefault();
-    keys.add(key);
-    if (key === "e" && started) interact();
-  });
-  window.addEventListener("keyup", e => keys.delete(e.key.toLowerCase()));
-  window.addEventListener("blur", () => keys.clear());
-
-  document.querySelectorAll("[data-dir]").forEach(button => {
-    const dir = button.dataset.dir;
-    const keyMap = { up: "arrowup", down: "arrowdown", left: "arrowleft", right: "arrowright" };
-    const key = keyMap[dir];
-    button.addEventListener("pointerdown", e => { e.preventDefault(); keys.add(key); });
-    ["pointerup","pointercancel","pointerleave"].forEach(type => button.addEventListener(type, () => keys.delete(key)));
-  });
-  document.getElementById("interact-button").addEventListener("click", interact);
-
-  function interact() {
-    let nearest = null;
-    let best = 92;
-    for (const b of buildings) {
-      const d = Math.hypot(player.x - (b.x + b.w / 2), player.y - (b.y + b.h / 2));
-      if (d < best) { best = d; nearest = b; }
-    }
-    if (nearest) {
-      if (nearest.name === "あなたの家") showNotice("ここがあなたの家だよ！ 家具や設備はこれから追加していくよ。");
-      else showNotice(nearest.name + "：この施設は開発中だよ。");
-    } else {
-      showNotice("周りには草原が広がっている。いろいろな場所を探検してみよう！");
-    }
+  function drawTreePatch(){for(let i=0;i<70;i++){const x=250+(i*173)%2550,y=260+(i*293)%2050;if(x>1050&&x<2250&&y>700&&y<2050)continue;if(Math.hypot(x-water.x,y-water.y)<350)continue;drawTree(x,y,i)}}
+  function drawPixelPerson(p,isPlayer=false){const x=Math.round(p.x-camera.x),y=Math.round(p.y-camera.y);if(x<-35||y<-50||x>W+35||y>H+35)return;const coat=isPlayer?player.outfit:p.color,hair=isPlayer?(player.hair==="金髪"?"#d6b65e":player.hair==="黒髪"?"#302b2b":"#704a35"):p.hair;
+    ellipse(x,y+12,13,5,"#3d603d");rect(x-7,y+3,5,7,"#58483d");rect(x+2,y+3,5,7,"#58483d");rect(x-9,y-8,18,14,"#263f4c");rect(x-8,y-9,16,12,coat);rect(x-4,y-7,8,11,"#e4c68d");
+    rect(x-7,y-23,14,14,isPlayer&&player.skin==="褐色肌"?"#b87953":isPlayer&&player.skin==="色白"?"#f0d3b2":"#dfb58e");rect(x-8,y-25,16,6,hair);rect(x-9,y-21,4,8,hair);rect(x+5,y-21,4,7,hair);rect(x-4,y-18,2,2,"#44352e");rect(x+3,y-18,2,2,"#44352e");rect(x-7,y+1,5,3,"#e0c08c");if(isPlayer&&player.accessory==="帽子")rect(x-11,y-29,22,5,"#b68c4f");
+    if(isPlayer){ctx.fillStyle="#fff3d5";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText(player.name,x,y-34)}
   }
-
-  function rect(x,y,w,h,color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(x,y,w,h);
+  function drawDecor(){for(let i=0;i<20;i++){const x=900+(i*97)%1100,y=800+(i*139)%1000;ellipse(x-camera.x,y-camera.y,5,3,["#d9c17a","#e2a0a3","#c8d49a"][i%3])}for(let i=0;i<8;i++){const x=1460+i*40-camera.x,y=1280-camera.y;rect(x,y,2,10,"#e5d29c");ellipse(x,y-2,5,4,"#f0d88c")}}
+  function render(){ctx.clearRect(0,0,W,H);drawGround();drawTreePatch();drawDecor();buildings.forEach(drawHouse);npcs.forEach(n=>drawPixelPerson(n));for(const p of others.values())drawPixelPerson(p);drawPixelPerson(player,true);
+    // foreground vignette, light pixel frame
+    const g=ctx.createRadialGradient(W/2,H/2,120,W/2,H/2,650);g.addColorStop(.65,"#0000");g.addColorStop(1,"#203b2c55");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   }
-  function roundRect(x,y,w,h,r,fill,stroke) {
-    ctx.beginPath();
-    ctx.roundRect(x,y,w,h,r);
-    if (fill) { ctx.fillStyle=fill; ctx.fill(); }
-    if (stroke) { ctx.strokeStyle=stroke; ctx.lineWidth=2; ctx.stroke(); }
-  }
-  function hash(x,y) {
-    let n = (x * 374761393 + y * 668265263) | 0;
-    n = Math.imul(n ^ (n >>> 13), 1274126177);
-    return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
-  }
-  function ellipse(x,y,rx,ry,color) {
-    ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);
-    ctx.fillStyle=color; ctx.fill();
-  }
-  function drawGround() {
-    const bg = ctx.createLinearGradient(0,0,0,VIEW_H);
-    bg.addColorStop(0,"#8dbb72"); bg.addColorStop(.55,"#78aa68"); bg.addColorStop(1,"#63945c");
-    rect(0,0,VIEW_W,VIEW_H,bg);
-    const step=42;
-    for(let ty=Math.floor(camera.y/step)-1;ty<Math.floor((camera.y+VIEW_H)/step)+2;ty++){
-      for(let tx=Math.floor(camera.x/step)-1;tx<Math.floor((camera.x+VIEW_W)/step)+2;tx++){
-        const h=hash(tx,ty), sx=tx*step-camera.x, sy=ty*step-camera.y;
-        if(h>.42){
-          ctx.strokeStyle=h>.8?"#a7c982":"#5d9457"; ctx.globalAlpha=.48; ctx.lineWidth=1.5;
-          ctx.beginPath(); ctx.moveTo(sx+8,sy+24); ctx.quadraticCurveTo(sx+11,sy+15,sx+14,sy+12); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(sx+27,sy+34); ctx.quadraticCurveTo(sx+30,sy+25,sx+33,sy+23); ctx.stroke();
-          ctx.globalAlpha=1;
-        }
-        if(h<.12) ellipse(sx+20,sy+17,2,2,"#e5d69a");
-      }
-    }
-    // Soft-edged paths crossing through the village
-    ctx.save();
-    ctx.lineCap="round"; ctx.lineJoin="round";
-    ctx.strokeStyle="#9b805d"; ctx.lineWidth=122;
-    ctx.beginPath(); ctx.moveTo(980-camera.x,1332-camera.y); ctx.lineTo(2200-camera.x,1332-camera.y); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(1557-camera.x,850-camera.y); ctx.lineTo(1557-camera.x,1840-camera.y); ctx.stroke();
-    ctx.strokeStyle="#d8c49a"; ctx.lineWidth=112;
-    ctx.beginPath(); ctx.moveTo(980-camera.x,1325-camera.y); ctx.lineTo(2200-camera.x,1325-camera.y); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(1550-camera.x,850-camera.y); ctx.lineTo(1550-camera.x,1840-camera.y); ctx.stroke();
-    ctx.restore();
-    // Pond with a soft shoreline
-    const px=450-camera.x, py=1450-camera.y;
-    ellipse(px+150,py+100,166,112,"#b6a77b");
-    ellipse(px+150,py+92,151,96,"#4d9eae");
-    ellipse(px+112,py+62,62,13,"#8bc9c5");
-    ellipse(px+205,py+122,35,7,"#76b9bb");
-  }
-  function drawTree(x,y) {
-    const sx=x-camera.x, sy=y-camera.y;
-    // soft shadow, trunk and layered foliage
-    ellipse(sx,sy+19,24,9,"#426b48");
-    const trunk=ctx.createLinearGradient(sx-7,sy,sx+8,sy);
-    trunk.addColorStop(0,"#68462f"); trunk.addColorStop(.5,"#a87549"); trunk.addColorStop(1,"#68452e");
-    roundRect(sx-7,sy-2,14,34,5,trunk);
-    ellipse(sx-13,sy-13,23,21,"#376f4a");
-    ellipse(sx+10,sy-18,24,23,"#4b8b52");
-    ellipse(sx-2,sy-31,25,23,"#5c9b58");
-    ellipse(sx-12,sy-20,10,9,"#78ae63");
-    ellipse(sx+15,sy-28,10,8,"#80b66a");
-    ellipse(sx+4,sy-5,8,7,"#2e6843");
-  }
-  function drawBuilding(b) {
-    const x=b.x-camera.x, y=b.y-camera.y, w=b.w, h=b.h;
-    // cast shadow
-    ctx.save();
-    ctx.shadowColor="#294a35"; ctx.shadowBlur=18; ctx.shadowOffsetY=12;
-    roundRect(x+3,y+26,w,h-8,8,"#4c6346");
-    ctx.restore();
-    // stone foundation and plaster walls
-    roundRect(x,y+18,w,h-18,7,"#d7c69d","#806c52");
-    const wall=ctx.createLinearGradient(x,y,x+w,y+h);
-    wall.addColorStop(0,b.color); wall.addColorStop(1,"#d4b98a");
-    roundRect(x+5,y+22,w-10,h-28,5,wall);
-    // timber framing
-    ctx.strokeStyle="#76533d"; ctx.lineWidth=7;
-    ctx.beginPath(); ctx.moveTo(x+13,y+35); ctx.lineTo(x+13,y+h-12); ctx.moveTo(x+w-13,y+35); ctx.lineTo(x+w-13,y+h-12); ctx.stroke();
-    // roof with a pitched silhouette
-    ctx.beginPath(); ctx.moveTo(x-16,y+36); ctx.lineTo(x+w*.5,y-23); ctx.lineTo(x+w+16,y+36); ctx.closePath();
-    const roof=ctx.createLinearGradient(x,y-20,x,y+42);
-    roof.addColorStop(0,"#9b6048"); roof.addColorStop(.55,"#754936"); roof.addColorStop(1,"#593b32");
-    ctx.fillStyle=roof; ctx.fill(); ctx.strokeStyle="#4e3a31"; ctx.lineWidth=4; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x+12,y+31); ctx.lineTo(x+w*.5,y-12); ctx.lineTo(x+w-12,y+31);
-    ctx.strokeStyle="#c18a61"; ctx.lineWidth=3; ctx.stroke();
-    // warm windows
-    for(const wx of [x+29,x+w-67]){
-      roundRect(wx,y+65,38,39,4,"#5c5142","#e2c99a");
-      roundRect(wx+5,y+70,28,29,2,"#a9d5d0");
-      ctx.strokeStyle="#f0dfb8"; ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(wx+19,y+70); ctx.lineTo(wx+19,y+99); ctx.moveTo(wx+5,y+84); ctx.lineTo(wx+33,y+84); ctx.stroke();
-    }
-    // arched wooden door
-    roundRect(x+w/2-20,y+h-63,40,62,18,"#503b31","#d0aa72");
-    roundRect(x+w/2-14,y+h-56,28,55,13,"#79513a");
-    ellipse(x+w/2+9,y+h-29,3,3,"#e4c47c");
-    // name plaque
-    roundRect(x+w/2-55,y-42,110,25,7,"#354c39","#d7c18f");
-    ctx.fillStyle="#fff3d8"; ctx.font="bold 13px sans-serif"; ctx.textAlign="center";
-    ctx.fillText(b.name,x+w/2,y-25);
-  }
-  function drawCharacter(p, isSelf=false) {
-    const x=p.x-camera.x, y=p.y-camera.y;
-    const robe=p.color || (isSelf?"#477fc0":"#b85f50");
-    // shadow and feet
-    ellipse(x,y+13,17,7,"#3d6747");
-    roundRect(x-11,y+3,8,13,3,"#493e3b");
-    roundRect(x+3,y+3,8,13,3,"#493e3b");
-    // cloak/body with subtle outline
-    ctx.beginPath(); ctx.moveTo(x-13,y-9); ctx.quadraticCurveTo(x,y-17,x+13,y-9);
-    ctx.lineTo(x+15,y+7); ctx.quadraticCurveTo(x,y+14,x-15,y+7); ctx.closePath();
-    const cloth=ctx.createLinearGradient(x-12,y-10,x+12,y+9);
-    cloth.addColorStop(0,"#f1d8a8"); cloth.addColorStop(.18,robe); cloth.addColorStop(1,"#263f68");
-    ctx.fillStyle=cloth; ctx.fill(); ctx.strokeStyle="#263c35"; ctx.lineWidth=1.5; ctx.stroke();
-    // head, hair and face
-    ellipse(x,y-19,10,12,"#efc99e");
-    ctx.beginPath(); ctx.moveTo(x-10,y-20); ctx.quadraticCurveTo(x-8,y-34,x+5,y-31);
-    ctx.quadraticCurveTo(x+13,y-28,x+10,y-17); ctx.lineTo(x+4,y-22); ctx.lineTo(x-5,y-18); ctx.closePath();
-    ctx.fillStyle=isSelf?"#59402f":"#49352e"; ctx.fill();
-    ellipse(x-3,y-19,1.5,2,"#392d29"); ellipse(x+4,y-19,1.5,2,"#392d29");
-    // small shoulder cape
-    ctx.beginPath(); ctx.moveTo(x-12,y-8); ctx.lineTo(x,y-2); ctx.lineTo(x+12,y-8);
-    ctx.strokeStyle="#e7c77e"; ctx.lineWidth=3; ctx.stroke();
-    ctx.fillStyle="#fff8e7"; ctx.font="12px sans-serif"; ctx.textAlign="center";
-    ctx.shadowColor="#314b36"; ctx.shadowBlur=4; ctx.fillText(p.name||"冒険者",x,y-39); ctx.shadowBlur=0;
-  }
-  function drawWorld() {
-    drawGround();
-    // trees placed throughout the fields
-    for(let i=0;i<95;i++){
-      const x=100+(i*173)%3000, y=100+(i*293)%2200;
-      if(buildings.some(b=>x>b.x-55&&x<b.x+b.w+55&&y>b.y-75&&y<b.y+b.h+55)) continue;
-      drawTree(x,y);
-    }
-    // a few flower patches add life to the meadow
-    for(let i=0;i<34;i++){
-      const x=(i*271+210)%3100-camera.x, y=(i*397+170)%2250-camera.y;
-      if(x>-8&&x<VIEW_W+8&&y>-8&&y<VIEW_H+8){
-        ellipse(x,y,3,3,i%3===0?"#f1d9a0":i%3===1?"#f4e8d0":"#d9b8ce");
-        ellipse(x+4,y+2,2,2,"#fff0c4");
-      }
-    }
-    buildings.forEach(drawBuilding);
-    // wooden welcome sign
-    const sx=1196-camera.x, sy=1185-camera.y;
-    roundRect(sx-5,sy+8,10,52,3,"#805537");
-    roundRect(sx-31,sy-13,62,34,7,"#b98c55","#6d4b36");
-    ctx.fillStyle="#fff0cf"; ctx.font="bold 10px sans-serif"; ctx.textAlign="center";
-    ctx.fillText("WELCOME",sx,sy+8);
-    others.forEach(p=>drawCharacter(p,false));
-    drawCharacter(player,true);
-  }
-  function frame(time) {
-    const dt = Math.min((time-lastTime)/1000 || 0, .04);
-    lastTime=time;
-    if (started) {
-      let dx=0,dy=0;
-      if (keys.has("arrowleft")||keys.has("a")) dx--;
-      if (keys.has("arrowright")||keys.has("d")) dx++;
-      if (keys.has("arrowup")||keys.has("w")) dy--;
-      if (keys.has("arrowdown")||keys.has("s")) dy++;
-      if (dx||dy) {
-        const length=Math.hypot(dx,dy);
-        dx=dx/length*player.speed*dt;
-        dy=dy/length*player.speed*dt;
-        if (!blocked(player.x+dx,player.y)) player.x+=dx;
-        if (!blocked(player.x,player.y+dy)) player.y+=dy;
-        if (socket && socket.connected && time-lastSent>90) {
-          socket.emit("player:move",{x:player.x,y:player.y});
-          lastSent=time;
-        }
-      }
-      camera.x=Math.max(0,Math.min(world.width-VIEW_W,player.x-VIEW_W/2));
-      camera.y=Math.max(0,Math.min(world.height-VIEW_H,player.y-VIEW_H/2));
-      updateOnline();
-      if (time-saveTimer>10000) { saveTimer=time; saveCurrent(); }
-    } else {
-      camera.x=1120;
-      camera.y=950;
-    }
-    drawWorld();
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
+  function update(dt){if(!started||!$("creation-panel").classList.contains("hidden"))return;let dx=0,dy=0;if(keys.has("w")||keys.has("arrowup"))dy--;if(keys.has("s")||keys.has("arrowdown"))dy++;if(keys.has("a")||keys.has("arrowleft"))dx--;if(keys.has("d")||keys.has("arrowright"))dx++;if(dx||dy){const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=player.x+dx*player.speed*dt,ny=player.y+dy*player.speed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";const now=performance.now();if(socket&&socket.connected&&now-lastMoveSent>80){lastMoveSent=now;socket.emit("player:move",{x:player.x,y:player.y,dir:player.dir})}}camera.x=Math.max(0,Math.min(worldW-W,player.x-W/2));camera.y=Math.max(0,Math.min(worldH-H,player.y-H/2))}
+  function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
+  document.querySelectorAll(".panel-tab").forEach(b=>b.addEventListener("click",()=>{}));
+  $("open-adventurer").addEventListener("click",()=>{$("adventurer-panel").classList.remove("hidden")});$("close-adventurer").addEventListener("click",()=>$("adventurer-panel").classList.add("hidden"));
+  requestAnimationFrame(loop);
 })();
