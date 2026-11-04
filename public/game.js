@@ -272,105 +272,87 @@
     const q=project(p.x,p.y),x=q.x-32,y=q.y-82;
     if(x<-90||y<-110||x>W+90||y>H+55)return;
     const female=!isPlayer&&[0,2,8,14,16,18,19,21,23,26,31,32].includes(p.id);
-    const dirs=["down","up","left","right","down-left","down-right","up-left","up-right"];
-    const dir=dirs.includes(p.dir)?p.dir:"down";
     const moving=!!p.moving,phase=moving?Math.floor((p.walkClock||0)*8)%4:0;
-    const key=[isPlayer?1:0,p.id,p.color,p.hair,p.skin,p.eyes,p.style,p.accessory,dir,phase].join(":");
+    const key=[isPlayer?1:0,p.id,p.color,p.hair,p.skin,p.eyes,p.style,p.accessory,phase].join(":");
     let sprite=pixelSpriteCache.get(key);
     if(!sprite){
-      const c=document.createElement("canvas");c.width=32;c.height=40;
-      const g=c.getContext("2d"),px=Array.from({length:40},()=>Array(32).fill(null));
-      const put=(xx,yy,w,h,col)=>{for(let j=yy;j<yy+h;j++)for(let i=xx;i<xx+w;i++)if(i>=0&&i<32&&j>=0&&j<40)px[j][i]=col;};
+      const c=document.createElement("canvas");c.width=40;c.height=48;
+      const g=c.getContext("2d"),px=Array.from({length:48},()=>Array(40).fill(null));
+      const put=(xx,yy,w,h,col)=>{for(let j=yy;j<yy+h;j++)for(let i=xx;i<xx+w;i++)if(i>=0&&i<40&&j>=0&&j<48)px[j][i]=col;};
       const hairMap={"栗色":"#795039","金髪":"#edc45c","黒髪":"#30282b","銀髪":"#b8c2cc","茶色":"#8a5938","赤髪":"#b64d38","青髪":"#426eaa","緑髪":"#52784a"};
       const skinMap={"明るい肌":["#f4cba5","#d99d78"],"普通の肌":["#dba77e","#b9785d"],"褐色肌":["#b97850","#8c513b"]};
       const hair=hairMap[p.hair]||(/^#[0-9a-f]{6}$/i.test(p.hair||"")?p.hair:"#795039");
       const sk=skinMap[p.skin]||skinMap["明るい肌"],skin=sk[0],skinShade=sk[1];
       const cloth=isPlayer?(p.outfit||"#7629ad"):(/^#[0-9a-f]{6}$/i.test(p.color||"")?p.color:"#6388a1");
-      const dark=isPlayer?"#43205f":"#384052",light=isPlayer?"#c18ae0":"#e8d2a9";
-      const side=dir==="left"||dir==="right",left=dir==="left"||dir==="up-left"||dir==="down-left";
-      const front=dir==="down",back=dir==="up",diagonal=dir.includes("-");
+      const shade=isPlayer?"#48205f":"#35404b",trim=isPlayer?"#d4a0ed":"#ead3a7";
       const step=moving?(phase===1?-2:phase===3?2:0):0;
-      // Soft contact shadow and layered boots/legs.
-      put(7+step,30,7,6,"#ead7bb");put(18-step,30,7,6,"#d8c3a4");
-      put(6+step,35,9,3,"#55443b");put(17-step,35,9,3,"#403b3b");
-      put(7+step,34,7,1,"#fff0d2");put(18-step,34,6,1,"#fff0d2");
-      // Tunic, sleeves, belt and warm fabric highlights.
-      put(7,18,18,14,cloth);put(9,17,14,2,light);put(7,20,3,9,dark);put(22,20,3,9,dark);
-      put(10,22,12,2,light);put(9,29,14,2,dark);put(14,28,4,2,"#e7c36e");
-      put(5,20,4,9,cloth);put(23,20,4,9,cloth);
-      put(5,27,4,3,skin);put(23,27,4,3,skin);
-      // Neck and shoulders are separated by a small inked jaw/neck seam.
-      put(13,15,6,5,skin);put(13,18,6,2,skinShade);
-      if(front){
-        // Face, ears, eyes and nose: large readable JRPG portrait-like pixels.
-        put(8,5,16,14,hair);put(9,7,14,12,skin);
-        put(7,10,3,6,hair);put(22,10,3,6,hair);
-        put(8,14,2,3,skinShade);put(22,14,2,3,skinShade);
-        put(11,10,3,2,"#fff4df");put(19,10,3,2,"#fff4df");
-        put(12,11,2,3,p.eyes==="緑"?"#4e8060":p.eyes==="茶"?"#805238":"#456f9b");
-        put(19,11,2,3,p.eyes==="緑"?"#4e8060":p.eyes==="茶"?"#805238":"#456f9b");
-        put(13,14,2,2,skinShade);put(15,16,3,1,"#a94e50");
-        put(10,17,12,1,skinShade);
-      }else if(back){
-        put(8,5,16,16,hair);put(7,9,3,9,hair);put(22,9,3,9,hair);
-        put(10,17,12,2,skinShade);
-      }else if(side){
-        // True profile: one visible eye, a projecting nose, and hair behind the skull.
-        put(8,5,16,15,hair);put(7,9,4,10,hair);put(21,7,4,12,hair);
-        put(10,7,12,12,skin);
-        if(left){
-          put(9,12,3,3,skin);put(7,13,3,2,skinShade);
-          put(10,10,3,2,"#fff2dc");put(10,11,2,3,p.eyes==="緑"?"#4e8060":"#456f9b");
-          put(8,16,4,1,"#a94e50");put(18,6,6,12,hair);
-        }else{
-          put(20,12,3,3,skin);put(22,13,3,2,skinShade);
-          put(19,10,3,2,"#fff2dc");put(20,11,2,3,p.eyes==="緑"?"#4e8060":"#456f9b");
-          put(20,16,4,1,"#a94e50");put(8,6,6,12,hair);
-        }
-      }else{
-        put(8,5,16,15,hair);put(9,8,14,11,skin);
-        if(left){put(11,11,2,3,"#456f9b");put(10,15,3,1,"#a94e50");}
-        else{put(19,11,2,3,"#456f9b");put(20,15,3,1,"#a94e50");}
-      }
-      // Jawline: a short, deliberate dark contour, never a full black head ring.
-      if(front){put(10,18,12,1,"#30232a");put(13,19,6,1,"#30232a");}
-      else if(side){put(left?10:20,18,5,1,"#30232a");put(left?11:19,19,3,1,"#30232a");}
-      else if(!back){put(11,18,10,1,"#30232a");}
-      // Character-specific hair silhouettes and accessories.
+      // Rounded shadow, boots and short alternating walking legs.
+      put(8+step,39,9,5,"#3b302d");put(23-step,39,9,5,"#302b2b");
+      put(9+step,38,7,2,"#e7d5b8");put(24-step,38,7,2,"#d8c3a4");
+      put(8+step,43,10,2,"#211f25");put(23-step,43,10,2,"#211f25");
+      // Short legs and tunic silhouette, with shaded side panels.
+      put(10,32,20,8,cloth);put(12,34,6,6,shade);put(23,34,5,6,shade);
+      put(8,20,24,16,cloth);put(10,19,20,3,trim);
+      put(8,23,4,11,shade);put(28,23,4,11,shade);
+      put(11,25,18,2,trim);put(12,29,16,2,shade);
+      put(18,28,4,4,"#e4c16d");put(19,29,2,2,"#fff0b0");
+      // Arms, cuffs and hands.
+      put(5,23,5,10,cloth);put(30,23,5,10,shade);
+      put(5,30,5,4,skin);put(30,30,5,4,skinShade);
+      put(6,24,3,6,trim);put(31,24,3,6,trim);
+      // Neck and broad shoulders.
+      put(16,17,8,7,skin);put(16,20,8,2,skinShade);
+      // Large rounded face with ears, warm cheek shading and chin.
+      put(10,5,20,17,hair);put(8,10,4,10,hair);put(28,10,4,10,hair);
+      put(11,8,18,14,skin);put(10,12,2,6,skinShade);put(28,12,2,6,skinShade);
+      put(13,17,4,2,"#eaa88f");put(23,17,4,2,"#eaa88f");
+      // Brows, eyes with bright glints, nose and small smile.
+      put(13,12,4,2,"#654437");put(23,12,4,2,"#654437");
+      put(14,14,3,4,"#fff0d8");put(23,14,3,4,"#fff0d8");
+      const iris=p.eyes==="緑"?"#4e8060":p.eyes==="茶"?"#805238":p.eyes==="黒"?"#30282b":"#456f9b";
+      put(15,15,2,3,iris);put(24,15,2,3,iris);
+      put(15,15,1,1,"#fff");put(24,15,1,1,"#fff");
+      put(19,17,2,2,skinShade);put(18,20,4,1,"#a94e50");
+      put(14,22,12,1,"#30232a");put(17,23,6,1,"#30232a");
+      // Hair cap, side locks and layered highlights.
+      put(9,5,22,5,hair);put(8,8,4,8,hair);put(28,8,4,8,hair);
+      put(11,4,7,2,"#ffffff22");put(23,6,5,2,shade);
       if(isPlayer){
-        // Purple wrapped turban and travel mantle.
-        put(6,3,20,5,"#4b2372");put(9,1,15,5,"#7e3bb0");put(12,2,9,2,"#d4a0ed");
-        put(6,5,4,4,"#5d2a87");put(22,5,4,4,"#5d2a87");
-        put(5,19,4,12,"#6d2a99");put(23,19,4,12,"#4d216f");
-        put(14,22,4,4,"#e4c16d");
+        // Distinctive layered purple travel turban and mantle.
+        put(7,3,26,7,"#3e1d61");put(10,1,20,7,"#7135a0");
+        put(14,0,13,5,"#9250c0");put(13,2,12,2,"#d7a4ee");
+        put(7,6,5,5,"#582780");put(28,6,5,5,"#582780");
+        put(5,22,5,14,"#6d2a99");put(30,22,5,14,"#4d216f");
+        put(8,31,4,5,"#9a4ac0");put(29,31,4,5,"#35194f");
+        put(18,25,4,5,"#e4c16d");put(19,26,2,2,"#fff0b0");
       }else if(female){
-        put(8,2,16,5,"#dcae52");put(7,6,4,12,"#b8793d");put(22,6,4,12,"#b8793d");
-        put(5,13,4,9,"#edc66b");put(23,13,4,9,"#edc66b");
-        put(23,20,3,5,"#dcae52");
+        // Soft braided hairstyle and small decorative ribbon.
+        put(9,3,22,5,hair);put(7,9,4,13,hair);put(29,9,4,13,hair);
+        put(6,18,4,8,"#c18a45");put(30,18,4,8,"#c18a45");
+        put(29,25,4,5,hair);put(31,26,2,3,"#f2d17c");
+        put(26,5,4,3,"#f2d17c");
       }else{
-        put(8,3,16,5,hair);put(7,7,3,8,hair);put(22,7,3,8,hair);
-        if(p.role==="衛兵"){put(7,2,18,4,"#6e8262");put(12,1,8,2,"#c5b58b");}
-        if(p.role==="鍛冶師"){put(7,2,18,5,"#66554a");}
+        put(10,3,20,5,hair);put(8,7,4,9,hair);put(28,7,4,9,hair);
+        if(p.role==="衛兵"){put(8,2,24,5,"#6e8262");put(15,1,10,2,"#d8c69a");}
+        if(p.role==="鍛冶師"){put(8,2,24,6,"#66554a");put(12,5,16,2,"#8c7562");}
       }
-      // Fine costume accents: collar, shoulder trim and small highlights.
-      put(10,19,4,2,light);put(18,19,4,2,light);
-      put(8,21,2,5,"#ffffff22");put(22,21,2,5,"#ffffff22");
-      // Thin silhouette ink plus selective inner folds for a polished sprite finish.
-      const outline=g.createImageData(32,40);
-      for(let yy=0;yy<40;yy++)for(let xx=0;xx<32;xx++)if(px[yy][xx]){
+      // Small costume-specific details and polished pixel highlights.
+      put(13,20,5,2,trim);put(22,20,5,2,trim);
+      put(11,26,2,5,"#ffffff22");put(27,26,2,5,"#ffffff22");
+      // One-pixel ink outline around the silhouette only.
+      const outline=g.createImageData(40,48);
+      for(let yy=0;yy<48;yy++)for(let xx=0;xx<40;xx++)if(px[yy][xx]){
         const edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>!px[yy+dy]?.[xx+dx]);
-        if(edge){const z=(yy*32+xx)*4;outline.data[z]=43;outline.data[z+1]=31;outline.data[z+2]=37;outline.data[z+3]=255;}
+        if(edge){const z=(yy*40+xx)*4;outline.data[z]=43;outline.data[z+1]=31;outline.data[z+2]=37;outline.data[z+3]=255;}
       }
       g.putImageData(outline,0,0);
-      for(let yy=0;yy<40;yy++)for(let xx=0;xx<32;xx++)if(px[yy][xx]){g.fillStyle=px[yy][xx];g.fillRect(xx,yy,1,1);}
-      // Tiny highlight pixels add a painted, hand-crafted finish.
-      g.fillStyle="#ffffff";g.fillRect(10,7,2,1);g.fillRect(20,7,2,1);
+      for(let yy=0;yy<48;yy++)for(let xx=0;xx<40;xx++)if(px[yy][xx]){g.fillStyle=px[yy][xx];g.fillRect(xx,yy,1,1);}
       sprite=c;pixelSpriteCache.set(key,sprite);if(pixelSpriteCache.size>260)pixelSpriteCache.delete(pixelSpriteCache.keys().next().value);
     }
     ctx.save();ctx.imageSmoothingEnabled=false;
     const bob=moving&&phase%2===1?-1:0;
-    ctx.drawImage(sprite,x,y+bob,64,80);ctx.restore();
-    ellipse(x+32,y+78,17,5,"#30452f");
+    ctx.drawImage(sprite,x,y+bob,72,86);ctx.restore();
+    ellipse(x+36,y+84,19,6,"#30452f");
   }
   function drawPlayerName(p){
     const q=project(p.x,p.y);
