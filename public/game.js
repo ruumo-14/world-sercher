@@ -266,30 +266,86 @@
     }
   }
   const spriteCache=new Map();
+  const pixelSpriteCache=new Map();
   function drawPixelPerson(p,isPlayer=false){
     const q=project(p.x,p.y),x=q.x-24,y=q.y-64;
     if(x<-70||y<-90||x>W+70||y>H+45)return;
     const female=!isPlayer&&[0,2,8,14,16,18,19,21,23,26,31,32].includes(p.id);
-    const dwarf=p.species==="ドワーフ";
-    const raw=p.dir||"down";
-    const dirs=["down","up","left","right","down-left","down-right","up-left","up-right"];
-    const col=Math.max(0,dirs.indexOf(raw));
-    const row=isPlayer?0:(female?1:(dwarf?3:((Number(p.id)||0)%2===0?2:3)));
-    const image=window.ASTERIA_SPRITE_IMAGE;
-    if(image&&image.complete&&image.naturalWidth){
-      const moving=!!p.moving;
-      const phase=moving?Math.floor((p.walkClock||0)*10)%4:0;
-      const bob=moving?(phase===1||phase===3?-2:0):0;
-      const sway=moving?(phase===1?1:phase===3?-1:0):0;
-      ctx.save();
-      ctx.imageSmoothingEnabled=false;
-      // Sprite atlas: 8 individually drawn facings per character archetype.
-      ctx.drawImage(image,col*24,row*36,24,36,x+sway,y-8+bob,48,72);
-      ctx.restore();
-    }else{
-      // Fallback while the sprite sheet is loading.
-      ellipse(x+24,y+38,8,12,"#7029a8");
+    const dir=["down","up","left","right","down-left","down-right","up-left","up-right"].includes(p.dir)?p.dir:"down";
+    const moving=!!p.moving,phase=moving?Math.floor((p.walkClock||0)*9)%4:0;
+    const key=[isPlayer?1:0,p.id,p.color,p.hair,dir,phase].join(":");
+    let sprite=pixelSpriteCache.get(key);
+    if(!sprite){
+      const c=document.createElement("canvas");c.width=24;c.height=32;
+      const g=c.getContext("2d"),cells=Array.from({length:32},()=>Array(24).fill(null));
+      const put=(xx,yy,w,h,col)=>{for(let j=yy;j<yy+h;j++)for(let i=xx;i<xx+w;i++)if(i>=0&&i<24&&j>=0&&j<32)cells[j][i]=col;};
+      const skin="#e5b18b",skinShadow="#b9785d",hair=p.hair||"#654632";
+      const cloth=isPlayer?"#7629ad":(p.color||"#6388a1");
+      const shadow=isPlayer?"#42166f":"#34465b",light=isPlayer?"#bd78e8":"#e6cba0";
+      const side=dir==="left"||dir==="right"||dir.endsWith("left")||dir.endsWith("right");
+      const left=dir==="left"||dir==="up-left"||dir==="down-left";
+      const back=dir==="up",front=dir==="down",diag=dir.includes("-");
+      const step=moving?(phase===1?-1:phase===3?1:0):0;
+      // Legs and boots: feet shift independently while walking.
+      put(6+step,23,5,6,"#e8d7bd");put(14-step,23,5,6,"#d8c5a9");
+      put(5+step,28,7,3,isPlayer?"#416e91":"#536f83");put(13-step,28,7,3,isPlayer?"#31516e":"#40586b");
+      // Body and tunic with light, midtone and shadow pixels.
+      if(side){
+        put(9,13,11,11,cloth);put(10,12,7,2,light);put(left?9:18,15,2,8,shadow);
+        put(12,17,6,2,light);put(10,22,10,2,shadow);
+        put(left?7:19,15,4,8,cloth);put(left?7:19,22,4,2,skin);
+      }else{
+        put(6,13,12,11,cloth);put(8,12,8,2,light);put(6,15,2,7,shadow);put(16,15,2,7,shadow);
+        put(9,16,6,2,light);put(7,22,10,2,shadow);
+        put(3,15,4,8,cloth);put(17,15,4,8,cloth);
+        if(front){put(3,22,4,2,skin);put(17,22,4,2,skin);}
+      }
+      put(7,22,10,1,"#e8c86c");
+      // Neck and head; side views use a true profile silhouette with rear hair covering the skull.
+      if(front){
+        put(10,10,4,4,skin);
+        put(6,3,12,11,hair);put(7,5,10,9,skin);
+        put(6,7,2,5,hair);put(16,7,2,5,hair);
+        put(8,7,3,2,"#fff0d8");put(13,7,3,2,"#fff0d8");
+        put(9,8,2,2,"#342c32");put(14,8,2,2,"#342c32");
+        put(11,12,3,1,"#9c4e4d");put(8,11,2,2,skinShadow);put(15,11,2,2,skinShadow);
+      }else if(back){
+        put(6,3,12,14,hair);put(5,6,2,7,hair);put(17,6,2,7,hair);
+        put(8,4,8,2,isPlayer?"#a95be0":"#967454");put(8,16,8,2,skinShadow);
+      }else{
+        // Side-facing head: hair fills the back of the head; one eye, nose and mouth face travel direction.
+        put(7,3,11,13,hair);put(left?6:17,5,3,10,hair);
+        put(left?8:10,6,7,9,skin);put(left?7:17,9,3,5,skinShadow);
+        put(left?8:15,8,2,2,"#fff0d8");put(left?8:15,9,2,2,"#342c32");
+        put(left?7:16,12,3,1,"#9c4e4d");
+        put(left?15:7,5,3,8,hair);
+      }
+      // Character-specific signature accessories and clothing.
+      if(isPlayer){
+        put(5,1,14,4,"#4a1c78");put(7,0,11,4,"#782bb9");put(9,1,7,2,"#c17bed");
+        put(5,4,3,3,"#542080");put(16,4,3,3,"#542080");
+        put(4,14,3,10,"#7027a5");put(17,14,3,10,"#542078");
+      }else if(female){
+        put(6,1,12,3,"#e4bd5e");put(5,4,3,8,"#c68c3d");put(16,4,3,8,"#c68c3d");
+        put(4,10,3,5,"#e9c66d");put(17,10,3,5,"#e9c66d");
+      }else{
+        put(7,2,10,3,hair);put(6,5,2,5,hair);put(16,5,2,5,hair);
+      }
+      // Exterior-only black outline, plus a separate short jaw/neck seam.
+      const mask=g.createImageData(24,32);
+      for(let yy=0;yy<32;yy++)for(let xx=0;xx<24;xx++)if(cells[yy][xx]){
+        const edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>!cells[yy+dy]?.[xx+dx]);
+        if(edge){const z=(yy*24+xx)*4;mask.data[z]=25;mask.data[z+1]=20;mask.data[z+2]=28;mask.data[z+3]=255;}
+      }
+      g.putImageData(mask,0,0);
+      for(let yy=0;yy<32;yy++)for(let xx=0;xx<24;xx++)if(cells[yy][xx]){g.fillStyle=cells[yy][xx];g.fillRect(xx,yy,1,1);}
+      if(front){g.fillStyle="#19151e";g.fillRect(9,15,6,1);g.fillRect(10,16,4,1);}
+      else if(side){g.fillStyle="#19151e";g.fillRect(left?11:12,15,5,1);}
+      sprite=c;pixelSpriteCache.set(key,sprite);if(pixelSpriteCache.size>220)pixelSpriteCache.delete(pixelSpriteCache.keys().next().value);
     }
+    ctx.save();ctx.imageSmoothingEnabled=false;
+    const bob=moving&&phase%2===1?-1:0;
+    ctx.drawImage(sprite,x,y+bob,48,64);ctx.restore();
     ellipse(x+24,y+63,14,4,"#30452f");
   }
   function drawPlayerName(p){
