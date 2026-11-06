@@ -268,91 +268,95 @@
   }
   const spriteCache=new Map();
   const pixelSpriteCache=new Map();
+  // Original high-detail mobile-JRPG-style character sprite.
+  // Keeps the approved village layout and name labels untouched.
   function drawPixelPerson(p,isPlayer=false){
-    const q=project(p.x,p.y),x=q.x-32,y=q.y-82;
-    if(x<-90||y<-110||x>W+90||y>H+55)return;
+    const q=project(p.x,p.y),x=q.x-35,y=q.y-88;
+    if(x<-100||y<-120||x>W+100||y>H+65)return;
     const female=!isPlayer&&[0,2,8,14,16,18,19,21,23,26,31,32].includes(p.id);
-    const moving=!!p.moving,phase=moving?Math.floor((p.walkClock||0)*8)%4:0;
+    const moving=!!p.moving,phase=moving?Math.floor((p.walkClock||0)*9)%4:0;
     const key=[isPlayer?1:0,p.id,p.color,p.hair,p.skin,p.eyes,p.style,p.accessory,phase].join(":");
     let sprite=pixelSpriteCache.get(key);
     if(!sprite){
-      const c=document.createElement("canvas");c.width=40;c.height=48;
-      const g=c.getContext("2d"),px=Array.from({length:48},()=>Array(40).fill(null));
-      const put=(xx,yy,w,h,col)=>{for(let j=yy;j<yy+h;j++)for(let i=xx;i<xx+w;i++)if(i>=0&&i<40&&j>=0&&j<48)px[j][i]=col;};
+      const c=document.createElement("canvas");c.width=48;c.height=56;
+      const g=c.getContext("2d"),px=Array.from({length:56},()=>Array(48).fill(null));
+      const put=(xx,yy,w,h,col)=>{for(let j=yy;j<yy+h;j++)for(let i=xx;i<xx+w;i++)if(i>=0&&i<48&&j>=0&&j<56)px[j][i]=col;};
       const hairMap={"栗色":"#795039","金髪":"#edc45c","黒髪":"#30282b","銀髪":"#b8c2cc","茶色":"#8a5938","赤髪":"#b64d38","青髪":"#426eaa","緑髪":"#52784a"};
-      const skinMap={"明るい肌":["#f4cba5","#d99d78"],"普通の肌":["#dba77e","#b9785d"],"褐色肌":["#b97850","#8c513b"]};
+      const skinMap={"明るい肌":["#f4cba5","#d99d78","#f9d9b8"],"普通の肌":["#dba77e","#b9785d","#edbd96"],"褐色肌":["#b97850","#8c513b","#d29467"]};
       const hair=hairMap[p.hair]||(/^#[0-9a-f]{6}$/i.test(p.hair||"")?p.hair:"#795039");
-      const sk=skinMap[p.skin]||skinMap["明るい肌"],skin=sk[0],skinShade=sk[1];
+      const sk=skinMap[p.skin]||skinMap["明るい肌"],skin=sk[0],skinShade=sk[1],skinLight=sk[2];
       const cloth=isPlayer?(p.outfit||"#7629ad"):(/^#[0-9a-f]{6}$/i.test(p.color||"")?p.color:"#6388a1");
       const shade=isPlayer?"#48205f":"#35404b",trim=isPlayer?"#d4a0ed":"#ead3a7";
       const step=moving?(phase===1?-2:phase===3?2:0):0;
-      // Rounded shadow, boots and short alternating walking legs.
-      put(8+step,39,9,5,"#3b302d");put(23-step,39,9,5,"#302b2b");
-      put(9+step,38,7,2,"#e7d5b8");put(24-step,38,7,2,"#d8c3a4");
-      put(8+step,43,10,2,"#211f25");put(23-step,43,10,2,"#211f25");
-      // Short legs and tunic silhouette, with shaded side panels.
-      put(10,32,20,8,cloth);put(12,34,6,6,shade);put(23,34,5,6,shade);
-      put(8,20,24,16,cloth);put(10,19,20,3,trim);
-      put(8,23,4,11,shade);put(28,23,4,11,shade);
-      put(11,25,18,2,trim);put(12,29,16,2,shade);
-      put(18,28,4,4,"#e4c16d");put(19,29,2,2,"#fff0b0");
-      // Arms, cuffs and hands.
-      put(5,23,5,10,cloth);put(30,23,5,10,shade);
-      put(5,30,5,4,skin);put(30,30,5,4,skinShade);
-      put(6,24,3,6,trim);put(31,24,3,6,trim);
-      // Neck and broad shoulders.
-      put(16,17,8,7,skin);put(16,20,8,2,skinShade);
-      // Large rounded face with ears, warm cheek shading and chin.
-      put(10,5,20,17,hair);put(8,10,4,10,hair);put(28,10,4,10,hair);
-      put(11,8,18,14,skin);put(10,12,2,6,skinShade);put(28,12,2,6,skinShade);
-      put(13,17,4,2,"#eaa88f");put(23,17,4,2,"#eaa88f");
-      // Brows, eyes with bright glints, nose and small smile.
-      put(13,12,4,2,"#654437");put(23,12,4,2,"#654437");
-      put(14,14,3,4,"#fff0d8");put(23,14,3,4,"#fff0d8");
+      // Small soft shadow and separate boots.
+      put(9,49,30,4,"#34452f");put(12+step,47,9,5,"#332b2b");put(27-step,47,9,5,"#332b2b");
+      put(13+step,46,7,2,"#e7d5b8");put(28-step,46,7,2,"#d8c3a4");
+      put(12+step,51,10,2,"#211f25");put(27-step,51,10,2,"#211f25");
+      // Legs, trousers and tunic with layered cloth folds.
+      put(14,37,20,10,cloth);put(15,39,7,7,shade);put(26,39,6,7,shade);
+      put(11,25,26,17,cloth);put(14,23,20,5,trim);
+      put(11,28,4,12,shade);put(33,28,4,12,shade);
+      put(15,29,18,2,trim);put(16,33,15,2,shade);
+      put(17,35,4,5,"#ffffff22");put(27,29,3,6,"#ffffff22");
+      put(22,32,5,7,"#e4c16d");put(23,33,3,3,"#fff0b0");
+      // Sleeves, cuffs, hands and neck.
+      put(7,27,6,13,cloth);put(35,27,6,13,shade);
+      put(7,37,6,5,skin);put(35,37,6,5,skinShade);
+      put(8,28,4,7,trim);put(36,28,4,7,trim);
+      put(19,21,10,8,skin);put(19,24,10,3,skinShade);
+      // Head silhouette, ears and face: rounded, expressive, finely shaded.
+      put(12,5,24,20,hair);put(9,11,5,14,hair);put(34,11,5,14,hair);
+      put(13,9,22,19,skin);put(11,14,3,9,skinShade);put(34,14,3,9,skinShade);
+      put(14,10,20,2,skinLight);put(15,24,18,2,skinLight);
+      put(15,21,5,2,"#eaa88f");put(29,21,5,2,"#eaa88f");
+      // Eyebrows, eyes, pupils, nose and mouth.
+      put(16,15,5,2,"#654437");put(28,15,5,2,"#654437");
+      put(16,17,5,5,"#fff0d8");put(28,17,5,5,"#fff0d8");
       const iris=p.eyes==="緑"?"#4e8060":p.eyes==="茶"?"#805238":p.eyes==="黒"?"#30282b":"#456f9b";
-      put(15,15,2,3,iris);put(24,15,2,3,iris);
-      put(15,15,1,1,"#fff");put(24,15,1,1,"#fff");
-      put(19,17,2,2,skinShade);put(18,20,4,1,"#a94e50");
-      put(14,22,12,1,"#30232a");put(17,23,6,1,"#30232a");
-      // Hair cap, side locks and layered highlights.
-      put(9,5,22,5,hair);put(8,8,4,8,hair);put(28,8,4,8,hair);
-      put(11,4,7,2,"#ffffff22");put(23,6,5,2,shade);
+      put(18,18,2,3,iris);put(30,18,2,3,iris);
+      put(18,18,1,1,"#fff");put(30,18,1,1,"#fff");
+      put(24,20,2,2,skinShade);put(23,24,4,1,"#a94e50");
+      put(19,27,14,1,"#30232a");put(22,28,8,1,"#30232a");
+      // Hair cap, locks and individual highlight bands.
+      put(11,5,26,7,hair);put(10,9,5,10,hair);put(33,9,5,10,hair);
+      put(14,4,9,2,"#ffffff22");put(27,6,7,2,shade);
       if(isPlayer){
-        // Distinctive layered purple travel turban and mantle.
-        put(7,3,26,7,"#3e1d61");put(10,1,20,7,"#7135a0");
-        put(14,0,13,5,"#9250c0");put(13,2,12,2,"#d7a4ee");
-        put(7,6,5,5,"#582780");put(28,6,5,5,"#582780");
-        put(5,22,5,14,"#6d2a99");put(30,22,5,14,"#4d216f");
-        put(8,31,4,5,"#9a4ac0");put(29,31,4,5,"#35194f");
-        put(18,25,4,5,"#e4c16d");put(19,26,2,2,"#fff0b0");
+        // Original purple turban, layered cloth folds and travel mantle.
+        put(8,5,32,8,"#3e1d61");put(11,2,26,8,"#7135a0");
+        put(16,1,18,6,"#9250c0");put(15,4,17,2,"#d7a4ee");
+        put(10,8,7,5,"#582780");put(32,8,7,5,"#582780");
+        put(6,27,7,15,"#6d2a99");put(35,27,7,15,"#4d216f");
+        put(9,36,5,6,"#9a4ac0");put(34,36,5,6,"#35194f");
+        put(21,29,6,7,"#e4c16d");put(22,30,4,3,"#fff0b0");
+        put(14,12,20,2,"#b77bd7");
       }else if(female){
-        // Soft braided hairstyle and small decorative ribbon.
-        put(9,3,22,5,hair);put(7,9,4,13,hair);put(29,9,4,13,hair);
-        put(6,18,4,8,"#c18a45");put(30,18,4,8,"#c18a45");
-        put(29,25,4,5,hair);put(31,26,2,3,"#f2d17c");
-        put(26,5,4,3,"#f2d17c");
+        // Long hair, side braids and a tiny ribbon accent.
+        put(11,4,26,7,hair);put(8,10,5,17,hair);put(35,10,5,17,hair);
+        put(7,23,5,9,"#c18a45");put(36,23,5,9,"#c18a45");
+        put(35,30,5,6,hair);put(37,31,3,4,"#f2d17c");
+        put(31,6,5,3,"#f2d17c");put(14,7,7,2,"#ffffff22");
       }else{
-        put(10,3,20,5,hair);put(8,7,4,9,hair);put(28,7,4,9,hair);
-        if(p.role==="衛兵"){put(8,2,24,5,"#6e8262");put(15,1,10,2,"#d8c69a");}
-        if(p.role==="鍛冶師"){put(8,2,24,6,"#66554a");put(12,5,16,2,"#8c7562");}
+        put(12,4,24,7,hair);put(10,9,5,11,hair);put(33,9,5,11,hair);
+        if(p.role==="衛兵"){put(10,3,28,6,"#6e8262");put(18,2,12,2,"#d8c69a");}
+        if(p.role==="鍛冶師"){put(10,3,28,7,"#66554a");put(15,6,18,2,"#8c7562");}
       }
-      // Small costume-specific details and polished pixel highlights.
-      put(13,20,5,2,trim);put(22,20,5,2,trim);
-      put(11,26,2,5,"#ffffff22");put(27,26,2,5,"#ffffff22");
-      // One-pixel ink outline around the silhouette only.
-      const outline=g.createImageData(40,48);
-      for(let yy=0;yy<48;yy++)for(let xx=0;xx<40;xx++)if(px[yy][xx]){
+      // Collar, shoulder stitching and tiny fabric highlights.
+      put(18,25,12,2,trim);put(14,28,4,2,"#ffffff22");put(30,28,4,2,"#ffffff22");
+      put(16,42,4,2,trim);put(28,42,4,2,trim);
+      // Fine one-pixel dark contour, then paint the shaded pixel layers.
+      const outline=g.createImageData(48,56);
+      for(let yy=0;yy<56;yy++)for(let xx=0;xx<48;xx++)if(px[yy][xx]){
         const edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>!px[yy+dy]?.[xx+dx]);
-        if(edge){const z=(yy*40+xx)*4;outline.data[z]=43;outline.data[z+1]=31;outline.data[z+2]=37;outline.data[z+3]=255;}
+        if(edge){const z=(yy*48+xx)*4;outline.data[z]=43;outline.data[z+1]=31;outline.data[z+2]=37;outline.data[z+3]=255;}
       }
       g.putImageData(outline,0,0);
-      for(let yy=0;yy<48;yy++)for(let xx=0;xx<40;xx++)if(px[yy][xx]){g.fillStyle=px[yy][xx];g.fillRect(xx,yy,1,1);}
+      for(let yy=0;yy<56;yy++)for(let xx=0;xx<48;xx++)if(px[yy][xx]){g.fillStyle=px[yy][xx];g.fillRect(xx,yy,1,1);}
       sprite=c;pixelSpriteCache.set(key,sprite);if(pixelSpriteCache.size>260)pixelSpriteCache.delete(pixelSpriteCache.keys().next().value);
     }
     ctx.save();ctx.imageSmoothingEnabled=false;
     const bob=moving&&phase%2===1?-1:0;
-    ctx.drawImage(sprite,x,y+bob,72,86);ctx.restore();
-    ellipse(x+36,y+84,19,6,"#30452f");
+    ctx.drawImage(sprite,x,y+bob,78,94);ctx.restore();
+    ellipse(x+39,y+92,21,7,"#30452f");
   }
   function drawPlayerName(p){
     const q=project(p.x,p.y);
