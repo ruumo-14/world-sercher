@@ -1,0 +1,12 @@
+{
+  "name": "world-sercher",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Asteria fantasy world game",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3"
+  }
+}
