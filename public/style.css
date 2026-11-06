@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700;800&display=swap');
+
+:root{color-scheme:dark;--bg:#101c19;--panel:#1a2b25;--line:#365044;--gold:#f4cf79;--muted:#a9bdb0}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#294336 0,#172820 48%,#101916 100%);color:#f4f1df;font-family:'Nunito','Noto Sans JP',sans-serif}
+#app{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:22px 0 28px}
+.topbar{height:48px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.14em;font-size:14px}
+.brand-mark{color:var(--gold);font-size:24px}
+.online{display:flex;align-items:center;gap:8px;color:#b9cdbf;font-size:12px}
+.online-dot{width:8px;height:8px;border-radius:50%;background:#7bd69a;box-shadow:0 0 12px #7bd69a}
+.game-shell{padding:20px;background:linear-gradient(145deg,#22372d,#192921);border:1px solid #456151;border-radius:16px;box-shadow:0 20px 70px #0007}
+.game-heading{display:flex;justify-content:space-between;align-items:end;margin:0 2px 14px}
+.eyebrow{font-size:10px;letter-spacing:.22em;color:var(--gold);font-weight:800;margin:0 0 5px}
+h1{font-size:22px;margin:0;font-family:'Noto Sans JP',sans-serif;font-weight:400}
+.location-chip{padding:8px 12px;border:1px solid #496653;border-radius:20px;color:#d3e2d4;font-size:12px}
+.canvas-wrap{position:relative;overflow:hidden;border:3px solid #9aaf78;border-radius:14px;background:#294b35;box-shadow:inset 0 0 0 2px #1c3026,0 12px 30px #0005}
+canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#07130fc9;backdrop-filter:blur(2px);transition:opacity .25s}
+.overlay.hidden{opacity:0;pointer-events:none}
+.start-card{width:min(390px,calc(100% - 30px));padding:25px 28px;text-align:center;background:linear-gradient(160deg,#294334,#1b2e25);border:1px solid #718b62;border-radius:12px;box-shadow:0 12px 40px #0008}
+.crest{width:48px;height:48px;margin:0 auto 12px;display:grid;place-items:center;border:1px solid #b89d5d;border-radius:50%;color:var(--gold);font-size:27px}
+.start-card h2{font-family:'Noto Sans JP',sans-serif;font-size:23px;letter-spacing:.08em;margin:0 0 7px}
+.intro{color:#c5d5c8;font-size:13px;margin:0 0 20px}
+.start-card label{display:block;text-align:left;font-size:12px;color:#d8e4d7;margin-bottom:6px}
+.start-card input{width:100%;height:42px;border-radius:6px;border:1px solid #617b64;background:#14231c;color:#fff;padding:0 12px;font:inherit;outline:none}
+.start-card input:focus{border-color:var(--gold)}
+.start-card button{width:100%;margin-top:12px;height:45px;border:0;border-radius:6px;background:linear-gradient(#f3d58d,#d5ad5f);color:#293323;font:800 14px 'Nunito',sans-serif;cursor:pointer}
+.start-card button span{margin-left:8px}
+.small-note{font-size:10px;color:#a8bbaa;margin:13px 0 0}
+.hud{position:absolute;left:12px;right:12px;top:12px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.hud-player,.hud-help{background:#102019d9;border:1px solid #78916b;border-radius:6px;padding:7px 10px;font-size:11px;color:#f4f1df}
+.avatar{display:inline-grid;place-items:center;width:20px;height:20px;margin-right:6px;border-radius:4px;background:#e5c27a;color:#27382c}
+.notice{position:absolute;left:50%;bottom:58px;transform:translate(-50%,12px);opacity:0;background:#102019ed;border:1px solid #c4a96a;border-radius:7px;padding:10px 16px;font-size:13px;max-width:90%;text-align:center;transition:.2s;pointer-events:none}
+.notice.show{opacity:1;transform:translate(-50%,0)}
+.bottom-info{display:flex;justify-content:space-between;gap:12px;padding:13px 2px 0;color:#a9bdb0;font-size:11px}
+.mobile-controls{display:none;justify-content:space-between;align-items:center;padding:14px 4px 0}
+.dpad{display:flex;flex-direction:column;align-items:center;gap:5px}
+.dpad>div{display:flex;gap:5px}
+.mobile-controls button{width:42px;height:38px;border:1px solid #617a63;border-radius:7px;background:#263d30;color:#f5f0db;font-size:16px;touch-action:none}
+.mobile-controls .interact-button{width:82px;height:48px;background:#d5ad5f;color:#263323;font-weight:800}
+@media(max-width:650px){#app{width:calc(100% - 16px);padding-top:10px}.game-shell{padding:10px;border-radius:10px}.game-heading{align-items:center}.game-heading h1{font-size:17px}.location-chip{font-size:10px;padding:6px 8px}.hud-help{display:none}.mobile-controls{display:flex}.bottom-info{font-size:9px}.start-card{padding:18px}.start-card h2{font-size:19px}}
+
+.auth-card{width:min(420px,calc(100% - 24px));max-height:95%;overflow:auto}
+.auth-tabs{display:flex;gap:8px;margin:0 0 14px}
+.auth-tabs .auth-tab{width:50%;height:38px;margin:0;background:#263d30;color:#dce8d9;border:1px solid #617b64;font:700 13px 'Noto Sans JP',sans-serif}
+.auth-tabs .auth-tab.active{background:#e4c47c;color:#263323;border-color:#f4d995}
+.auth-card form{text-align:left}.auth-card label{margin:10px 0 6px}.auth-card input{height:42px}
+.auth-card .primary-action{margin-top:16px;font-family:'Noto Sans JP',sans-serif}
+.auth-extra.hidden{display:none}.auth-message{min-height:20px;margin:10px 0 0;color:#f2d28d;font-size:12px}
+.hud-right{display:flex;align-items:center;gap:8px;pointer-events:auto}
+#logout-button{border:1px solid #78916b;border-radius:6px;padding:7px 10px;background:#102019d9;color:#fff4df;font:12px 'Noto Sans JP',sans-serif;cursor:pointer}
+@media(max-width:650px){.auth-card{padding:16px 18px}.auth-card .intro{margin-bottom:12px}.auth-card .small-note{font-size:9px}}
+
+#open-adventurer{border:1px solid #d2b777;border-radius:6px;padding:7px 10px;background:#d5ad5f;color:#263323;font:700 12px 'Noto Sans JP',sans-serif;cursor:pointer}
+.adventurer-panel{position:absolute;z-index:5;inset:12px;overflow:auto;padding:18px;background:#14251ff2;border:2px solid #b89d5d;border-radius:12px;box-shadow:0 10px 35px #000a}
+.adventurer-panel.hidden{display:none}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.panel-head h2{font-size:20px;margin:0}
+.panel-close,.panel-tab,.panel-action{border:1px solid #71866c;border-radius:6px;background:#294334;color:#f4f1df;padding:8px 12px;font:12px 'Noto Sans JP',sans-serif;cursor:pointer}
+.panel-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}
+.panel-tab.active{background:#e4c47c;color:#263323;border-color:#f4d995}
+.panel-content{font-size:13px;line-height:1.7;color:#e7efdf}
+.panel-content h3{margin:8px 0;color:#f4d58c}
+.panel-content .stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.panel-content .stat{padding:10px;background:#20382b;border:1px solid #456151;border-radius:7px}
+.panel-content .stat strong{display:block;font-size:18px;color:#f4d58c}
+.panel-content .action-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #3b5545}
+.panel-content select{max-width:100%;padding:8px;background:#14231c;color:white;border:1px solid #617b64;border-radius:6px}
+.panel-content .muted{color:#a9bdb0;font-size:11px}
+.panel-message{min-height:18px;color:#f4d58c;font-size:12px;margin:8px 0 0}
+@media(max-width:650px){.adventurer-panel{inset:5px;padding:12px}.panel-content .stat-grid{grid-template-columns:1fr 1fr}.panel-head h2{font-size:17px}#open-adventurer{font-size:10px;padding:6px}}
+
+/* Retro RPG presentation: crisp pixel edges and warm parchment-like panels. */
+.canvas-wrap{border-radius:4px;border-width:4px;box-shadow:inset 0 0 0 3px #1c3026,0 8px 0 #253b2d,0 14px 28px #0006}
+.game-shell{border-radius:8px}
+.start-card,.adventurer-panel{border-radius:5px}
+.panel-tab,.panel-close,.panel-action{border-radius:3px}
+
+
+/* Original hand-built 16-bit town presentation */
+body{background:radial-gradient(ellipse at 50% 0%,#395a3d 0,#1b3025 55%,#101a17 100%)}
+.game-shell{background:linear-gradient(145deg,#2a4030,#192b22);border:2px solid #7d8055;box-shadow:0 18px 55px #0009}
+.canvas-wrap{border:5px solid #6e573c;border-radius:2px;background:#6e9b57;box-shadow:inset 0 0 0 3px #d1b77c,0 8px 0 #3b4931,0 14px 26px #0008}
+canvas{width:100%;height:auto;aspect-ratio:8/5;image-rendering:pixelated;image-rendering:crisp-edges}
+.overlay{z-index:8}
+.start-card{border:3px solid #9b8056;border-radius:3px;background:linear-gradient(160deg,#354d37,#1d3026);box-shadow:0 0 0 4px #263b2d,0 18px 40px #000b}
+.start-card input,.creation-card select{border:2px solid #7c805c;border-radius:2px;background:#15261d;color:#fff2d2}
+.start-card button{border-radius:2px}
+.creation-card{width:min(540px,calc(100% - 20px));max-height:94%;overflow:auto;text-align:left;padding:18px 22px}
+.creation-card h2,.creation-card .intro{text-align:center}
+.creation-card form{display:block}
+.creation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:8px}
+.creation-grid>div{min-width:0}
+.creation-card select{width:100%;height:39px;padding:0 8px;font:13px 'Noto Sans JP',sans-serif}
+.creation-card .primary-action{margin-top:16px}
+#creation-panel.hidden{display:none}
+.hud{z-index:3}
+.adventurer-panel{z-index:10;border-radius:3px;background:#17291ff5}
+@media(max-width:650px){.creation-card{padding:13px 15px}.creation-grid{gap:5px 8px}.creation-card select{height:36px;font-size:12px}.creation-card h2{font-size:17px}}
+
+
+/* Simplified navy interface: only the clean, restrained presentation is borrowed. */
+:root{color-scheme:dark;--bg:#101522;--panel:#1b2639;--line:#394b68;--gold:#a9c5ef;--muted:#b5c0d1}
+body{background:#101522;color:#edf2fa}
+#app{width:min(1120px,calc(100% - 28px));padding:18px 0 26px}
+.topbar{margin-bottom:14px}
+.brand-mark{color:#a9c5ef}
+.online{color:#c2ccda}
+.online-dot{background:#7fd6a4;box-shadow:none}
+.game-shell{padding:16px;background:#1b2639;border:1px solid #394b68;border-radius:9px;box-shadow:none}
+.game-heading{margin-bottom:12px}
+.eyebrow{color:#a9c5ef;letter-spacing:.12em}
+.location-chip{border:1px solid #465a79;border-radius:5px;background:#273750;color:#e1e9f5}
+.canvas-wrap{border:1px solid #465a79;border-radius:5px;background:#718b68;box-shadow:none}
+canvas{image-rendering:auto}
+.overlay{background:#101522d9;backdrop-filter:none}
+.start-card{background:#273750;border:1px solid #465a79;border-radius:7px;box-shadow:none}
+.crest{border:1px solid #8fa9ce;border-radius:7px;color:#c5d8f5}
+.start-card input{border:1px solid #596d8c;border-radius:5px;background:#172338}
+.start-card button{border:1px solid #657d9f;border-radius:5px;background:#405878;color:#fff}
+.auth-tabs .auth-tab{background:#344966;border:1px solid #596d8c;border-radius:5px;color:#edf2fa}
+.auth-tabs .auth-tab.active{background:#a9c5ef;color:#172338;border-color:#a9c5ef}
+.hud-player,.hud-help{background:#1b2639e8;border:1px solid #596d8c;border-radius:5px}
+.avatar{background:#a9c5ef;color:#172338}
+.notice{background:#1b2639;border:1px solid #596d8c;border-radius:5px}
+.mobile-controls button{background:#344966;border:1px solid #596d8c;border-radius:5px}
+.mobile-controls .interact-button{background:#a9c5ef;color:#172338}
+#logout-button,#open-adventurer{background:#344966;border:1px solid #596d8c;border-radius:5px;color:#fff}
+.adventurer-panel{background:#1b2639f5;border:1px solid #596d8c;border-radius:7px;box-shadow:none}
+.panel-close,.panel-tab,.panel-action{background:#344966;border:1px solid #596d8c;border-radius:5px;color:#fff}
+.panel-tab.active{background:#a9c5ef;color:#172338;border-color:#a9c5ef}
+.panel-content .stat{background:#273750;border:1px solid #465a79;border-radius:5px}
+.panel-content select{background:#172338;border:1px solid #596d8c;border-radius:5px}
+@media(max-width:650px){.game-shell{padding:9px}}
+
+.battle-controls{position:absolute;z-index:7;left:12px;right:12px;bottom:12px;display:flex;align-items:end;justify-content:space-between;gap:10px;pointer-events:none}
+.battle-controls.hidden{display:none}
+.battle-help{padding:8px 10px;background:#172338eF;border:1px solid #8fa9ce;border-radius:5px;color:#fff;font-size:12px}
+.battle-actions{display:flex;gap:7px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}
+.battle-actions button{padding:10px 13px;background:#344966;border:1px solid #9bb4d7;border-radius:5px;color:#fff;font-weight:700;cursor:pointer;touch-action:manipulation}
+.battle-actions button:active{background:#a9c5ef;color:#172338}
+.mobile-controls.battle-hidden{display:none}
+@media(max-width:650px){.battle-controls{bottom:6px;left:6px;right:6px;align-items:stretch;flex-direction:column}.battle-help{text-align:center}.battle-actions{justify-content:center}.battle-actions button{padding:9px 10px;font-size:12px}}
+
+.battle-move{display:flex;gap:6px;pointer-events:auto}
+.battle-move button{padding:10px 13px;background:#344966;border:1px solid #9bb4d7;border-radius:5px;color:#fff;font-weight:700;touch-action:none}
+@media(max-width:650px){.battle-controls{gap:6px}.battle-move{justify-content:center}.battle-move button{padding:8px 12px}}
+
+
+/* Crisp 16-bit pixel rendering: never smooth enlarged sprite art. */
+img, canvas, .tile {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+#game { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+
+/* Adventurer menu: original classic-JRPG status screen inspired by the supplied layout. */
+.adventurer-panel{inset:10px;padding:12px;background:#101d31;border:3px solid #b6a06c;box-shadow:0 0 0 2px #172b45,0 12px 32px #000b;display:flex;flex-direction:column;overflow:hidden}
+.panel-head{min-height:42px;padding:0 4px 8px;border-bottom:1px solid #536985}
+.panel-head .eyebrow{display:none}
+.panel-head h2{font-size:22px;color:#fff2c8;text-shadow:2px 2px #172338}
+.panel-close{background:#263d5d;border:2px solid #8da9ce;color:#fff;padding:8px 13px}
+.panel-tabs{display:flex;flex-direction:column;position:absolute;left:12px;top:68px;bottom:12px;width:170px;overflow:auto;padding:0 8px 0 0;margin:0;border-right:2px solid #526a8c;gap:7px}
+.panel-tab{min-height:48px;text-align:left;padding:8px 10px;background:#253b59;border:2px solid #607b9d;color:#fff;font-size:14px;box-shadow:inset 0 -3px #172943}
+.panel-tab::before{content:"✦";display:inline-block;width:25px;color:#f4d27b;font-size:18px}
+.panel-tab.active{background:#0879d1;border-color:#8de0ff;box-shadow:inset 0 0 0 2px #164e91,0 0 12px #20aaff;color:white}
+.panel-content{margin-left:180px;flex:1;min-height:0;overflow:auto;padding:2px 3px 8px}
+.panel-message{display:none}
+.adventure-dashboard{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto;gap:10px;position:relative;padding:2px 4px 26px}
+.dash-card{position:relative;min-width:0;padding:10px;background:#1b2c46;border:2px solid #8199b8;border-radius:8px;box-shadow:inset 0 0 0 2px #101e34,0 3px 0 #091426;color:#f4f4ee}
+.dash-card-title{margin:-2px -2px 9px;padding:5px 10px;background:#075ba4;border:2px solid #83d9ff;border-radius:7px;color:#fff;font-weight:800;font-size:16px;letter-spacing:.06em;text-shadow:1px 2px #16375d}
+.dash-card-title span{color:#ffdf69;font-size:20px;margin-right:8px}
+.dash-profile-body{display:flex;align-items:center;gap:12px;min-height:190px}
+.dash-portrait{position:relative;flex:0 0 126px;height:174px;background:#233c60;border:2px solid #536e94;border-radius:6px;overflow:hidden;image-rendering:pixelated}
+.dash-portrait:after{content:"";position:absolute;left:14px;right:14px;bottom:9px;height:10px;border:2px solid #4fd4ff;border-radius:50%;box-shadow:0 0 12px #26aaff}
+.dash-portrait div{position:absolute;image-rendering:pixelated;border:2px solid #17151a}
+.portrait-cape{left:25px;top:77px;width:78px;height:75px;background:#234d87;clip-path:polygon(20% 0,80% 0,100% 100%,0 100%)}
+.portrait-hair{left:37px;top:22px;width:52px;height:48px;background:#805033;clip-path:polygon(0 35%,10% 0,32% 15%,48% 0,70% 15%,100% 8%,95% 65%,80% 100%,15% 100%)}
+.portrait-face{left:43px;top:39px;width:42px;height:43px;background:#edc49a;border-radius:3px}
+.portrait-face i{position:absolute;top:18px;width:5px;height:7px;background:#17151a;border:0}
+.portrait-face i:first-child{left:8px}.portrait-face i:last-child{right:8px}
+.portrait-body{left:38px;top:79px;width:54px;height:57px;background:#3975b5;clip-path:polygon(20% 0,80% 0,100% 100%,0 100%)}
+.portrait-belt{left:38px;top:119px;width:54px;height:8px;background:#bd914d}
+.portrait-boots{left:42px;top:134px;width:18px;height:27px;background:#765039;box-shadow:25px 0 #765039}
+.dash-profile-info{flex:1;min-width:0}
+.dash-profile-info h3{font-size:19px;margin:0 0 4px;color:#fff}
+.dash-profile-info p{margin:3px 0 8px;color:#dce5f3}
+.dash-profile-info>strong{font-size:20px}
+.dash-profile-info>small{display:block;text-align:right;color:#e1e8f2;font-size:10px}
+.dash-bar{height:12px;margin:5px 0 3px;border:2px solid #8da1bb;border-radius:8px;background:#101a2a;overflow:hidden}
+.dash-bar i{display:block;height:100%;background:#19d4a2;border-right:2px solid #b5ffeb}
+.dash-bar.hp i{background:#1de0a5}.dash-bar.mp i{background:#27a9ed}.dash-bar.job i{background:#f3c52e}
+.dash-vital{display:flex;justify-content:space-between;margin-top:5px;color:#e7f0ff}
+.dash-vital b{color:#fff;font-size:14px}
+.dash-job-main{display:flex;align-items:center;gap:10px}
+.dash-job-icon{display:grid;place-items:center;width:62px;height:62px;background:#273e5d;border:2px solid #8099b8;border-radius:7px;font-size:37px;color:#fff}
+.dash-job-main h3{margin:0;font-size:20px}.dash-job-main strong{font-size:18px}
+.dash-disabled{margin-left:auto;padding:8px 10px;background:#2c4668;border:2px solid #9ab8da;border-radius:7px;color:#e9f2ff;font-weight:700;font-size:12px}
+.dash-exp{text-align:right;margin:2px 0 8px;font-size:11px;color:#dce6f5}
+.dash-job>p:last-child{color:#d6dfeb;font-size:12px;margin:9px 0 0}
+.dash-gear-layout{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.dash-gear-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.dash-gear-slot{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:61px;background:#14243b;border:2px solid #647c9b;border-radius:6px;text-align:center}
+.dash-gear-slot span{font-size:24px;filter:drop-shadow(1px 2px #000)}
+.dash-gear-slot small{font-size:9px;color:#e3eaf5;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dash-gear-detail{padding:7px;background:#14243b;border:2px solid #647c9b;border-radius:6px}
+.dash-gear-detail p,.dash-gear-detail small{font-size:11px;color:#d6e1f0}
+.dash-action{display:block;width:100%;padding:7px;margin-top:7px;background:#0875c8;border:2px solid #8bdcff;border-radius:6px;color:white;font-weight:800}
+.dash-skills h4{margin:5px 0;color:#f7dfa0;border-bottom:1px solid #536985;padding-bottom:4px}
+.dash-skill{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid #435773}
+.dash-skill-icon{display:grid;place-items:center;flex:0 0 36px;height:36px;background:#075da4;border:2px solid #87d8ff;border-radius:6px;color:#ffe27a;font-size:22px}
+.dash-skill-icon.common{background:#285e80}
+.dash-skill div{flex:1;min-width:0}.dash-skill b{display:block;font-size:12px}.dash-skill small{display:block;color:#cbd7e7;font-size:9px}
+.dash-skill strong{font-size:10px;white-space:nowrap}
+.dash-tip{grid-column:1/-1;position:absolute;left:4px;bottom:0;color:#fff1c9;font-size:11px;text-shadow:1px 1px #101a2a}
+.dash-wallet{position:absolute;right:5px;bottom:0;color:#ffdf75;font-weight:800;font-size:14px}
+@media(max-width:760px){
+ .adventurer-panel{inset:4px;padding:7px}
+ .panel-head{min-height:34px}.panel-head h2{font-size:16px}
+ .panel-tabs{left:7px;top:52px;bottom:7px;width:105px;padding-right:5px;gap:5px}
+ .panel-tab{min-height:42px;padding:5px;font-size:10px}.panel-tab::before{width:15px;font-size:13px}
+ .panel-content{margin-left:110px;padding:0}
+ .adventure-dashboard{grid-template-columns:1fr;gap:7px;padding-bottom:22px}
+ .dash-card{padding:7px}.dash-card-title{font-size:13px;padding:3px 7px}
+ .dash-profile-body{min-height:135px;gap:7px}.dash-portrait{flex-basis:88px;height:128px;transform-origin:top left}
+ .dash-profile-info h3{font-size:15px}.dash-profile-info p{font-size:10px}.dash-profile-info>strong{font-size:16px}
+ .dash-job-main h3{font-size:15px}.dash-job-icon{width:45px;height:45px;font-size:27px}
+ .dash-gear-slot{min-height:48px}.dash-gear-slot span{font-size:18px}
+ .dash-skills .dash-skill{gap:5px}.dash-skill-icon{flex-basis:28px;height:28px;font-size:17px}
+ .dash-tip{font-size:9px}.dash-wallet{font-size:11px}
+}
+img,canvas,.tile{image-rendering:pixelated;image-rendering:crisp-edges}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges}
