@@ -152,212 +152,178 @@
   function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
   function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);ctx.fill()}
   function path(points,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0]-camera.x,p[1]-camera.y):ctx.moveTo(p[0]-camera.x,p[1]-camera.y));ctx.stroke()}
-  // Gentle front-facing quarter view: north stays at the top, with a modest
-  // camera elevation. Character sprite proportions and screen-facing shapes stay unchanged.
-  const TILE=32, DEPTH=.68;
-  function project(wx,wy){return{x:Math.round(W/2+(wx-camera.x)),y:Math.round(H/2+(wy-camera.y)*DEPTH)};}
-  function poly(points,fill,stroke="#29202a",line=2){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}}
-  // Continuous grass field with restrained hand-placed pixel blades, not bubble-like patches.
-  function tile(wx,wy,fill){const p=project(wx,wy);rect(p.x,p.y,2,1,fill);}
+  // GBA-era top-down tile projection inspired by early handheld RPGs.
+  // World coordinates now map directly to a classic overhead view.
+  const TILE=16, DEPTH=1;
+  function project(wx,wy){return{x:Math.round(W/2+(wx-camera.x)),y:Math.round(H/2+(wy-camera.y))};}
+  function poly(points,fill,stroke="#344b35",line=1){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}}
+  function tile(wx,wy,fill){const p=project(wx,wy);rect(p.x,p.y,16,16,fill);}
   function specks(){}
   function drawGround(){
-    rect(0,0,W,H,"#4c8047");
-    const gx0=Math.floor((camera.x-W/2-32)/TILE)*TILE,gx1=camera.x+W/2+32;
-    const gy0=Math.floor((camera.y-H/(2*DEPTH)-32)/TILE)*TILE,gy1=camera.y+H/(2*DEPTH)+32;
+    rect(0,0,W,H,"#69a94f");
+    const gx0=Math.floor((camera.x-W/2-16)/TILE)*TILE,gx1=camera.x+W/2+16;
+    const gy0=Math.floor((camera.y-H/2-16)/TILE)*TILE,gy1=camera.y+H/2+16;
     for(let wy=gy0;wy<=gy1;wy+=TILE)for(let wx=gx0;wx<=gx1;wx+=TILE){
       const p=project(wx,wy),v=hash(Math.floor(wx/TILE),Math.floor(wy/TILE));
-      const tone=v>.66?"#52864a":v>.30?"#4d8046":"#477a42";
-      // Subtle irregular rectangular color variation blends into one lawn.
-      rect(p.x-16,p.y-12,32,24,tone);
-      const h=hash(Math.floor(wx/TILE)+17,Math.floor(wy/TILE)+9);
-      for(let k=0;k<4;k++){
-        const xx=p.x-13+Math.floor(hash(k,Math.floor(wx/TILE)*7+Math.floor(wy/TILE))*26);
-        const yy=p.y-9+Math.floor(hash(k+8,Math.floor(wy/TILE)*11+Math.floor(wx/TILE))*18);
-        rect(xx,yy,2+(k%2),1,h>.5?"#679253":"#3f713d");
+      rect(p.x-8,p.y-8,16,16,v>.78?"#73b454":v>.35?"#69a94f":"#639f49");
+      if(v>.70){rect(p.x-4,p.y+1,2,3,"#4f8c42");rect(p.x+3,p.y-4,2,3,"#8bc45d");}
+      else if(v<.12){rect(p.x+2,p.y+3,2,2,"#8ac45c");}
+    }
+    // A narrow winding stream and grassy banks on the western side of town.
+    for(let wy=650;wy<2200;wy+=16){
+      const bend=390+Math.sin(wy/150)*65;
+      for(let wx=bend-64;wx<=bend+64;wx+=16){
+        const p=project(wx,wy);rect(p.x-8,p.y-8,16,16,hash(wx,wy)>.5?"#4a9fc0":"#4395b8");
+        rect(p.x-5,p.y-5,4,2,"#75c6d5");
       }
+      for(const wx of [bend-80,bend+80]){const p=project(wx,wy);rect(p.x-8,p.y-8,16,16,"#b4a06a");rect(p.x-5,p.y-4,5,2,"#d0b879");}
     }
-    for(let y=650;y<2200;y+=24){const bend=390+Math.sin(y/150)*65;for(let x=bend-80;x<=bend+80;x+=32){const p=project(x,y);ellipse(p.x,p.y,19,14,"#347c9e");}}
-    for(let y=650;y<2200;y+=32){const bend=390+Math.sin(y/150)*65;for(const x of [bend-100,bend+100]){const p=project(x,y);ellipse(p.x,p.y,19,14,"#b69b6b");}}
-    const road=(x1,y1,x2,y2,width,color)=>{const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/24);for(let i=0;i<=n;i++){const t=i/n,cx=x1+(x2-x1)*t,cy=y1+(y2-y1)*t;for(let o=-width/2;o<=width/2;o+=32){const p=project(cx+(x2===x1?o:0),cy+(y2===y1?o:0));ellipse(p.x,p.y,19,14,color);}}};
-    road(1600,500,1600,2300,96,"#a99b7c");road(650,1320,2600,1320,96,"#a99b7c");
-    road(1600,1320,1100,900,48,"#927c5b");road(1600,1320,2050,900,48,"#927c5b");road(1600,1320,2050,1800,48,"#927c5b");
-    // Continuous square-cut stone paving: every cell touches its neighbours, with fine grout and no gaps.
-    for(let wy=1168;wy<1488;wy+=32)for(let wx=1440;wx<1760;wx+=32){
-      const a=project(wx,wy),b=project(wx+32,wy),c=project(wx+32,wy+32),d=project(wx,wy+32);
-      const shade=((wx/32+wy/32)%2===0)?"#c8bea5":"#bdb397";
-      poly([{x:a.x,y:a.y},{x:b.x,y:b.y},{x:c.x,y:c.y},{x:d.x,y:d.y}],shade,"#9f967f",1);
-      const hi=project(wx+3,wy+3);rect(hi.x,hi.y,22,1,"#ded5bd");
+    const road=(x1,y1,x2,y2,width)=>{
+      const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/8);
+      for(let i=0;i<=n;i++){const t=i/n,cx=x1+(x2-x1)*t,cy=y1+(y2-y1)*t;
+        for(let o=-width/2;o<=width/2;o+=16){const p=project(cx+(x2===x1?o:0),cy+(y2===y1?o:0));
+          rect(p.x-8,p.y-8,16,16,hash(Math.floor(cx/16)+o,Math.floor(cy/16))>.5?"#c7ad78":"#bda36e");
+          rect(p.x-5,p.y-5,2,2,"#d9c18b");
+        }
+      }
+    };
+    road(1600,500,1600,2300,112);road(650,1320,2600,1320,112);
+    road(1600,1320,1100,900,48);road(1600,1320,2050,900,48);road(1600,1320,2050,1800,48);
+    // Town square: compact square paving, like a handheld RPG plaza.
+    for(let wy=1160;wy<1480;wy+=16)for(let wx=1440;wx<1760;wx+=16){
+      const p=project(wx,wy),v=hash(wx/16,wy/16);
+      rect(p.x-8,p.y-8,16,16,v>.5?"#d7c69a":"#cdbb8d");
+      rect(p.x-7,p.y-7,14,1,"#e8d9b5");
+      rect(p.x-8,p.y+7,16,1,"#a99770");
     }
-    for(let y=2048;y<2240;y+=32)for(let x=1840;x<2160;x+=32){const p=project(x,y);ellipse(p.x,p.y,19,14,"#82613d");}
+    for(let wy=2048;wy<2240;wy+=16)for(let wx=1840;wx<2160;wx+=16){const p=project(wx,wy);rect(p.x-8,p.y-8,16,16,"#a78350");rect(p.x-5,p.y-4,5,2,"#c39a5e");}
     drawBridge(390,930);drawBridge(430,1260);drawBridge(480,1680);drawBridge(510,1940);
     drawFountain(1600,1320);
   }
   function drawFountain(wx,wy){
     const p=project(wx,wy),x=p.x,y=p.y;
-    // Circular carved-stone basin, layered rim and visible blue water.
-    ellipse(x,y+15,59,21,"#665747");
-    ellipse(x,y+8,57,21,"#8f8877");
-    ellipse(x,y+4,53,18,"#d0c6aa");
-    ellipse(x,y+2,46,14,"#777b78");
-    ellipse(x,y+1,42,12,"#3988a3");
-    ellipse(x-10,y-1,19,4,"#63b4c2");
-    ellipse(x+12,y+4,15,3,"#286f91");
-    // Raised central stone pedestal and bubbling water jet.
-    rect(x-7,y-10,14,13,"#bcb39a");
-    rect(x-5,y-15,10,6,"#ded5bd");
-    ellipse(x,y-17,6,3,"#83d5e2");
-    rect(x-2,y-31,4,14,"#72c6d8");
-    rect(x-1,y-39,2,9,"#a8e8e8");
-    ellipse(x,y-40,3,3,"#e4ffff");
-    // Pixel highlights on the rippling surface.
-    rect(x-29,y+1,8,2,"#b7e8df");rect(x+19,y-3,10,2,"#c5f1e8");
-    rect(x-12,y+9,7,2,"#d4f4e8");rect(x+5,y+6,6,2,"#9cdae0");
-    rect(x-3,y-3,3,2,"#f2ffff");
-    // Individual stone blocks around the outer rim.
-    for(let i=0;i<12;i++){
-      const a=i*Math.PI/6,px=x+Math.cos(a)*51,py=y+Math.sin(a)*16+5;
-      rect(px-4,py-2,8,4,i%2?"#b9b19b":"#d8ceb5");
-      rect(px-3,py-2,5,1,"#eee4cc");
-    }
+    // Small square-edged stone fountain viewed from directly above.
+    rect(x-34,y-23,68,46,"#786b57");
+    rect(x-31,y-20,62,40,"#c6b99a");
+    rect(x-27,y-16,54,32,"#4b9fbd");
+    rect(x-22,y-12,44,24,"#58b1ca");
+    rect(x-15,y-8,30,16,"#75c6d5");
+    rect(x-5,y-5,10,10,"#d7e6d2");
+    rect(x-2,y-2,4,4,"#ffffff");
+    rect(x-30,y-18,10,2,"#eee0bd");rect(x+18,y+14,10,2,"#eee0bd");
+    rect(x-34,y-23,68,3,"#e0d2b1");rect(x-34,y+20,68,3,"#9a896a");
   }
-  function drawBridge(wx,wy){const p=project(wx,wy);rect(p.x-42,p.y-13,84,26,"#62432d");for(let i=-3;i<=3;i++){rect(p.x+i*12-5,p.y-12,9,23,i%2?"#bd8750":"#9d693d");rect(p.x+i*12-4,p.y-9,2,17,"#d2a36b");}rect(p.x-46,p.y-17,92,4,"#d3a66b");rect(p.x-46,p.y+14,92,4,"#d3a66b");}
+
+  function drawBridge(wx,wy){
+    const p=project(wx,wy),x=p.x,y=p.y;
+    rect(x-48,y-13,96,26,"#805632");rect(x-44,y-10,88,20,"#c99a5c");
+    for(let i=-3;i<=3;i++){rect(x+i*12-4,y-9,8,18,i%2?"#a97543":"#d2a66b");}
+    rect(x-49,y-15,98,4,"#e0bd7d");rect(x-49,y+11,98,4,"#e0bd7d");
+  }
   function drawTree(wx,wy,index=0){
-    const p=project(wx,wy),x=p.x,y=p.y;if(x<-80||y<-120||x>W+80||y>H+100)return;
-    const palettes=[["#285a36","#397a42","#65954c"],["#315d3d","#4c8549","#83a35a"],["#315a42","#54834c","#a0a15a"],["#3d6539","#6a8e48","#b5a45c"]],leaf=palettes[index%4];
-    ellipse(x+2,y+14,23,8,"#263b2b");rect(x-5,y-16,10,30,"#79502f");rect(x-14,y-5,9,5,"#79502f");rect(x+5,y-20,9,5,"#79502f");
-    // Layered canopy with irregular pixel clusters, black-green ink edge.
-    ellipse(x,y-43,31,29,"#1d3928");ellipse(x-13,y-49,19,20,leaf[0]);ellipse(x+13,y-51,20,21,leaf[1]);ellipse(x,y-68,21,22,leaf[1]);ellipse(x-3,y-74,13,13,leaf[2]);
-    ellipse(x-11,y-58,10,6,leaf[2]);ellipse(x+12,y-65,9,5,leaf[2]);
-    ellipse(x-20,y-42,7,5,leaf[1]);ellipse(x+19,y-47,7,5,leaf[1]);
+    const p=project(wx,wy),x=p.x,y=p.y;if(x<-50||y<-60||x>W+50||y>H+60)return;
+    const palettes=[["#34753c","#4b9847","#80b94e"],["#286c42","#3f8b4b","#73ae50"],["#3b7a3e","#55994b","#9bc45b"],["#397044","#57964b","#83b85a"]];
+    const a=palettes[index%palettes.length];
+    // Flat overhead canopy with stepped pixel edges and a compact trunk.
+    rect(x-13,y-9,26,22,"#285b37");
+    rect(x-10,y-14,20,28,a[0]);rect(x-15,y-8,30,16,a[1]);
+    rect(x-9,y-17,18,7,a[1]);rect(x-6,y-20,12,4,a[2]);
+    rect(x-12,y-4,7,5,a[2]);rect(x+5,y+1,7,5,a[0]);
+    rect(x-2,y+8,4,7,"#79512e");
+    rect(x-7,y-10,5,3,a[2]);rect(x+3,y-6,5,3,a[2]);
   }
   function drawHouse(b,index=0){
-    const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;if(x<-220||y<-200||x>W+220||y>H+180)return;
-    const w=Math.max(76,b.w*.72),h=Math.max(50,b.h*.48),type=b.type;
-    const palettes=type==="guild"?["#d7b783","#a17a55","#8a4338","#bd7250"]:type==="forge"?["#a18b70","#786b5c","#4b4b52","#77747a"]:type==="inn"?["#e0bc83","#b28b60","#79423a","#c27451"]:type==="market"?["#e0c08d","#b48a61","#9b4d3e","#d17b51"]:type==="farm"?["#c7a16d","#9b7650","#6f5836","#a17a48"]:type==="bank"?["#c9c0a4","#918b7b","#59616b","#92959a"]:[index%2?"#d6bd91":"#c59b70","#987653",index%3===0?"#78433a":index%3===1?"#586b56":"#785b43",index%3===0?"#bf7250":index%3===1?"#8ca16c":"#b28a58"];
-    const [front,side,roof,lit]=palettes;
-    ellipse(x,y+h+8,w*.58,13,"#26392a");
-    // Back roof silhouette and side wall.
-    poly([{x:x-w/2,y:y-24},{x:x,y:y-55},{x:x+w/2,y:y-24},{x:x+w/2,y:y+h-7},{x:x,y:y+h+8},{x:x-w/2,y:y+h-7}],side,"#342923",3);
-    // Straight, clearly visible front wall and facade.
-    rect(x-w/2,y-20,w,h+30,front);rect(x-w/2,y-20,w,5,"#ead2a4");
-    for(let row=0;row<5;row++)for(let col=0;col<Math.floor(w/13);col++){const xx=x-w/2+5+col*13+(row%2?6:0),yy=y+row*10;rect(xx,yy,8,2,row%2?"#a77e58":"#ead0a0");}
-    // Timber framing.
-    rect(x-w/2+8,y-16,6,h+18,"#68462f");rect(x+w/2-14,y-16,6,h+18,"#68462f");rect(x-3,y-16,6,h+18,"#68462f");
-    // Raised pitched roof: broad visible roof plane, dark eaves and a side plane
-    // create depth while keeping the facade and door straight-on.
-    const ridgeY=y-82-(index%3)*4, eaveY=y-19, roofFront=y-7;
-    poly([{x:x-w/2-13,y:eaveY},{x:x-3,y:ridgeY},{x:x+w/2+13,y:eaveY},{x:x+w/2+8,y:roofFront},{x:x,y:roofFront+18},{x:x-w/2-8,y:roofFront}], "#392827","#251d20",4);
-    poly([{x:x-w/2-9,y:eaveY-2},{x:x-3,y:ridgeY+5},{x:x-1,y:roofFront+5},{x:x-w/2+3,y:roofFront+3}],lit,"#50302a",2);
-    poly([{x:x-1,y:ridgeY+5},{x:x+w/2+9,y:eaveY-2},{x:x+w/2+5,y:roofFront+2},{x:x,y:roofFront+18}],roof,"#392725",2);
-    // Solid clean roof planes; remove broken shingle strokes.
-    poly([{x:x-w/2-9,y:eaveY-2},{x:x-3,y:ridgeY+5},{x:x-1,y:roofFront+5},{x:x-w/2+3,y:roofFront+3}],lit,"#50302a",2);
-    poly([{x:x-1,y:ridgeY+5},{x:x+w/2+9,y:eaveY-2},{x:x+w/2+5,y:roofFront+2},{x:x,y:roofFront+18}],roof,"#392725",2);
-    rect(x-w/2-12,roofFront-1,w+24,5,"#4a3029");
-    rect(x-w/2-12,roofFront+3,w+24,2,"#b8784f");
-    // Warm windows, shutters and centered wooden door.
-    const wy=y+Math.round(h*.38);for(const s of [-1,1]){const wx=x+s*w*.29;rect(wx-10,wy-11,20,25,"#493329");rect(wx-7,wy-8,14,19,"#e6ad58");rect(wx-5,wy-6,10,15,"#ffe2a0");rect(wx-1,wy-8,2,18,"#754b30");rect(wx-12,wy-12,4,26,"#805234");rect(wx+8,wy-12,4,26,"#805234");}
-    rect(x-12,y+h-18,24,35,"#493126");rect(x-8,y+h-14,16,31,"#95643d");rect(x+4,y+h-5,2,2,"#f0ce72");rect(x-18,y+h+17,36,5,"#b4a58a");
-    if(type==="forge"||type==="inn"){rect(x+w*.23,y-70,13,29,"#6e4a3b");rect(x+w*.23-2,y-74,17,5,"#44332f");}
-    rect(x-11,y-82,22,10,type==="guild"?"#d6b56e":"#70452f");rect(x-8,y-79,16,3,"#e7d7a5");
+    const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;
+    if(x<-150||y<-130||x>W+150||y>H+130)return;
+    const w=Math.max(64,Math.round(b.w*.78)),h=Math.max(52,Math.round(b.h*.68)),type=b.type;
+    const roofColors=type==="guild"?["#8e493d","#b9664b"]:type==="forge"?["#555b62","#7a7770"]:type==="inn"?["#9b493c","#c46c4b"]:type==="market"?["#bd6746","#d98b50"]:type==="farm"?["#8b6c3c","#b28b4b"]:type==="bank"?["#69777a","#9ba39a"]:["#8e493e","#b75f48"];
+    const roof=roofColors[0],light=roofColors[1];
+    // Soft shadow and visible timber foundation.
+    rect(x-w/2-5,y-h/2+8,w+10,h+10,"#477343");
+    rect(x-w/2,y-h/2,w,h,"#9c754c");
+    rect(x-w/2+5,y-h/2+5,w-10,h-10,type==="forge"?"#8c8170":"#e2bd82");
+    // Broad tiled roof, drawn as a flat top-down footprint.
+    rect(x-w/2+1,y-h/2+1,w-2,h-2,roof);
+    for(let yy=y-h/2+5;yy<y+h/2-3;yy+=10){
+      rect(x-w/2+4,yy,w-8,2,light);
+      for(let xx=x-w/2+7;xx<x+w/2-5;xx+=16)rect(xx,yy+3,9,2,index%2?"#6f3d37":"#a95b45");
+    }
+    // Roof ridge and eaves make the structure readable at small GBA-like scale.
+    rect(x-2,y-h/2+4,4,h-8,"#e0a765");
+    rect(x-w/2+3,y-h/2+3,3,h-6,"#633d34");
+    rect(x+w/2-6,y-h/2+3,3,h-6,"#633d34");
+    // Small front-facing doorway and two bright windows.
+    rect(x-9,y+h/2-13,18,13,"#50372b");rect(x-6,y+h/2-11,12,10,"#b77b4b");
+    rect(x-w/2+9,y+h/2-23,10,8,"#73b8c6");rect(x+w/2-19,y+h/2-23,10,8,"#73b8c6");
+    rect(x-w/2+10,y+h/2-24,8,2,"#e5d19a");rect(x+w/2-18,y+h/2-24,8,2,"#e5d19a");
+    // Distinct silhouettes for important facilities.
+    if(type==="forge"){rect(x+w/2-17,y-h/2+5,12,12,"#5a4b43");rect(x+w/2-14,y-h/2+7,6,8,"#e5a34c");}
+    if(type==="inn"){rect(x-9,y-h/2+5,18,6,"#f0d58a");}
+    if(type==="market"){rect(x-w/2+3,y-h/2+4,w-6,9,"#e7d08e");}
+    if(type==="farm"){rect(x-w/2+5,y-h/2+5,12,10,"#789b4e");}
     if(b.name!=="住民の家"){
-      const labelY=y-91;
       ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineJoin="round";
-      ctx.lineWidth=3;ctx.strokeStyle="#30251f";ctx.strokeText(b.name,x,labelY);
-      ctx.fillStyle="#fff0ca";ctx.fillText(b.name,x,labelY);ctx.restore();
+      ctx.lineWidth=3;ctx.strokeStyle="#34402e";ctx.strokeText(b.name,x,y-h/2-5);
+      ctx.fillStyle="#fff7d7";ctx.fillText(b.name,x,y-h/2-5);ctx.restore();
     }
   }
+
   const spriteCache=new Map();
   const pixelSpriteCache=new Map();
-  // Original high-detail mobile-JRPG-style character sprite.
-  // Keeps the approved village layout and name labels untouched.
+  // Compact original handheld-era overhead character sprites.
+  // Designed for the new top-down town rather than enlarged portrait-like figures.
   function drawPixelPerson(p,isPlayer=false){
-    const q=project(p.x,p.y),x=q.x-35,y=q.y-88;
-    if(x<-100||y<-120||x>W+100||y>H+65)return;
-    const female=!isPlayer&&[0,2,8,14,16,18,19,21,23,26,31,32].includes(p.id);
+    const q=project(p.x,p.y),x=q.x-16,y=q.y-27;
+    if(x<-50||y<-60||x>W+50||y>H+50)return;
     const moving=!!p.moving,phase=moving?Math.floor((p.walkClock||0)*9)%4:0;
     const key=[isPlayer?1:0,p.id,p.color,p.hair,p.skin,p.eyes,p.style,p.accessory,phase].join(":");
     let sprite=pixelSpriteCache.get(key);
     if(!sprite){
-      const c=document.createElement("canvas");c.width=48;c.height=56;
-      const g=c.getContext("2d"),px=Array.from({length:56},()=>Array(48).fill(null));
-      const put=(xx,yy,w,h,col)=>{for(let j=yy;j<yy+h;j++)for(let i=xx;i<xx+w;i++)if(i>=0&&i<48&&j>=0&&j<56)px[j][i]=col;};
-      const hairMap={"栗色":"#795039","金髪":"#edc45c","黒髪":"#30282b","銀髪":"#b8c2cc","茶色":"#8a5938","赤髪":"#b64d38","青髪":"#426eaa","緑髪":"#52784a"};
-      const skinMap={"明るい肌":["#f4cba5","#d99d78","#f9d9b8"],"普通の肌":["#dba77e","#b9785d","#edbd96"],"褐色肌":["#b97850","#8c513b","#d29467"]};
-      const hair=hairMap[p.hair]||(/^#[0-9a-f]{6}$/i.test(p.hair||"")?p.hair:"#795039");
-      const sk=skinMap[p.skin]||skinMap["明るい肌"],skin=sk[0],skinShade=sk[1],skinLight=sk[2];
-      const cloth=isPlayer?(p.outfit||"#7629ad"):(/^#[0-9a-f]{6}$/i.test(p.color||"")?p.color:"#6388a1");
-      const shade=isPlayer?"#48205f":"#35404b",trim=isPlayer?"#d4a0ed":"#ead3a7";
-      const step=moving?(phase===1?-2:phase===3?2:0):0;
-      // Small soft shadow and separate boots.
-      put(9,49,30,4,"#34452f");put(12+step,47,9,5,"#332b2b");put(27-step,47,9,5,"#332b2b");
-      put(13+step,46,7,2,"#e7d5b8");put(28-step,46,7,2,"#d8c3a4");
-      put(12+step,51,10,2,"#211f25");put(27-step,51,10,2,"#211f25");
-      // Legs, trousers and tunic with layered cloth folds.
-      put(14,37,20,10,cloth);put(15,39,7,7,shade);put(26,39,6,7,shade);
-      put(11,25,26,17,cloth);put(14,23,20,5,trim);
-      put(11,28,4,12,shade);put(33,28,4,12,shade);
-      put(15,29,18,2,trim);put(16,33,15,2,shade);
-      put(17,35,4,5,"#ffffff22");put(27,29,3,6,"#ffffff22");
-      put(22,32,5,7,"#e4c16d");put(23,33,3,3,"#fff0b0");
-      // Sleeves, cuffs, hands and neck.
-      put(7,27,6,13,cloth);put(35,27,6,13,shade);
-      put(7,37,6,5,skin);put(35,37,6,5,skinShade);
-      put(8,28,4,7,trim);put(36,28,4,7,trim);
-      put(19,21,10,8,skin);put(19,24,10,3,skinShade);
-      // Head silhouette, ears and face: rounded, expressive, finely shaded.
-      put(12,5,24,20,hair);put(9,11,5,14,hair);put(34,11,5,14,hair);
-      put(13,9,22,19,skin);put(11,14,3,9,skinShade);put(34,14,3,9,skinShade);
-      put(14,10,20,2,skinLight);put(15,24,18,2,skinLight);
-      put(15,21,5,2,"#eaa88f");put(29,21,5,2,"#eaa88f");
-      // Eyebrows, eyes, pupils, nose and mouth.
-      put(16,15,5,2,"#654437");put(28,15,5,2,"#654437");
-      put(16,17,5,5,"#fff0d8");put(28,17,5,5,"#fff0d8");
-      const iris=p.eyes==="緑"?"#4e8060":p.eyes==="茶"?"#805238":p.eyes==="黒"?"#30282b":"#456f9b";
-      put(18,18,2,3,iris);put(30,18,2,3,iris);
-      put(18,18,1,1,"#fff");put(30,18,1,1,"#fff");
-      put(24,20,2,2,skinShade);put(23,24,4,1,"#a94e50");
-      put(19,27,14,1,"#30232a");put(22,28,8,1,"#30232a");
-      // Hair cap, locks and individual highlight bands.
-      put(11,5,26,7,hair);put(10,9,5,10,hair);put(33,9,5,10,hair);
-      put(14,4,9,2,"#ffffff22");put(27,6,7,2,shade);
+      const c=document.createElement("canvas");c.width=24;c.height=32;
+      const g=c.getContext("2d");
+      const put=(xx,yy,w,h,col)=>{g.fillStyle=col;g.fillRect(xx,yy,w,h);};
+      const hairMap={"栗色":"#794b32","金髪":"#e7bd55","黒髪":"#30272b","銀髪":"#b7c1c9","茶色":"#8a5938","赤髪":"#b64d38","青髪":"#426eaa","緑髪":"#52784a"};
+      const skinMap={"明るい肌":"#f0c49a","普通の肌":"#dba77e","褐色肌":"#b97850","色白":"#f4d8bd"};
+      const hair=hairMap[p.hair]||"#754a34",skin=skinMap[p.skin]||"#f0c49a";
+      const cloth=isPlayer?(p.outfit||"#7136a0"):(p.color||"#527caa");
+      const dark=isPlayer?"#43205f":"#344b58";
+      const leg=phase===1?1:phase===3?-1:0;
+      // Feet and short legs.
+      put(5,25,5,4,"#49352b");put(14,25,5,4,"#49352b");
+      put(6+leg,24,4,3,"#d8bd8b");put(14-leg,24,4,3,"#d8bd8b");
+      // Body, sleeves and hands.
+      put(6,16,12,9,cloth);put(4,17,4,7,dark);put(16,17,4,7,dark);
+      put(4,22,3,3,skin);put(17,22,3,3,skin);
+      put(8,16,8,2,isPlayer?"#d4a0ed":"#e7d4a4");
+      put(10,19,4,4,isPlayer?"#e4c16d":"#d7c18d");
+      put(9,14,6,4,skin);
+      // Head and hair cap.
+      put(6,5,12,10,hair);put(5,8,2,7,hair);put(17,8,2,7,hair);
+      put(7,7,10,9,skin);put(8,8,2,2,"#f7d9b5");
+      put(8,10,2,2,"#fff4d9");put(14,10,2,2,"#fff4d9");
+      put(9,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");
+      put(15,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");
+      put(11,13,2,1,"#a94e50");
       if(isPlayer){
-        // Original purple turban, layered cloth folds and travel mantle.
-        put(8,5,32,8,"#3e1d61");put(11,2,26,8,"#7135a0");
-        put(16,1,18,6,"#9250c0");put(15,4,17,2,"#d7a4ee");
-        put(10,8,7,5,"#582780");put(32,8,7,5,"#582780");
-        put(6,27,7,15,"#6d2a99");put(35,27,7,15,"#4d216f");
-        put(9,36,5,6,"#9a4ac0");put(34,36,5,6,"#35194f");
-        put(21,29,6,7,"#e4c16d");put(22,30,4,3,"#fff0b0");
-        put(14,12,20,2,"#b77bd7");
-      }else if(female){
-        // Long hair, side braids and a tiny ribbon accent.
-        put(11,4,26,7,hair);put(8,10,5,17,hair);put(35,10,5,17,hair);
-        put(7,23,5,9,"#c18a45");put(36,23,5,9,"#c18a45");
-        put(35,30,5,6,hair);put(37,31,3,4,"#f2d17c");
-        put(31,6,5,3,"#f2d17c");put(14,7,7,2,"#ffffff22");
+        put(5,4,14,4,"#4c236e");put(7,2,10,4,"#7136a0");put(9,1,7,3,"#9655bf");put(8,5,9,1,"#d7a4ee");
+        put(3,17,3,8,"#7136a0");put(18,17,3,8,"#542477");
+      }else if(p.role==="衛兵"){
+        put(5,4,14,3,"#5e8052");put(8,2,8,3,"#d8c69a");
+      }else if(p.role==="鍛冶師"){
+        put(5,4,14,3,"#5d5048");put(8,6,8,1,"#a68a69");
       }else{
-        put(12,4,24,7,hair);put(10,9,5,11,hair);put(33,9,5,11,hair);
-        if(p.role==="衛兵"){put(10,3,28,6,"#6e8262");put(18,2,12,2,"#d8c69a");}
-        if(p.role==="鍛冶師"){put(10,3,28,7,"#66554a");put(15,6,18,2,"#8c7562");}
+        put(6,4,12,3,hair);
       }
-      // Collar, shoulder stitching and tiny fabric highlights.
-      put(18,25,12,2,trim);put(14,28,4,2,"#ffffff22");put(30,28,4,2,"#ffffff22");
-      put(16,42,4,2,trim);put(28,42,4,2,trim);
-      // Fine one-pixel dark contour, then paint the shaded pixel layers.
-      const outline=g.createImageData(48,56);
-      for(let yy=0;yy<56;yy++)for(let xx=0;xx<48;xx++)if(px[yy][xx]){
-        const edge=[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>!px[yy+dy]?.[xx+dx]);
-        if(edge){const z=(yy*48+xx)*4;outline.data[z]=43;outline.data[z+1]=31;outline.data[z+2]=37;outline.data[z+3]=255;}
-      }
-      g.putImageData(outline,0,0);
-      for(let yy=0;yy<56;yy++)for(let xx=0;xx<48;xx++)if(px[yy][xx]){g.fillStyle=px[yy][xx];g.fillRect(xx,yy,1,1);}
+      // One-pixel highlights keep the sprite readable at native scale.
+      put(7,7,3,1,"#ffffff55");put(8,17,3,1,"#ffffff33");
       sprite=c;pixelSpriteCache.set(key,sprite);if(pixelSpriteCache.size>260)pixelSpriteCache.delete(pixelSpriteCache.keys().next().value);
     }
     ctx.save();ctx.imageSmoothingEnabled=false;
     const bob=moving&&phase%2===1?-1:0;
-    ctx.drawImage(sprite,x,y+bob,78,94);ctx.restore();
-    ellipse(x+39,y+92,21,7,"#30452f");
+    ctx.drawImage(sprite,x,y+bob,32,40);ctx.restore();
+    rect(x+8,y+37,16,3,"#42623b");
   }
+
   function drawPlayerName(p){
     const q=project(p.x,p.y);
     const label=(p.name||"冒険者").slice(0,12);
