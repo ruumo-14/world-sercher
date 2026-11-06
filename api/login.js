@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
     }
 
     const saves = await db("game_saves", {
-      select: "username:game_users(username),character_name,x,y,level,gold",
+      select: "character_name,x,y,level,gold",
       user_id: "eq." + user.id,
       limit: "1",
     });
