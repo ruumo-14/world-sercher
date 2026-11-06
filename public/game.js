@@ -270,52 +270,46 @@
 
   const spriteCache=new Map();
   const pixelSpriteCache=new Map();
-  // Compact original handheld-era overhead character sprites.
-  // Designed for the new top-down town rather than enlarged portrait-like figures.
+  // Generated player sprite, cropped from the approved white-background artwork.
+  const playerGbaSprite=new Image();
+  fetch("/assets/player-gba.b64").then(r=>r.text()).then(data=>{
+    playerGbaSprite.src="data:image/png;base64,"+data.trim();
+  }).catch(()=>{});
+  // Compact original overhead sprites for NPCs; player uses the generated GBA sprite.
   function drawPixelPerson(p,isPlayer=false){
-    const q=project(p.x,p.y),x=q.x-16,y=q.y-27;
+    const q=project(p.x,p.y);
+    if(isPlayer&&playerGbaSprite.complete&&playerGbaSprite.naturalWidth){
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      const bob=p.moving&&Math.floor((p.walkClock||0)*9)%2===1?-1:0;
+      ctx.drawImage(playerGbaSprite,Math.round(q.x-20),Math.round(q.y-45+bob),40,48);
+      ctx.restore();
+      return;
+    }
+    const x=q.x-16,y=q.y-27;
     if(x<-50||y<-60||x>W+50||y>H+50)return;
     const moving=!!p.moving,phase=moving?Math.floor((p.walkClock||0)*9)%4:0;
-    const key=[isPlayer?1:0,p.id,p.color,p.hair,p.skin,p.eyes,p.style,p.accessory,phase].join(":");
+    const key=[p.id,p.color,p.hair,p.skin,p.eyes,p.style,p.accessory,phase].join(":");
     let sprite=pixelSpriteCache.get(key);
     if(!sprite){
       const c=document.createElement("canvas");c.width=24;c.height=32;
-      const g=c.getContext("2d");
-      const put=(xx,yy,w,h,col)=>{g.fillStyle=col;g.fillRect(xx,yy,w,h);};
+      const g=c.getContext("2d"),put=(xx,yy,w,h,col)=>{g.fillStyle=col;g.fillRect(xx,yy,w,h);};
       const hairMap={"栗色":"#794b32","金髪":"#e7bd55","黒髪":"#30272b","銀髪":"#b7c1c9","茶色":"#8a5938","赤髪":"#b64d38","青髪":"#426eaa","緑髪":"#52784a"};
       const skinMap={"明るい肌":"#f0c49a","普通の肌":"#dba77e","褐色肌":"#b97850","色白":"#f4d8bd"};
-      const hair=hairMap[p.hair]||"#754a34",skin=skinMap[p.skin]||"#f0c49a";
-      const cloth=isPlayer?(p.outfit||"#7136a0"):(p.color||"#527caa");
-      const dark=isPlayer?"#43205f":"#344b58";
+      const hair=hairMap[p.hair]||"#754a34",skin=skinMap[p.skin]||"#f0c49a",cloth=p.color||"#527caa",dark="#344b58";
       const leg=phase===1?1:phase===3?-1:0;
-      // Feet and short legs.
       put(5,25,5,4,"#49352b");put(14,25,5,4,"#49352b");
       put(6+leg,24,4,3,"#d8bd8b");put(14-leg,24,4,3,"#d8bd8b");
-      // Body, sleeves and hands.
       put(6,16,12,9,cloth);put(4,17,4,7,dark);put(16,17,4,7,dark);
-      put(4,22,3,3,skin);put(17,22,3,3,skin);
-      put(8,16,8,2,isPlayer?"#d4a0ed":"#e7d4a4");
-      put(10,19,4,4,isPlayer?"#e4c16d":"#d7c18d");
-      put(9,14,6,4,skin);
-      // Head and hair cap.
+      put(4,22,3,3,skin);put(17,22,3,3,skin);put(8,16,8,2,"#e7d4a4");
+      put(10,19,4,4,"#d7c18d");put(9,14,6,4,skin);
       put(6,5,12,10,hair);put(5,8,2,7,hair);put(17,8,2,7,hair);
-      put(7,7,10,9,skin);put(8,8,2,2,"#f7d9b5");
-      put(8,10,2,2,"#fff4d9");put(14,10,2,2,"#fff4d9");
+      put(7,7,10,9,skin);put(8,10,2,2,"#fff4d9");put(14,10,2,2,"#fff4d9");
       put(9,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");
-      put(15,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");
-      put(11,13,2,1,"#a94e50");
-      if(isPlayer){
-        put(5,4,14,4,"#4c236e");put(7,2,10,4,"#7136a0");put(9,1,7,3,"#9655bf");put(8,5,9,1,"#d7a4ee");
-        put(3,17,3,8,"#7136a0");put(18,17,3,8,"#542477");
-      }else if(p.role==="衛兵"){
-        put(5,4,14,3,"#5e8052");put(8,2,8,3,"#d8c69a");
-      }else if(p.role==="鍛冶師"){
-        put(5,4,14,3,"#5d5048");put(8,6,8,1,"#a68a69");
-      }else{
-        put(6,4,12,3,hair);
-      }
-      // One-pixel highlights keep the sprite readable at native scale.
-      put(7,7,3,1,"#ffffff55");put(8,17,3,1,"#ffffff33");
+      put(15,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");put(11,13,2,1,"#a94e50");
+      if(p.role==="衛兵"){put(5,4,14,3,"#5e8052");put(8,2,8,3,"#d8c69a");}
+      else if(p.role==="鍛冶師"){put(5,4,14,3,"#5d5048");put(8,6,8,1,"#a68a69");}
+      else put(6,4,12,3,hair);
+      put(7,7,3,1,"#ffffff");put(8,17,3,1,"#ffffff");
       sprite=c;pixelSpriteCache.set(key,sprite);if(pixelSpriteCache.size>260)pixelSpriteCache.delete(pixelSpriteCache.keys().next().value);
     }
     ctx.save();ctx.imageSmoothingEnabled=false;
@@ -323,7 +317,6 @@
     ctx.drawImage(sprite,x,y+bob,32,40);ctx.restore();
     rect(x+8,y+37,16,3,"#42623b");
   }
-
   function drawPlayerName(p){
     const q=project(p.x,p.y);
     const label=(p.name||"冒険者").slice(0,12);
