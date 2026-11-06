@@ -27,3 +27,7 @@ alter table public.game_saves enable row level security;
 
 -- No anon/authenticated policies are intentionally created.
 -- Only the server-side Supabase secret key can access these tables.
+
+-- Ensure the server-side role can access these tables.
+grant usage on schema public to service_role;
+grant all privileges on table public.game_users, public.game_saves to service_role;
