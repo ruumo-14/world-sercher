@@ -7,8 +7,8 @@
   const $=id=>document.getElementById(id);
   const startPanel=$("start-panel"),authForm=$("auth-form"),accountName=$("account-name"),password=$("account-password"),characterName=$("character-name"),nameWrap=$("character-name-wrap"),authMessage=$("auth-message"),authSubmit=$("auth-submit"),loginTab=$("login-tab"),registerTab=$("register-tab"),notice=$("notice"),hudName=$("hud-name"),onlineCount=$("online-count"),connectionState=$("connection-state");
   const player={id:null,name:"冒険者",x:1600,y:1300,speed:155,dir:"down",species:"人間",hair:"栗色",skin:"明るい肌",eyes:"青",style:"旅人",outfit:"#4f78a5",accessory:"なし"};
-  const others=new Map(),keys=new Set();let started=false,authMode="login",gameData={},camera={x:0,y:0},lastMoveSent=0,noticeTimer=null,lastFrame=0;
-  const socket=typeof io==="function"?io({autoConnect:false}):null;
+  const others=new Map(),keys=new Set();let started=false,authMode="login",gameData={},camera={x:0,y:0},lastMoveSent=0,lastPresenceSent=0,noticeTimer=null,lastFrame=0;
+  let realtimeClient=null,realtimeChannel=null,realtimeId=null;
   const town={x:1600,y:1300};
   const buildings=[
     ["冒険者ギルド",1900,850,190,145,"#d5b47b","guild"],["武器屋",980,1080,150,120,"#bd8860","shop"],["鍛冶屋",1120,1660,150,125,"#8c6b59","forge"],["道具屋",2180,1080,155,125,"#c48e5e","shop"],["宿屋",1050,1740,180,140,"#b77d57","inn"],["酒場",1260,1900,150,120,"#98664e","inn"],["市場",1980,1800,180,120,"#c19a62","market"],["銀行",2160,1980,140,115,"#b5a17a","bank"],["町長の家",980,1500,165,130,"#a78a71","home"],["あなたの家",1480,2050,175,140,"#9a7eaa","home"],["服飾店",2060,1660,145,120,"#b77b8b","shop"],["農家の作業小屋",2300,2120,150,120,"#a18b57","farm"],["理髪店",2360,900,130,110,"#a6a1a0","shop"],["仕立て屋",2280,1840,145,115,"#a87989","shop"],["訓練所",880,850,155,120,"#8c9a72","guild"],["住民の家",700,570,125,100,"#b48a62","home"],["住民の家",930,570,130,105,"#a98268","home"],["住民の家",2110,570,130,105,"#b58e67","home"],["住民の家",2350,620,125,100,"#a67f60","home"],["住民の家",2500,1050,125,105,"#b18c69","home"],["住民の家",2510,1900,135,105,"#a67f60","home"],["住民の家",2050,2160,135,105,"#b58e67","home"],["住民の家",1000,2130,130,105,"#ad8967","home"],["住民の家",700,1840,130,105,"#b18c69","home"]  ].map(([name,x,y,w,h,color,type])=>({name,x,y,w,h,color,type}));
@@ -131,17 +131,75 @@
   function initCreation(){
     const form=$("creation-form");if(!form)return;
     form.addEventListener("submit",async e=>{e.preventDefault();player.name=($("create-name").value.trim()||"冒険者").slice(0,12);player.species=$("create-species").value;player.hair=$("create-hair").value;player.skin=$("create-skin").value;player.eyes=$("create-eyes").value;player.style=$("create-style").value;player.outfit=$("create-color").value;player.accessory=$("create-accessory").value;
-      gameData.characterCreated=true;gameData.species=player.species;gameData.appearance={hair:player.hair,skin:player.skin,eyes:player.eyes,style:player.style,color:player.outfit,accessory:player.accessory};await saveGameData();await saveCurrent();hudName.textContent=player.name;closeCreation();startPanel.classList.add("hidden");if(socket)socket.connect();say("ようこそ、リーフェルへ！");});
+      gameData.characterCreated=true;gameData.species=player.species;gameData.appearance={hair:player.hair,skin:player.skin,eyes:player.eyes,style:player.style,color:player.outfit,accessory:player.accessory};await saveGameData();await saveCurrent();hudName.textContent=player.name;closeCreation();startPanel.classList.add("hidden");connectRealtime();say("ようこそ、リーフェルへ！");});
   }
-  async function enterWorld(profile){player.name=profile.name||"冒険者";player.x=Number(profile.x)||1600;player.y=Number(profile.y)||1300;hudName.textContent=player.name;started=true;await readGameData();if(!socket){connectionState.textContent="セーブ接続済み（オンライン同期は未接続）";onlineCount.textContent="オンライン同期準備中";}if(!gameData.characterCreated){$("create-name").value=player.name;openCreation()}else{const a=gameData.appearance||{};player.species=gameData.species||"人間";player.hair=a.hair||"栗色";player.skin=a.skin||"明るい肌";player.eyes=a.eyes||"青";player.style=a.style||"旅人";player.outfit=a.color||"#4f78a5";player.accessory=a.accessory||"なし";startPanel.classList.add("hidden");if(socket)socket.connect();}window.dispatchEvent(new Event("world:entered"));}
+  async function enterWorld(profile){player.name=profile.name||"冒険者";player.x=Number(profile.x)||1600;player.y=Number(profile.y)||1300;hudName.textContent=player.name;started=true;await readGameData();if(!gameData.characterCreated){$("create-name").value=player.name;openCreation()}else{const a=gameData.appearance||{};player.species=gameData.species||"人間";player.hair=a.hair||"栗色";player.skin=a.skin||"明るい肌";player.eyes=a.eyes||"青";player.style=a.style||"旅人";player.outfit=a.color||"#4f78a5";player.accessory=a.accessory||"なし";startPanel.classList.add("hidden");connectRealtime();}window.dispatchEvent(new Event("world:entered"));}
   initCreation();
   authForm.addEventListener("submit",async e=>{e.preventDefault();authSubmit.disabled=true;authMessage.textContent="確認しています...";const payload={username:accountName.value.trim(),password:password.value,characterName:characterName.value.trim()||accountName.value.trim()};try{const r=await fetch(authMode==="register"?"/api/register":"/api/login",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify(payload)});const j=await responseJson(r);if(!r.ok)throw new Error(j.error||"処理に失敗しました");password.value="";await enterWorld(j.profile)}catch(err){authMessage.textContent=err.message||"通信に失敗しました"}finally{authSubmit.disabled=false}});
   async function saveCurrent(){if(!started)return;try{await fetch("/api/save",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:player.name,x:player.x,y:player.y})})}catch(e){}}
-  $("logout-button").addEventListener("click",async()=>{await saveCurrent();if(socket)socket.disconnect();await fetch("/api/logout",{method:"POST",credentials:"same-origin"});location.reload()});
+  $("logout-button").addEventListener("click",async()=>{await saveCurrent();if(realtimeClient&&realtimeChannel)await realtimeClient.removeChannel(realtimeChannel);realtimeChannel=null;await fetch("/api/logout",{method:"POST",credentials:"same-origin"});location.reload()});
   setInterval(()=>{if(started)saveCurrent()},10000);window.addEventListener("pagehide",saveCurrent);
   async function checkLogin(){try{const r=await fetch("/api/me",{credentials:"same-origin"}),j=await responseJson(r);if(r.ok&&j.loggedIn)await enterWorld(j.profile);else if(!r.ok)authMessage.textContent=j.error||"アカウント機能を確認してね"}catch(e){authMessage.textContent="サーバーに接続できません。再読み込みしてね。"}}
   checkLogin();
-  if(socket){socket.on("connect",()=>{connectionState.textContent="サーバー接続済み";if(started&&!$("creation-panel")?.classList.contains("hidden"))return;socket.emit("player:join")});socket.on("disconnect",()=>{connectionState.textContent="再接続を待っています"});socket.on("world:init",d=>{if(d?.world){};(d.players||[]).forEach(p=>others.set(p.id,p));updateOnline()});socket.on("player:ready",p=>{player.id=p.id;player.x=p.x;player.y=p.y;player.name=p.name});socket.on("player:joined",p=>{others.set(p.id,p);updateOnline();say(p.name+" が村にやってきた！")});socket.on("player:moved",p=>{const o=others.get(p.id);if(o)Object.assign(o,p)});socket.on("player:left",id=>{others.delete(id);updateOnline()});socket.on("connect_error",e=>{connectionState.textContent="接続エラー";say(e.message||"接続できません")})}else connectionState.textContent="オンライン同期未接続";
+  function currentPlayerState(){
+    return {id:realtimeId,name:player.name,x:player.x,y:player.y,dir:player.dir,moving:!!player.moving,walkClock:player.walkClock||0,color:player.outfit,hair:player.hair,skin:player.skin,eyes:player.eyes,style:player.style,accessory:player.accessory};
+  }
+  function refreshPresence(){
+    if(!realtimeChannel)return;
+    const state=realtimeChannel.presenceState(),next=new Map();
+    for(const [key,entries] of Object.entries(state)){
+      for(const entry of entries||[]){
+        const id=entry.id||key;
+        if(id!==realtimeId&&Number.isFinite(Number(entry.x))&&Number.isFinite(Number(entry.y)))next.set(id,{...entry,id});
+      }
+    }
+    for(const [id,p] of others)if(next.has(id)&&p._broadcastAt&&Date.now()-p._broadcastAt<7000)next.set(id,p);
+    others.clear();for(const [id,p] of next)others.set(id,p);
+    updateOnline();
+  }
+  async function connectRealtime(){
+    if(realtimeChannel||!started)return;
+    connectionState.textContent="オンライン接続中...";
+    try{
+      const response=await fetch("/api/realtime-config",{credentials:"same-origin"});
+      const config=await responseJson(response);
+      if(!response.ok)throw new Error(config.error||"オンライン設定を取得できません");
+      if(!window.supabase||typeof window.supabase.createClient!=="function")throw new Error("オンライン通信ライブラリを読み込めません");
+      realtimeClient=window.supabase.createClient(config.url,config.anonKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+      realtimeId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():"p-"+Math.random().toString(36).slice(2)+Date.now().toString(36);
+      realtimeChannel=realtimeClient.channel("asteria-world-leafell",{config:{broadcast:{self:false},presence:{key:realtimeId}}});
+      realtimeChannel.on("presence",{event:"sync"},refreshPresence);
+      realtimeChannel.on("broadcast",{event:"player-move"},({payload})=>{
+        if(!payload||payload.id===realtimeId||!Number.isFinite(Number(payload.x))||!Number.isFinite(Number(payload.y)))return;
+        others.set(payload.id,{...payload,_broadcastAt:Date.now()});updateOnline();
+      });
+      realtimeChannel.subscribe(async status=>{
+        if(status==="SUBSCRIBED"){
+          connectionState.textContent="オンライン接続済み";
+          await realtimeChannel.track(currentPlayerState());
+          refreshPresence();
+          say("リーフェルのオンラインワールドに接続しました！");
+        }else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
+          connectionState.textContent="オンライン接続エラー";
+        }
+      });
+    }catch(error){
+      realtimeChannel=null;connectionState.textContent="オンライン接続失敗";
+      onlineCount.textContent="オンライン未接続";
+      console.error("Realtime connection error:",error);
+      say("オンライン通信に接続できません。設定を確認してね。");
+    }
+  }
+  function publishPlayerState(force=false){
+    if(!realtimeChannel)return;
+    const now=performance.now();
+    if(!force&&player.moving&&now-lastMoveSent<100)return;
+    if(!force&&!player.moving&&now-lastMoveSent<100&&lastMoveSent!==0)return;
+    lastMoveSent=now;
+    const payload=currentPlayerState();
+    realtimeChannel.send({type:"broadcast",event:"player-move",payload}).catch(error=>console.warn("Player update failed:",error));
+    if(force||now-lastPresenceSent>5000){lastPresenceSent=now;realtimeChannel.track(payload).catch(error=>console.warn("Presence update failed:",error));}
+  }
   function updateOnline(){onlineCount.textContent="村にいる冒険者 "+(others.size+(started?1:0))+"人"}
   function blocked(x,y){if(x<70||y<70||x>worldW-70||y>worldH-70)return true;if(Math.hypot(x-(water.x+water.w/2),y-(water.y+water.h/2))<220)return true;return buildings.some(b=>x+12>b.x&&x-12<b.x+b.w&&y+8>b.y+32&&y-8<b.y+b.h)}
   const worldW=3000,worldH=2300;
@@ -357,9 +415,11 @@
       }
       return;
     }
+    const wasMoving=!!player.moving;
     player.moving=false;
     let dx=0,dy=0;if(keys.has("w")||keys.has("arrowup"))dy--;if(keys.has("s")||keys.has("arrowdown"))dy++;if(keys.has("a")||keys.has("arrowleft"))dx--;if(keys.has("d")||keys.has("arrowright"))dx++;
-    if(dx||dy){player.moving=true;player.walkClock=(player.walkClock||0)+dt;const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=player.x+dx*player.speed*dt,ny=player.y+dy*player.speed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";const now=performance.now();if(socket&&socket.connected&&now-lastMoveSent>80){lastMoveSent=now;socket.emit("player:move",{x:player.x,y:player.y,dir:player.dir,moving:true,walkClock:player.walkClock})}}
+    if(dx||dy){player.moving=true;player.walkClock=(player.walkClock||0)+dt;const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=player.x+dx*player.speed*dt,ny=player.y+dy*player.speed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";}
+    if(realtimeChannel&&(player.moving||wasMoving))publishPlayerState(!player.moving);
     camera.x=player.x;camera.y=player.y;
     const touched=fieldEnemies.find(e=>e.alive&&Math.hypot(player.x-e.x,player.y-e.y)<32);if(touched)beginBattle(touched);
   }
