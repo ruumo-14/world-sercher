@@ -198,7 +198,7 @@
     lastMoveSent=now;
     const payload=currentPlayerState();
     realtimeChannel.send({type:"broadcast",event:"player-move",payload}).catch(error=>console.warn("Player update failed:",error));
-    if(force||now-lastPresenceSent>500){lastPresenceSent=now;realtimeChannel.track(payload).catch(error=>console.warn("Presence update failed:",error));}
+    if(force||now-lastPresenceSent>5000){lastPresenceSent=now;realtimeChannel.track(payload).catch(error=>console.warn("Presence update failed:",error));}
   }
   function updateOnline(){onlineCount.textContent="村にいる冒険者 "+(others.size+(started?1:0))+"人"}
   function blocked(x,y){if(x<70||y<70||x>worldW-70||y>worldH-70)return true;if(Math.hypot(x-(water.x+water.w/2),y-(water.y+water.h/2))<220)return true;return buildings.some(b=>x+12>b.x&&x-12<b.x+b.w&&y+8>b.y+32&&y-8<b.y+b.h)}
