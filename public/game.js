@@ -173,14 +173,17 @@
         if(!payload||payload.id===realtimeId||!Number.isFinite(Number(payload.x))||!Number.isFinite(Number(payload.y)))return;
         others.set(payload.id,{...payload,_broadcastAt:Date.now()});updateOnline();
       });
-      realtimeChannel.subscribe(async status=>{
+      realtimeChannel.subscribe(async (status,error)=>{
         if(status==="SUBSCRIBED"){
           connectionState.textContent="オンライン接続済み";
           await realtimeChannel.track(currentPlayerState());
           refreshPresence();
           say("リーフェルのオンラインワールドに接続しました！");
         }else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
-          connectionState.textContent="オンライン接続エラー";
+          const detail=error?.message||error?.reason||error?.toString?.()||"詳細なし";
+          connectionState.textContent="オンライン接続エラー ("+status+")";
+          console.error("Realtime channel status:",status,error);
+          say("オンライン通信が切断されました: "+status+" / "+String(detail).slice(0,100));
         }
       });
     }catch(error){
