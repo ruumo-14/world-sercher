@@ -169,6 +169,7 @@
       realtimeId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():"p-"+Math.random().toString(36).slice(2)+Date.now().toString(36);
       realtimeChannel=realtimeClient.channel("asteria-world-leafell",{config:{broadcast:{self:false},presence:{key:realtimeId}}});
       realtimeChannel.on("presence",{event:"sync"},refreshPresence);
+      realtimeChannel.on("system",{event:"*"},message=>{if(message?.status==="error"){console.error("Realtime system error:",message);connectionState.textContent="オンライン接続エラー";say("通信サーバー: "+String(message.message||"接続エラー").slice(0,100));}});
       realtimeChannel.on("broadcast",{event:"player-move"},({payload})=>{
         if(!payload||payload.id===realtimeId||!Number.isFinite(Number(payload.x))||!Number.isFinite(Number(payload.y)))return;
         others.set(payload.id,{...payload,_broadcastAt:Date.now()});updateOnline();
@@ -201,7 +202,6 @@
     lastMoveSent=now;
     const payload=currentPlayerState();
     realtimeChannel.send({type:"broadcast",event:"player-move",payload}).catch(error=>console.warn("Player update failed:",error));
-    if(force||now-lastPresenceSent>5000){lastPresenceSent=now;realtimeChannel.track(payload).catch(error=>console.warn("Presence update failed:",error));}
   }
   function updateOnline(){onlineCount.textContent="村にいる冒険者 "+(others.size+(started?1:0))+"人"}
   function blocked(x,y){if(x<70||y<70||x>worldW-70||y>worldH-70)return true;if(Math.hypot(x-(water.x+water.w/2),y-(water.y+water.h/2))<220)return true;return buildings.some(b=>x+12>b.x&&x-12<b.x+b.w&&y+8>b.y+32&&y-8<b.y+b.h)}
