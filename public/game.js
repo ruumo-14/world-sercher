@@ -348,7 +348,7 @@
       const frame=p.moving?Math.floor((p.walkClock||0)*7)%3:1;
       const sx=frame*64,sy=row*64;
       ctx.save();ctx.imageSmoothingEnabled=false;
-      ellipse(q.x,q.y+1,13,4,"#3d5138");
+      ellipse(q.x,q.y-5,11,3,"#3d5138");
       ctx.drawImage(playerWalkSheet,sx,sy,64,64,Math.round(q.x-28),Math.round(q.y-62),56,56);
       ctx.restore();
       return;
