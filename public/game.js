@@ -332,18 +332,24 @@
 
   const spriteCache=new Map();
   const pixelSpriteCache=new Map();
-  // Generated player sprite, cropped from the approved white-background artwork.
-  const playerGbaSprite=new Image();
-  fetch("/assets/player-gba.b64").then(r=>r.text()).then(data=>{
-    playerGbaSprite.src="data:image/png;base64,"+data.trim();
-  }).catch(()=>{});
-  // Compact original overhead sprites for NPCs; player uses the generated GBA sprite.
+  // Approved 12-frame walk sheet: 3 frames x 4 directions (front, left, right, back).
+  // The green chroma background has been removed; white eye pixels remain opaque.
+  const playerWalkSheet=new Image();
+  fetch("/assets/player-walk-12.b64").then(r=>r.text()).then(data=>{
+    playerWalkSheet.src="data:image/png;base64,"+data.trim();
+  }).catch(error=>console.warn("Player walk sheet could not be loaded:",error));
+  // NPCs keep their generated sprites; the local player and remote players use the 12-frame sheet.
   function drawPixelPerson(p,isPlayer=false){
     const q=project(p.x,p.y);
-    if(isPlayer&&playerGbaSprite.complete&&playerGbaSprite.naturalWidth){
+    if((isPlayer||typeof p.id==="string")&&playerWalkSheet.complete&&playerWalkSheet.naturalWidth){
+      // Rows: front/down=0, left=1, right=2, back/up=3. Columns are the 3 walking poses.
+      const dir=String(p.dir||"down");
+      const row=dir.includes("left")?1:dir.includes("right")?2:(dir==="up"||dir==="up-left"||dir==="up-right")?3:0;
+      const frame=p.moving?Math.floor((p.walkClock||0)*7)%3:1;
+      const sx=frame*64,sy=row*64;
       ctx.save();ctx.imageSmoothingEnabled=false;
-      const bob=p.moving&&Math.floor((p.walkClock||0)*9)%2===1?-1:0;
-      ctx.drawImage(playerGbaSprite,Math.round(q.x-20),Math.round(q.y-45+bob),40,48);
+      ellipse(q.x,q.y+1,13,4,"#3d5138");
+      ctx.drawImage(playerWalkSheet,sx,sy,64,64,Math.round(q.x-28),Math.round(q.y-62),56,56);
       ctx.restore();
       return;
     }
