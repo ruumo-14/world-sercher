@@ -355,13 +355,15 @@
 
   function drawPixelPerson(p,isPlayer=false){
     const q=project(p.x,p.y);
-    if((isPlayer||typeof p.id==="string")&&playerWalkSheet.complete&&playerWalkSheet.naturalWidth){
+    if(playerWalkSheet.complete&&playerWalkSheet.naturalWidth){
       // Rows: front/down=0, left=1, right=2, back/up=3. Columns are the 3 walking poses.
       const dir=String(p.dir||"down");
       const row=dir.includes("left")?1:dir.includes("right")?2:(dir==="up"||dir==="up-left"||dir==="up-right")?3:0;
       const frame=p.moving?Math.floor((p.walkClock||0)*7)%3:1;
       const sx=frame*64,sy=row*64;
       ctx.save();ctx.imageSmoothingEnabled=false;
+      // NPCs share the protagonist's sprite style and proportions, with a subtle palette variation.
+      if(!isPlayer&&!p.id){const label=String(p.name||p.role||"住民");const tint=Array.from(label).reduce((sum,ch)=>sum+ch.charCodeAt(0),0)%7;ctx.filter="hue-rotate("+((tint-3)*9)+"deg)";}
       ellipse(q.x,q.y-5,11,3,"#3d5138");
       ctx.drawImage(playerWalkSheet,sx,sy,64,64,Math.round(q.x-28),Math.round(q.y-62),56,56);
       ctx.restore();
