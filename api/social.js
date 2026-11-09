@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
         });
         const blocks = await db("player_blocks", { select: "blocked_user_id", blocker_user_id: "eq." + session.sub });
         const hidden = new Set((blocks || []).map(row => row.blocked_user_id));
-        return send(res, 200, { messages: (rows || []).filter(row => !hidden.has(row.sender_user_id)).reverse() });
+        return send(res, 200, { me: session.sub, messages: (rows || []).filter(row => !hidden.has(row.sender_user_id)).reverse() });
       }
       if (action === "blocks") {
         const rows = await db("player_blocks", {

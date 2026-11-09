@@ -9,7 +9,7 @@
   const status=document.getElementById("chat-status");
   if(!open||!panel||!close||!list||!form||!input||!status)return;
   const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  let busy=false;
+  let busy=false,selfId="";
   async function refresh(){
     try{
       const r=await fetch("/api/social?action=global",{credentials:"same-origin"});

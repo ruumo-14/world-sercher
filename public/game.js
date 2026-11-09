@@ -59,6 +59,7 @@
     if(result==="win"){
       window.dispatchEvent(new CustomEvent("world:combat-ended",{detail:{result:"win",boss}}));
     } else if(result==="escape"){
+      window.dispatchEvent(new CustomEvent("world:combat-ended",{detail:{result:"escape"}}));
       saveCurrent();
     }
     setTimeout(()=>{

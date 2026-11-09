@@ -7,7 +7,7 @@ Render is not used. The deployment target is Vercel, with Supabase for the datab
 1. Open the Supabase project used by World Sercher.
 2. Open **SQL Editor**.
 3. Open `SUPABASE_SETUP.sql` from this repository, copy the complete contents, and run it.
-4. Confirm the tables `game_users`, `game_saves`, `global_chat_messages`, `player_blocks`, `player_reports`, `market_listings`, and `market_payouts` exist.
+4. Confirm the tables `game_users`, `game_saves`, `global_chat_messages`, `player_blocks`, `player_reports`, `friend_requests`, `player_friends`, `player_private_messages`, `chat_groups`, `chat_group_members`, `group_chat_messages`, `market_listings`, and `market_payouts` exist. If you ran an older version of this SQL before, run the full updated file again; its table and function setup is designed to be repeatable.
 
 The SQL uses server-only access for account, save, chat, report, and marketplace tables. Do not add public read/write policies to these tables.
 
@@ -46,4 +46,4 @@ The `api/` directory contains Vercel serverless functions. Static files are serv
 - Chat phrase filtering reads active entries from `chat_blocked_terms`. The operator must maintain this list; automatic detection is not a substitute for human moderation.
 - Marketplace database functions support owned-item listing, purchases up to 99 per transaction, 10% sale fee, cancellation, seven-day expiry return, and payout claims that expire after 30 days.
 - Marketplace functions require item records in `game_data.inventory` with stable `id` and `quantity` fields. Existing prototype items may need migration before they can be listed.
-- This repository is still a prototype. The complete design is not yet fully playable: friend requests and private/group chats, full quests and rewards, complete battle progression, home furniture placement, pets/mounts, dungeon content, achievements, ranking snapshots/rewards, arena matchmaking, and operator moderation tools still need implementation and testing.
+- Friend requests (name search, approval, 50-person cap, 7-day expiry), 1:1 messages, and group chat (up to 20 people) now have API and basic UI. Group stamp selection, online-first friend ordering, and login/acceptance notifications still need UI integration.\n- The global chat UI shows the latest 20 messages while the API keeps a 100-message history.\n- The game now has an interactive daily job-change control, skill-level controls gated by interacting with the training building, inventory/home/quest/achievement/ranking overview tabs, and walking-based random encounters.\n- The repository is still a prototype. Actual battle XP/GOLD rewards, complete quest content and rewards, gathering/crafting/farming, home expansion and furniture placement, pets/mounts, dungeon maps, gacha draws and exchange shop, weekly ranking snapshots/rewards, arena matchmaking, full NPC daily routines and stories, and operator moderation tools still need implementation and testing.
