@@ -1,7 +1,7 @@
 "use strict";
 (() => {
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
-  const W=960,H=600; canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=true;
+  const W=960,H=600; canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=false;
   const worldTileset=new Image();worldTileset.src="/assets/world-sercher-user-atlas.png";window.WS_WORLD_TILESET=worldTileset;
   const storybookTexture=new Image();storybookTexture.src="/assets/storybook-paper.svg";
   // 新しいGBA風タイルセット（建物・芝生・道）
@@ -190,8 +190,7 @@
     ctx.font="14px 'Noto Sans JP',sans-serif";ctx.fillText("HP  "+battle.hp+" / "+battle.maxHp,34,76);ctx.fillText("MP  "+battle.mp+" / "+battle.maxMp,34,103);
     const bar=(x,y,w,v,max,color)=>{rect(x,y,w,10,"#69584a");rect(x+2,y+2,w-4,6,"#9a8a70");rect(x+2,y+2,(w-4)*Math.max(0,v/max),6,color);};
     bar(34,84,200,battle.hp,battle.maxHp,"#bd554b");bar(34,111,200,battle.mp,battle.maxMp,"#428eae");
-    drawPixelPerson({ ...player,x:battle.playerX,y:0,dir:"right",moving:false },true);
-    // battle avatar needs screen coordinates, not world projection
+    // Battle avatar is drawn in screen coordinates.
     drawStorybookPersonAt(battle.playerX,438-battle.playerY,player,true,1.25);
     battle.enemies.forEach((e,i)=>{if(e.hp<=0)return;const ex=650+(i%3)*92,ey=422-Math.floor(i/3)*70;
       ellipse(ex,ey+8,e.boss?46:32,9,"#77654a");
