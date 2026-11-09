@@ -100,6 +100,29 @@
     if(battle.herbs<=0){say("この戦闘で使える薬草はもうない。");return;}
     battle.herbs--;battle.hp=Math.min(battle.maxHp,battle.hp+28);say("薬草を使った。HPが回復！");
   }
+  function drawInterior(){
+    const b=interior?.building;if(!b)return;
+    rect(0,0,W,H,"#3d4e43");
+    rect(28,24,904,552,"#594437");rect(36,32,888,536,"#d4b77d");
+    // warm, flat GBA-style wooden floor with crisp plank seams
+    for(let y=52;y<548;y+=32){rect(48,y,864,28,(Math.floor(y/32)%2)?"#bd925b":"#c9a16a");rect(48,y+27,864,3,"#8e6848");for(let x=80+(Math.floor(y/32)%2)*24;x<900;x+=120)rect(x,y,2,27,"#a77d50");}
+    rect(48,48,864,18,"#76543c");rect(48,48,864,5,"#e1c58d");
+    // windows and door
+    rect(110,76,100,92,"#73503a");rect(118,84,84,76,"#6fa8ae");rect(158,84,4,76,"#e6d3a4");rect(118,120,84,4,"#e6d3a4");
+    rect(750,76,100,92,"#73503a");rect(758,84,84,76,"#6fa8ae");rect(798,84,4,76,"#e6d3a4");rect(758,120,84,4,"#e6d3a4");
+    // facility-specific furniture, all drawn in the same pixel palette
+    rect(300,110,360,44,"#755039");rect(306,116,348,32,"#d5bd8c");
+    rect(330,210,300,72,"#694733");rect(338,218,284,56,"#b78550");
+    rect(350,218,260,12,"#e1bc78");
+    if(b.type==="inn"){rect(180,340,150,90,"#75513a");rect(188,348,134,74,"#e7d4a2");rect(690,340,150,90,"#75513a");rect(698,348,134,74,"#e7d4a2");}
+    else if(b.type==="forge"){rect(680,320,150,150,"#57483c");rect(696,336,118,118,"#a95d3c");rect(716,356,78,78,"#ef9a48");}
+    else if(b.type==="market"||b.type==="shop"){for(let i=0;i<4;i++){rect(110+i*190,360,130,74,"#75513a");rect(118+i*190,368,114,58,"#d5bd8c");}}
+    else {rect(160,360,640,66,"#76533a");rect(170,370,620,48,"#d0a66c");}
+    rect(410,500,140,48,"#765039");rect(418,508,124,40,"#8b5738");
+    ctx.fillStyle="#fff1c9";ctx.font="bold 20px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(b.name,480,70);
+    ctx.font="13px 'Noto Sans JP',sans-serif";ctx.fillText("Eキー / 操作ボタン：外へ出る",480,565);
+    camera.x=480;camera.y=320;drawPixelPerson(player,true);
+  }
   function drawBattle(){
     // Side-view battle scene redrawn in the same crisp pixel palette as the field.
     rect(0,0,W,H,"#8bc4c0");
@@ -224,12 +247,31 @@
     realtimeChannel.send({type:"broadcast",event:"player-move",payload}).catch(error=>console.warn("Player update failed:",error));
   }
   function updateOnline(){onlineCount.textContent="村にいる冒険者 "+(others.size+(started?1:0))+"人"}
-  function blocked(x,y){if(x<70||y<70||x>worldW-70||y>worldH-70)return true;if(Math.hypot(x-(water.x+water.w/2),y-(water.y+water.h/2))<220)return true;return buildings.some(b=>x+12>b.x&&x-12<b.x+b.w&&y+8>b.y+32&&y-8<b.y+b.h)}
+  function blocked(x,y){if(interior)return x<92||y<92||x>868||y>508;if(x<70||y<70||x>worldW-70||y>worldH-70)return true;if(Math.hypot(x-(water.x+water.w/2),y-(water.y+water.h/2))<220)return true;return buildings.some(b=>x+12>b.x&&x-12<b.x+b.w&&y+8>b.y+32&&y-8<b.y+b.h)}
   const worldW=3000,worldH=2300;
   window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();keys.add(k);if(k==="e"&&started&&!battle){if(interior)leaveBuilding();else interact();}if(k==="z"&&battle)battleAttack();if(k==="1"&&battle)battleMagic();if(k==="2"&&battle)battleItem()});window.addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));window.addEventListener("blur",()=>keys.clear());
   const keyMap={up:"arrowup",down:"arrowdown",left:"arrowleft",right:"arrowright"};document.querySelectorAll("[data-dir]").forEach(b=>{const k=keyMap[b.dataset.dir];b.addEventListener("pointerdown",e=>{e.preventDefault();keys.add(k)});["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>keys.delete(k)))});
-  $("interact-button").addEventListener("click",interact);
-  function interact(){let best=95,target=null;for(const b of buildings){const d=Math.hypot(player.x-(b.x+b.w/2),player.y-(b.y+b.h/2));if(d<best){best=d;target=b}}for(const n of npcs){const d=Math.hypot(player.x-n.x,player.y-n.y);if(d<best){best=d;target=n}}if(target?.name){window.dispatchEvent(new CustomEvent("world:interact",{detail:{name:target.name,role:target.role||""}}));if(target.role)say(target.name+"「こんにちは！ "+target.role+"をしているよ。」");else say(target.name+"：施設の準備を進めているよ。")}else say("草花が風に揺れている。リーフェルを探検しよう！")}
+  $("interact-button").addEventListener("click",()=>{if(interior)leaveBuilding();else interact()});
+  function enterBuilding(b){
+    interior={building:b,outside:{x:player.x,y:player.y}};
+    player.x=480;player.y=320;player.moving=false;camera.x=480;camera.y=320;keys.clear();
+    window.dispatchEvent(new CustomEvent("world:building-enter",{detail:{name:b.name,type:b.type}}));
+    window.dispatchEvent(new CustomEvent("world:interact",{detail:{name:b.name,role:"施設"}}));
+    say(b.name+"に入った。Eキーで外へ出られるよ。");
+  }
+  function leaveBuilding(){
+    if(!interior)return;
+    const previous=interior.outside;interior=null;player.x=previous.x;player.y=previous.y+24;player.moving=false;camera.x=player.x;camera.y=player.y;keys.clear();
+    window.dispatchEvent(new Event("world:building-exit"));say("建物の外へ出た。");
+  }
+  function interact(){
+    if(interior){leaveBuilding();return;}
+    let best=105,target=null,isBuilding=false;
+    for(const b of buildings){const d=Math.hypot(player.x-(b.x+b.w/2),player.y-(b.y+b.h+20));if(d<best){best=d;target=b;isBuilding=true;}}
+    for(const n of npcs){const d=Math.hypot(player.x-n.x,player.y-n.y);if(d<best){best=d;target=n;isBuilding=false;}}
+    if(target?.name){if(isBuilding){enterBuilding(target);return;}window.dispatchEvent(new CustomEvent("world:interact",{detail:{name:target.name,role:target.role||""}}));say(target.name+"「こんにちは！ "+(target.role||"村の住民")+"をしているよ。」");}
+    else say("建物の入口か村人の近くで操作してね。");
+  }
   function hash(x,y){let n=(x*374761393+y*668265263)|0;n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967295}
   function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
   function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);ctx.fill()}
@@ -411,7 +453,7 @@
     ctx.fillStyle="#fff8df";ctx.fillText(label,q.x,q.y-78);ctx.restore();
   }
   function render(){
-    ctx.clearRect(0,0,W,H);if(battle){drawBattle();return;}drawGround();
+    ctx.clearRect(0,0,W,H);if(battle){drawBattle();return;}if(interior){drawInterior();return;}drawGround();
     const objects=[];
     for(const b of buildings)objects.push({depth:b.y+b.h,draw:()=>drawHouse(b,buildings.indexOf(b))});
     for(let i=0;i<110;i++){const x=160+Math.floor(hash(i,23)*2700),y=180+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<420||(x>280&&x<620&&y>700&&y<2200))continue;objects.push({depth:y,draw:()=>drawTree(x,y,i)});}
