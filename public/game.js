@@ -413,67 +413,98 @@
   }
 
   function drawTree(wx,wy,index=0){
-    const p=project(wx,wy),x=p.x,y=p.y;if(x<-100||y<-120||x>W+100||y>H+100)return;
-    ctx.fillStyle="rgba(62,83,50,.2)";ctx.beginPath();ctx.ellipse(x,y+13,38,13,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#765039";ctx.beginPath();ctx.moveTo(x-9,y+8);ctx.quadraticCurveTo(x-2,y-15,x-12,y-46);ctx.lineTo(x+12,y-46);ctx.quadraticCurveTo(x+3,y-16,x+10,y+8);ctx.closePath();ctx.fill();
-    ctx.strokeStyle="#9b714d";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x,y-27);ctx.quadraticCurveTo(x-17,y-46,x-24,y-61);ctx.moveTo(x+2,y-31);ctx.quadraticCurveTo(x+20,y-49,x+28,y-65);ctx.stroke();
-    const palettes=[["#5e8d59","#7ca96a","#a8c17e","#c0ce91"],["#568b70","#79a987","#a6c7a2","#c3d5ad"],["#789653","#9eb66c","#c3cf89","#d6d99a"],["#58857b","#7da998","#a9c6a9","#c6d7b8"]],a=palettes[index%palettes.length];
-    const blobs=[[-22,-60,25,a[0]],[6,-77,28,a[1]],[29,-57,23,a[2]],[-5,-45,28,a[1]],[-32,-39,20,a[2]],[18,-34,22,a[0]],[1,-96,18,a[3]]];
-    for(const [ox,oy,r,c] of blobs){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(x+ox,y+oy,r,r*.78,(ox+oy)*.01,0,Math.PI*2);ctx.fill();}
-    ctx.strokeStyle="rgba(63,104,65,.35)";ctx.lineWidth=2;for(let i=0;i<7;i++){const ox=-24+(i*17)%48,oy=-78+(i%3)*19;ctx.beginPath();ctx.moveTo(x+ox,y+oy);ctx.quadraticCurveTo(x+ox+5,y+oy-8,x+ox+12,y+oy-4);ctx.stroke();}
-    ctx.fillStyle="rgba(248,239,190,.34)";ctx.beginPath();ctx.ellipse(x-9,y-83,11,6,-.4,0,Math.PI*2);ctx.fill();
+    const p=project(wx,wy),x=p.x,y=p.y;if(x<-110||y<-130||x>W+110||y>H+110)return;
+    const palettes=[
+      ["#547f54","#729b63","#a6bd7c","#d0d39a"],
+      ["#4e806c","#75a18a","#a9c6a0","#d0d9b5"],
+      ["#789052","#9eae68","#c3c985","#e0d9a5"],
+      ["#568078","#79a69a","#a9c6b0","#d7dec0"]
+    ],a=palettes[index%palettes.length];
+    ctx.save();
+    ctx.fillStyle="rgba(76,83,53,.17)";ctx.beginPath();ctx.ellipse(x+5,y+14,40,13,-.04,0,Math.PI*2);ctx.fill();
+    // Slightly crooked trunk and visible branches give each tree a hand-painted silhouette.
+    ctx.fillStyle="#765039";ctx.beginPath();ctx.moveTo(x-8,y+12);ctx.quadraticCurveTo(x-2,y-13,x-13,y-48);ctx.quadraticCurveTo(x-4,y-54,x+1,y-48);ctx.quadraticCurveTo(x+9,y-20,x+12,y+10);ctx.closePath();ctx.fill();
+    ctx.strokeStyle="#a77b55";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x-1,y-31);ctx.quadraticCurveTo(x-20,y-49,x-26,y-67);ctx.moveTo(x+2,y-36);ctx.quadraticCurveTo(x+21,y-53,x+29,y-69);ctx.stroke();
+    const leaves=[[-25,-58,25,a[0]],[-4,-79,27,a[1]],[25,-62,25,a[2]],[-10,-48,29,a[1]],[-35,-38,20,a[2]],[19,-37,23,a[0]],[4,-99,18,a[3]],[39,-47,15,a[1]]];
+    for(const [ox,oy,r,c] of leaves){
+      ctx.fillStyle="rgba(63,79,53,.10)";ctx.beginPath();ctx.ellipse(x+ox+2,y+oy+4,r,r*.78,.1,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(x+ox,y+oy,r,r*.78,(ox+oy)*.008,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle="rgba(69,105,67,.22)";ctx.lineWidth=1.2;ctx.stroke();
+      ctx.fillStyle="rgba(255,246,205,.25)";ctx.beginPath();ctx.ellipse(x+ox-r*.22,y+oy-r*.28,r*.42,r*.19,-.45,0,Math.PI*2);ctx.fill();
+    }
+    // Small leaf strokes add watercolor-like variation without external image files.
+    for(let i=0;i<9;i++){const ox=-30+(i*19)%63,oy=-83+(i%4)*15;ctx.strokeStyle=i%2?"rgba(245,235,190,.35)":"rgba(55,103,72,.22)";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x+ox,y+oy);ctx.quadraticCurveTo(x+ox+5,y+oy-5,x+ox+10,y+oy-2);ctx.stroke();}
+    ctx.restore();
   }
 
   function drawHouse(b,index=0){
     const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;if(x<-220||y<-260||x>W+220||y>H+260)return;
     const w=Math.max(100,b.w*.92),h=Math.max(82,b.h*.78);
-    const pal={guild:["#687f86","#9aaba2","#e5d1a5"],forge:["#70675f","#a48b73","#d3b998"],inn:["#a65f53","#d28a70","#f0d4a9"],market:["#b77c4e","#e0b57c","#f1dfb9"],farm:["#81905c","#b2a36d","#e8d3a1"],bank:["#718d8c","#a9b8a7","#ebddba"],home:["#a86d5a","#d39a79","#f0d8b0"],shop:["#a76d78","#d49b8c","#f1d9b8"]}[b.type]||["#a86d5a","#d39a79","#f0d8b0"];
-    ctx.fillStyle="rgba(61,78,49,.22)";ctx.beginPath();ctx.ellipse(x+7,y+h*.36,w*.68,20,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#8d765a";ctx.beginPath();ctx.moveTo(x-w*.49,y-h*.04);ctx.lineTo(x+w*.44,y-h*.04);ctx.lineTo(x+w*.52,y+h*.34);ctx.lineTo(x-w*.42,y+h*.34);ctx.closePath();ctx.fill();
-    ctx.fillStyle=pal[2];ctx.beginPath();ctx.moveTo(x-w*.42,y-h*.13);ctx.lineTo(x+w*.36,y-h*.13);ctx.lineTo(x+w*.36,y+h*.31);ctx.lineTo(x-w*.42,y+h*.31);ctx.closePath();ctx.fill();
-    ctx.strokeStyle="#79553d";ctx.lineWidth=3;ctx.stroke();
-    ctx.fillStyle="rgba(255,250,224,.36)";ctx.beginPath();ctx.moveTo(x-w*.4,y-h*.1);ctx.lineTo(x+w*.34,y-h*.1);ctx.lineTo(x+w*.34,y-h*.02);ctx.lineTo(x-w*.4,y-h*.02);ctx.closePath();ctx.fill();
-    for(let k=0;k<5;k++){ctx.strokeStyle="rgba(123,85,55,.19)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-w*.39,y+k*h*.075);ctx.lineTo(x+w*.33,y+k*h*.075);ctx.stroke();}
-    ctx.fillStyle="#6c4937";ctx.beginPath();ctx.moveTo(x-w*.56,y-h*.12);ctx.lineTo(x-w*.08,y-h*.78);ctx.lineTo(x+w*.57,y-h*.12);ctx.lineTo(x+w*.43,y+h*.01);ctx.lineTo(x-w*.08,y-h*.57);ctx.lineTo(x-w*.43,y+h*.01);ctx.closePath();ctx.fill();
-    const roof=ctx.createLinearGradient(x-w*.4,y-h*.7,x+w*.45,y);roof.addColorStop(0,pal[0]);roof.addColorStop(.52,pal[1]);roof.addColorStop(1,pal[0]);ctx.fillStyle=roof;ctx.beginPath();ctx.moveTo(x-w*.53,y-h*.14);ctx.lineTo(x-w*.08,y-h*.73);ctx.lineTo(x+w*.53,y-h*.14);ctx.lineTo(x+w*.39,y-h*.04);ctx.lineTo(x-w*.08,y-h*.57);ctx.lineTo(x-w*.4,y-h*.04);ctx.closePath();ctx.fill();ctx.strokeStyle="#76513b";ctx.lineWidth=3;ctx.stroke();
-    for(let r=0;r<7;r++){const yy=y-h*(.18+r*.075);ctx.strokeStyle="rgba(255,224,177,.34)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-w*(.39-r*.018),yy);ctx.quadraticCurveTo(x,y-h*(.53-r*.065),x+w*(.39-r*.018),yy);ctx.stroke();}
-    for(const wx of [x-w*.27,x+w*.14]){ctx.fillStyle="#795039";ctx.beginPath();ctx.roundRect(wx-10,y+2,23,29,4);ctx.fill();ctx.fillStyle="#8fb8b8";ctx.beginPath();ctx.roundRect(wx-7,y+5,17,22,3);ctx.fill();ctx.strokeStyle="#f0dcb0";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(wx+1,y+5);ctx.lineTo(wx+1,y+27);ctx.moveTo(wx-7,y+16);ctx.lineTo(wx+10,y+16);ctx.stroke();}
-    ctx.fillStyle="#704a36";ctx.beginPath();ctx.roundRect(x-14,y+h*.055,28,h*.25,5);ctx.fill();ctx.fillStyle="#b98254";ctx.beginPath();ctx.roundRect(x-11,y+h*.07,22,h*.22,4);ctx.fill();ctx.fillStyle="#f2d59a";ctx.beginPath();ctx.arc(x+6,y+h*.18,2.5,0,Math.PI*2);ctx.fill();
-    if(b.type==="guild"||b.type==="inn"||b.type==="forge"){ctx.fillStyle="#f2dcae";ctx.beginPath();ctx.roundRect(x-22,y-h*.28,44,16,4);ctx.fill();ctx.strokeStyle="#80583c";ctx.lineWidth=2;ctx.stroke();}
-    if(b.name!=="住民の家"&&b.name!=="あなたの家"&&b.name!=="町長の家"){ctx.fillStyle="#fff2d5";ctx.strokeStyle="#6f4d38";ctx.lineWidth=4;ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.strokeText(b.name,x,y-h*.82);ctx.fillText(b.name,x,y-h*.82);}
+    const pal={guild:["#647f83","#9fb4a8","#ead9b7"],forge:["#77695d","#ad9278","#ddc7a3"],inn:["#a96055","#d28b70","#f2d9b5"],market:["#b77c4e","#e0b57c","#f4e4c5"],farm:["#81905c","#b5a773","#ead9ae"],bank:["#718d8c","#a9b8a7","#ebddba"],home:["#a86d5a","#d39a79","#f3dfbd"],shop:["#a76d78","#d49b8c","#f4e1c5"]}[b.type]||["#a86d5a","#d39a79","#f3dfbd"];
+    ctx.save();
+    ctx.fillStyle="rgba(70,77,53,.19)";ctx.beginPath();ctx.ellipse(x+8,y+h*.37,w*.68,19,-.02,0,Math.PI*2);ctx.fill();
+    // Side wall and warm plaster front, with a little irregularity in the outline.
+    ctx.fillStyle="#8e7558";ctx.beginPath();ctx.moveTo(x-w*.48,y-h*.13);ctx.lineTo(x+w*.43,y-h*.13);ctx.lineTo(x+w*.51,y+h*.31);ctx.lineTo(x-w*.42,y+h*.34);ctx.closePath();ctx.fill();
+    ctx.fillStyle=pal[2];ctx.beginPath();ctx.moveTo(x-w*.42,y-h*.12);ctx.lineTo(x+w*.34,y-h*.12);ctx.lineTo(x+w*.35,y+h*.30);ctx.lineTo(x-w*.42,y+h*.31);ctx.closePath();ctx.fill();
+    ctx.strokeStyle="#79583f";ctx.lineWidth=2.5;ctx.stroke();
+    // Plaster mottling and timber beams.
+    for(let k=0;k<12;k++){const xx=x-w*.34+(k*37)%(w*.66),yy=y-h*.04+(k*23)%(h*.31);ctx.fillStyle=k%2?"rgba(255,247,218,.16)":"rgba(143,105,68,.09)";ctx.beginPath();ctx.ellipse(xx,yy,7+(k%3)*3,3+(k%2)*2,-.25,0,Math.PI*2);ctx.fill();}
+    ctx.strokeStyle="rgba(119,82,55,.28)";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-w*.38,y-h*.08);ctx.lineTo(x-w*.38,y+h*.28);ctx.moveTo(x+w*.30,y-h*.08);ctx.lineTo(x+w*.31,y+h*.28);ctx.stroke();
+    // Roof has two visible slopes, like a small quarter-view storybook building.
+    ctx.fillStyle="#76513b";ctx.beginPath();ctx.moveTo(x-w*.57,y-h*.13);ctx.lineTo(x-w*.08,y-h*.79);ctx.lineTo(x+w*.59,y-h*.13);ctx.lineTo(x+w*.43,y+h*.01);ctx.lineTo(x-w*.08,y-h*.59);ctx.lineTo(x-w*.42,y+h*.01);ctx.closePath();ctx.fill();
+    ctx.fillStyle=pal[0];ctx.beginPath();ctx.moveTo(x-w*.53,y-h*.15);ctx.lineTo(x-w*.08,y-h*.73);ctx.lineTo(x+w*.53,y-h*.15);ctx.lineTo(x+w*.39,y-h*.04);ctx.lineTo(x-w*.08,y-h*.56);ctx.lineTo(x-w*.40,y-h*.04);ctx.closePath();ctx.fill();
+    ctx.strokeStyle=pal[1];ctx.lineWidth=3;ctx.stroke();
+    for(let r=0;r<8;r++){const yy=y-h*(.19+r*.067);ctx.strokeStyle=r%2?"rgba(255,231,194,.27)":"rgba(91,65,48,.17)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-w*(.39-r*.017),yy);ctx.quadraticCurveTo(x,y-h*(.54-r*.06),x+w*(.39-r*.017),yy);ctx.stroke();}
+    for(let k=0;k<5;k++){const xx=x-w*.33+k*w*.16;ctx.strokeStyle="rgba(92,61,43,.18)";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(xx,y-h*.42);ctx.lineTo(xx+8,y-h*.29);ctx.stroke();}
+    // Windows, divided panes, door and little doorstep.
+    for(const wx of [x-w*.27,x+w*.14]){ctx.fillStyle="#795039";ctx.beginPath();ctx.roundRect(wx-11,y+1,24,32,5);ctx.fill();ctx.fillStyle="#94c0bd";ctx.beginPath();ctx.roundRect(wx-8,y+4,18,25,3);ctx.fill();ctx.strokeStyle="#f3dfb8";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(wx+1,y+4);ctx.lineTo(wx+1,y+29);ctx.moveTo(wx-8,y+16);ctx.lineTo(wx+10,y+16);ctx.stroke();}
+    ctx.fillStyle="#6c4937";ctx.beginPath();ctx.roundRect(x-14,y+h*.055,28,h*.25,5);ctx.fill();ctx.fillStyle="#b98254";ctx.beginPath();ctx.roundRect(x-11,y+h*.07,22,h*.22,4);ctx.fill();ctx.fillStyle="#f2d59a";ctx.beginPath();ctx.arc(x+6,y+h*.18,2.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#b99a70";ctx.beginPath();ctx.ellipse(x,y+h*.31,23,5,0,0,Math.PI*2);ctx.fill();
+    if(b.type==="guild"||b.type==="inn"||b.type==="forge"||b.type==="shop"){
+      ctx.fillStyle="#f4e5c4";ctx.beginPath();ctx.roundRect(x-25,y-h*.30,50,18,5);ctx.fill();ctx.strokeStyle="#80583c";ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle="#a46f45";ctx.font="bold 10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(b.type==="guild"?"★":b.type==="forge"?"⚒":b.type==="inn"?"♨":"✿",x,y-h*.17);
+    }
+    if(b.name!=="住民の家"&&b.name!=="あなたの家"&&b.name!=="町長の家"){ctx.fillStyle="#fff2d5";ctx.strokeStyle="#6f4d38";ctx.lineWidth=3;ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.strokeText(b.name,x,y-h*.82);ctx.fillText(b.name,x,y-h*.82);}
+    ctx.restore();
   }
 
   function drawStorybookPersonAt(x,y,p,isPlayer=false,scale=1){
     ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
-    const moving=!!p.moving,phase=moving?Math.sin((p.walkClock||0)*13):0,bob=moving?Math.abs(Math.sin((p.walkClock||0)*13))*2:Math.sin(performance.now()/850)*.45;
+    const moving=!!p.moving,phase=moving?Math.sin((p.walkClock||0)*13):0,bob=moving?Math.abs(Math.sin((p.walkClock||0)*13))*1.8:Math.sin(performance.now()/900)*.35;
     const hairMap={"栗色":"#805039","金髪":"#e6bd68","黒髪":"#40353b","銀髪":"#b9c1c3","茶色":"#986442","赤髪":"#b65c49","青髪":"#547da4","緑髪":"#66845a"};
     const skinMap={"明るい肌":"#f0c7a0","普通の肌":"#dba982","褐色肌":"#bd805e","色白":"#f5dcc4"};
-    const hair=hairMap[p.hair]||"#805039",skin=skinMap[p.skin]||"#f0c7a0",cloth=p.outfit||p.color||"#6488a2",ink="#60483a",dir=String(p.dir||"down");
-    const back=dir==="up"||dir==="up-left"||dir==="up-right",left=dir.includes("left"),right=dir.includes("right");
-    ctx.fillStyle="rgba(68,82,53,.2)";ctx.beginPath();ctx.ellipse(0,2,18,5,0,0,Math.PI*2);ctx.fill();
-    const swing=phase*6;
-    // Legs are separate moving shapes so the walking cycle remains visible.
-    ctx.strokeStyle="#6e503d";ctx.lineWidth=7;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-5,-14+bob);ctx.quadraticCurveTo(-8+swing*.5,-8,-8+swing,-2);ctx.moveTo(5,-14+bob);ctx.quadraticCurveTo(8-swing*.5,-8,8-swing,-2);ctx.stroke();
-    ctx.fillStyle="#76523a";ctx.beginPath();ctx.ellipse(-8+swing,-2,6,3,.08,0,Math.PI*2);ctx.ellipse(8-swing,-2,6,3,-.08,0,Math.PI*2);ctx.fill();
-    // Small travel cloak and tunic.
-    ctx.fillStyle="#80634d";ctx.beginPath();ctx.moveTo(-10,-34);ctx.quadraticCurveTo(-18,-28,-15,-13);ctx.quadraticCurveTo(0,-7,15,-13);ctx.lineTo(10,-34);ctx.closePath();ctx.fill();
-    const body=ctx.createLinearGradient(-12,-37,12,-10);body.addColorStop(0,"#fff0d2");body.addColorStop(.18,cloth);body.addColorStop(1,cloth);ctx.fillStyle=body;ctx.beginPath();ctx.moveTo(-9,-35);ctx.quadraticCurveTo(-14,-29,-11,-14);ctx.quadraticCurveTo(0,-9,11,-14);ctx.quadraticCurveTo(14,-29,9,-35);ctx.quadraticCurveTo(0,-40,-9,-35);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=2.2;ctx.stroke();
-    ctx.strokeStyle="#f1d9a7";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-4,-32);ctx.lineTo(0,-17);ctx.lineTo(4,-32);ctx.stroke();
-    // Arms swing opposite to the legs.
-    ctx.strokeStyle=skin;ctx.lineWidth=6;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-10,-31);ctx.quadraticCurveTo(-16,-25,-13-swing*.45,-18);ctx.moveTo(10,-31);ctx.quadraticCurveTo(16,-25,13+swing*.45,-18);ctx.stroke();
-    ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-10,-31);ctx.quadraticCurveTo(-16,-25,-13-swing*.45,-18);ctx.moveTo(10,-31);ctx.quadraticCurveTo(16,-25,13+swing*.45,-18);ctx.stroke();
-    // Head and hair.
+    const hair=hairMap[p.hair]||"#805039",skin=skinMap[p.skin]||"#f0c7a0",cloth=p.outfit||p.color||"#6488a2",ink="#674b3a",dir=String(p.dir||"down");
+    const back=dir==="up"||dir==="up-left"||dir==="up-right",left=dir==="left"||dir==="up-left"||dir==="down-left",right=dir==="right"||dir==="up-right"||dir==="down-right",side=left||right;
+    const swing=phase*5.5,legA=moving?swing:0,legB=moving?-swing:0;
+    // Soft oval ground shadow and small shoes.
+    ctx.fillStyle="rgba(73,77,53,.19)";ctx.beginPath();ctx.ellipse(0,2,17,5,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#76543e";ctx.lineWidth=6.5;ctx.lineCap="round";ctx.beginPath();
+    ctx.moveTo(-4,-15+bob);ctx.quadraticCurveTo(-6+legA*.45,-8,-6+legA,-2);
+    ctx.moveTo(4,-15+bob);ctx.quadraticCurveTo(6+legB*.45,-8,6+legB,-2);ctx.stroke();
+    ctx.fillStyle="#76523a";ctx.beginPath();ctx.ellipse(-6+legA,-2,5.8,2.8,.08,0,Math.PI*2);ctx.ellipse(6+legB,-2,5.8,2.8,-.08,0,Math.PI*2);ctx.fill();
+    // Back cape peeks around a rounded tunic.
+    ctx.fillStyle="#80634d";ctx.beginPath();ctx.moveTo(-9,-34);ctx.quadraticCurveTo(-17,-29,-14,-13);ctx.quadraticCurveTo(0,-8,14,-13);ctx.lineTo(9,-34);ctx.closePath();ctx.fill();
+    ctx.fillStyle=cloth;ctx.beginPath();ctx.moveTo(-8,-35);ctx.quadraticCurveTo(-14,-29,-11,-15);ctx.quadraticCurveTo(0,-10,11,-15);ctx.quadraticCurveTo(14,-29,8,-35);ctx.quadraticCurveTo(0,-39,-8,-35);ctx.fill();
+    ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.stroke();
+    ctx.strokeStyle="#f1d9a7";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-3,-32);ctx.lineTo(0,-18);ctx.lineTo(3,-32);ctx.stroke();
+    // Opposite arm and leg swing makes the walk cycle readable.
+    const armL=moving?legB*.42:0,armR=moving?legA*.42:0;
+    ctx.strokeStyle=ink;ctx.lineWidth=7;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-9,-31);ctx.quadraticCurveTo(-15,-25,-12+armL,-18);ctx.moveTo(9,-31);ctx.quadraticCurveTo(15,-25,12+armR,-18);ctx.stroke();
+    ctx.strokeStyle=skin;ctx.lineWidth=4.5;ctx.beginPath();ctx.moveTo(-9,-31);ctx.quadraticCurveTo(-15,-25,-12+armL,-18);ctx.moveTo(9,-31);ctx.quadraticCurveTo(15,-25,12+armR,-18);ctx.stroke();
+    // Rounded head, with two unmistakable eyes when facing the camera.
     ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(0,-44+bob,12.5,13.5,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle=hair;ctx.beginPath();ctx.moveTo(-12,-47+bob);ctx.quadraticCurveTo(-15,-60,0,-61);ctx.quadraticCurveTo(15,-60,13,-44+bob);ctx.quadraticCurveTo(8,-49,4,-49);ctx.quadraticCurveTo(-3,-42,-12,-47+bob);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle=hair;ctx.beginPath();ctx.moveTo(-12,-48+bob);ctx.quadraticCurveTo(-15,-61,0,-61);ctx.quadraticCurveTo(15,-60,13,-44+bob);ctx.quadraticCurveTo(8,-49,4,-49);ctx.quadraticCurveTo(-3,-42,-12,-48+bob);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.stroke();
     if(!back){
-      ctx.fillStyle="#fff8e8";
-      if(left){ctx.beginPath();ctx.ellipse(-5,-43+bob,2.6,3.3,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=p.eyes==="緑"?"#638b5d":"#54728e";ctx.beginPath();ctx.arc(-5,-43+bob,1.4,0,Math.PI*2);ctx.fill();}
-      else if(right){ctx.beginPath();ctx.ellipse(5,-43+bob,2.6,3.3,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#54728e";ctx.beginPath();ctx.arc(5,-43+bob,1.4,0,Math.PI*2);ctx.fill();}
-      else{for(const ex of [-4.5,4.5]){ctx.beginPath();ctx.ellipse(ex,-43+bob,2.3,3,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=p.eyes==="緑"?"#638b5d":p.eyes==="茶"?"#986442":"#54728e";ctx.beginPath();ctx.arc(ex,-43+bob,1.3,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff8e8";}ctx.strokeStyle="#a45c54";ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(0,-38+bob,2.4,.15,Math.PI-.15);ctx.stroke();}
+      if(side){
+        const eyeX=left?-5:5;ctx.fillStyle="#fff8e8";ctx.beginPath();ctx.ellipse(eyeX,-43+bob,2.5,3.2,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=p.eyes==="緑"?"#638b5d":p.eyes==="茶"?"#986442":"#54728e";ctx.beginPath();ctx.arc(eyeX,-43+bob,1.35,0,Math.PI*2);ctx.fill();
+      }else{
+        for(const ex of [-4.5,4.5]){ctx.fillStyle="#fff8e8";ctx.beginPath();ctx.ellipse(ex,-43+bob,2.6,3.2,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=p.eyes==="緑"?"#638b5d":p.eyes==="茶"?"#986442":"#54728e";ctx.beginPath();ctx.arc(ex,-43+bob,1.4,0,Math.PI*2);ctx.fill();}
+        ctx.strokeStyle="#a45c54";ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(0,-38+bob,2.4,.15,Math.PI-.15);ctx.stroke();
+      }
     }
     if(p.accessory==="帽子"||p.role==="旅人"||p.role==="冒険者"){
       ctx.fillStyle="#76543d";ctx.beginPath();ctx.ellipse(0,-55+bob,18,4.5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#b58b5a";ctx.beginPath();ctx.moveTo(-11,-54+bob);ctx.quadraticCurveTo(-8,-70,2,-70);ctx.quadraticCurveTo(12,-68,11,-54+bob);ctx.closePath();ctx.fill();ctx.strokeStyle="#684a39";ctx.lineWidth=2;ctx.stroke();ctx.strokeStyle="#e5c68e";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-7,-57+bob);ctx.lineTo(7,-57+bob);ctx.stroke();
-    }else if(p.accessory==="眼鏡"){ctx.strokeStyle="#6c5b4d";ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(-5,-43+bob,4,0,Math.PI*2);ctx.arc(5,-43+bob,4,0,Math.PI*2);ctx.moveTo(-1,-43+bob);ctx.lineTo(1,-43+bob);ctx.stroke();}
+    }else if(p.accessory==="眼鏡"){ctx.strokeStyle="#6c5b4d";ctx.lineWidth=1.5;ctx.beginPath();if(side){ctx.arc(left?-5:5,-43+bob,4,0,Math.PI*2);}else{ctx.arc(-5,-43+bob,4,0,Math.PI*2);ctx.arc(5,-43+bob,4,0,Math.PI*2);ctx.moveTo(-1,-43+bob);ctx.lineTo(1,-43+bob);}ctx.stroke();}
     if(p.accessory==="マント"){ctx.fillStyle="#876b8d";ctx.beginPath();ctx.moveTo(-10,-34);ctx.lineTo(-16,-13);ctx.lineTo(0,-18);ctx.lineTo(15,-13);ctx.lineTo(10,-34);ctx.closePath();ctx.fill();}
     if(isPlayer){ctx.fillStyle="#d7b477";ctx.beginPath();ctx.arc(8,-26,3.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#76543d";ctx.lineWidth=1;ctx.stroke();}
     ctx.restore();
