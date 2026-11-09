@@ -469,67 +469,76 @@
   }
 
   function drawStorybookPersonAt(x,y,p,isPlayer=false,scale=1){
-    ctx.save();
-    ctx.translate(x,y);
-    ctx.scale(scale,scale);
+    ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
     const dir=String(p.dir||"down");
-    // The character is authored facing down. Rotate the complete figure so head,
-    // torso, arms, legs and accessories all turn together.
-    const directionAngles={down:0,"down-right":Math.PI/4,right:Math.PI/2,"up-right":Math.PI*.75,up:Math.PI,"up-left":-Math.PI*.75,left:-Math.PI/2,"down-left":-Math.PI/4};
-    ctx.rotate(directionAngles[dir]||0);
-    const moving=!!p.moving;
-    const phase=moving?Math.sin((p.walkClock||0)*13):0;
-    const stride=moving?phase*5.2:0;
-    const bob=moving?Math.abs(Math.sin((p.walkClock||0)*13))*1.5:Math.sin(performance.now()/900)*.3;
+    const vectors={down:[0,1],"down-right":[.707,.707],right:[1,0],"up-right":[.707,-.707],up:[0,-1],"up-left":[-.707,-.707],left:[-1,0],"down-left":[-.707,.707]};
+    const [faceX,faceY]=vectors[dir]||[0,1];
+    const moving=!!p.moving,phase=moving?Math.sin((p.walkClock||0)*13):0;
+    const stride=moving?phase*5:0,bob=moving?Math.abs(Math.sin((p.walkClock||0)*13))*1.25:Math.sin(performance.now()/900)*.25;
     const hairMap={"栗色":"#805039","金髪":"#d7ad65","黒髪":"#40353b","銀髪":"#b9c1c3","茶色":"#986442","赤髪":"#ad6655","青髪":"#547da4","緑髪":"#66845a"};
     const skinMap={"明るい肌":"#edc5a0","普通の肌":"#d9a982","褐色肌":"#bd805e","色白":"#f2dac3"};
     const hair=hairMap[p.hair]||"#805039",skin=skinMap[p.skin]||"#edc5a0",cloth=p.outfit||p.color||"#6488a2",ink="#66503f";
-    const back=dir==="up"||dir==="up-left"||dir==="up-right";
-    const side=dir==="left"||dir==="right"||dir==="up-left"||dir==="up-right"||dir==="down-left"||dir==="down-right";
+    const back=faceY<-.35,side=Math.abs(faceX)>.55;
+    const profileShift=faceX<-.55?-2.2:faceX>.55?2.2:0;
+    const stepX=faceX*stride,stepY=-faceY*stride;
     ctx.lineJoin="round";ctx.lineCap="round";
-    // Ground shadow remains soft and slightly irregular, like a painted wash.
+    // The figure always stays upright. Direction is expressed by its silhouette,
+    // face profile and foot placement rather than rotating the canvas.
     ctx.fillStyle="rgba(73,77,53,.17)";ctx.beginPath();ctx.ellipse(1,3,16,4.5,-.06,0,Math.PI*2);ctx.fill();
-    // Legs step forward and backward along the facing direction, not sideways.
+    // Two legs step along the current travel vector; feet remain underneath the body.
+    const legSpread=side?3.2:5;
     ctx.strokeStyle=ink;ctx.lineWidth=7;ctx.beginPath();
-    ctx.moveTo(-4,-15+bob);ctx.quadraticCurveTo(-5,-9+bob+stride*.45,-5,-3+stride);
-    ctx.moveTo(4,-15+bob);ctx.quadraticCurveTo(5,-9+bob-stride*.45,5,-3-stride);
+    ctx.moveTo(-legSpread,-15+bob);ctx.quadraticCurveTo(-legSpread+stepX*.22,-9+bob+stepY*.22,-legSpread+stepX,-3+stepY);
+    ctx.moveTo(legSpread,-15+bob);ctx.quadraticCurveTo(legSpread-stepX*.22,-9+bob-stepY*.22,legSpread-stepX,-3-stepY);
     ctx.stroke();
     ctx.fillStyle="#76523e";ctx.beginPath();
-    ctx.ellipse(-5,-2+stride,5.7,2.8,-.08,0,Math.PI*2);
-    ctx.ellipse(5,-2-stride,5.7,2.8,.08,0,Math.PI*2);ctx.fill();
-    // Small coat with a hand-drawn hem.
-    ctx.fillStyle="#80634d";ctx.beginPath();ctx.moveTo(-10,-35);ctx.quadraticCurveTo(-16,-28,-14,-13);ctx.quadraticCurveTo(-1,-8,14,-13);ctx.lineTo(10,-35);ctx.closePath();ctx.fill();
-    ctx.fillStyle=cloth;ctx.beginPath();ctx.moveTo(-8,-35);ctx.quadraticCurveTo(-14,-29,-11,-15);ctx.quadraticCurveTo(-1,-10,11,-15);ctx.quadraticCurveTo(14,-29,8,-35);ctx.quadraticCurveTo(0,-39,-8,-35);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=1.8;ctx.stroke();
-    ctx.strokeStyle="rgba(246,222,177,.8)";ctx.lineWidth=1.7;ctx.beginPath();ctx.moveTo(-3,-32);ctx.quadraticCurveTo(-1,-24,0,-18);ctx.quadraticCurveTo(2,-25,3,-32);ctx.stroke();
-    // Arms swing opposite to the stepping legs, also along the forward axis.
-    const armSwing=stride*.52;
+    ctx.ellipse(-legSpread+stepX,-2+stepY,5.7,2.8,0,0,Math.PI*2);
+    ctx.ellipse(legSpread-stepX,-2-stepY,5.7,2.8,0,0,Math.PI*2);ctx.fill();
+    // Slightly narrower tunic in profile, but the torso stays vertical.
+    const bodyHalf=side?8.5:11;
+    ctx.fillStyle="#80634d";ctx.beginPath();ctx.moveTo(-bodyHalf-1,-35);ctx.quadraticCurveTo(-bodyHalf-6,-28,-bodyHalf-4,-13);ctx.quadraticCurveTo(0,-8,bodyHalf+4,-13);ctx.lineTo(bodyHalf+1,-35);ctx.closePath();ctx.fill();
+    ctx.fillStyle=cloth;ctx.beginPath();ctx.moveTo(-bodyHalf,-35);ctx.quadraticCurveTo(-bodyHalf-4,-29,-bodyHalf-2,-15);ctx.quadraticCurveTo(0,-10,bodyHalf+2,-15);ctx.quadraticCurveTo(bodyHalf+4,-29,bodyHalf,-35);ctx.quadraticCurveTo(0,-39,-bodyHalf,-35);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=1.8;ctx.stroke();
+    if(!side){ctx.strokeStyle="rgba(246,222,177,.8)";ctx.lineWidth=1.7;ctx.beginPath();ctx.moveTo(-3,-32);ctx.quadraticCurveTo(-1,-24,0,-18);ctx.quadraticCurveTo(2,-25,3,-32);ctx.stroke();}
+    else{ctx.strokeStyle="rgba(246,222,177,.65)";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(profileShift,-32);ctx.lineTo(profileShift,-18);ctx.stroke();}
+    // Arms swing opposite to the feet without tilting the shoulders or body.
+    const armSwingX=-stepX*.5,armSwingY=-stepY*.5;
     ctx.strokeStyle=ink;ctx.lineWidth=7;ctx.beginPath();
-    ctx.moveTo(-9,-31);ctx.quadraticCurveTo(-14,-25,-12,-19-armSwing);
-    ctx.moveTo(9,-31);ctx.quadraticCurveTo(14,-25,12,-19+armSwing);ctx.stroke();
+    ctx.moveTo(-bodyHalf,-31);ctx.quadraticCurveTo(-bodyHalf-5,-25,-bodyHalf-2+armSwingX,-19+armSwingY);
+    ctx.moveTo(bodyHalf,-31);ctx.quadraticCurveTo(bodyHalf+5,-25,bodyHalf+2-armSwingX,-19-armSwingY);ctx.stroke();
     ctx.strokeStyle=skin;ctx.lineWidth=4.5;ctx.beginPath();
-    ctx.moveTo(-9,-31);ctx.quadraticCurveTo(-14,-25,-12,-19-armSwing);
-    ctx.moveTo(9,-31);ctx.quadraticCurveTo(14,-25,12,-19+armSwing);ctx.stroke();
-    // Head and hair. Side-facing characters show one eye; the whole body has
-    // already rotated, so the profile is not just a turned face on a frontal body.
-    ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(0,-44+bob,12.5,13.5,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=1.8;ctx.stroke();
-    ctx.fillStyle=hair;ctx.beginPath();ctx.moveTo(-12,-48+bob);ctx.quadraticCurveTo(-15,-61,0,-61);ctx.quadraticCurveTo(15,-60,13,-44+bob);ctx.quadraticCurveTo(8,-49,4,-49);ctx.quadraticCurveTo(-3,-42,-12,-48+bob);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=1.8;ctx.stroke();
+    ctx.moveTo(-bodyHalf,-31);ctx.quadraticCurveTo(-bodyHalf-5,-25,-bodyHalf-2+armSwingX,-19+armSwingY);
+    ctx.moveTo(bodyHalf,-31);ctx.quadraticCurveTo(bodyHalf+5,-25,bodyHalf+2-armSwingX,-19-armSwingY);ctx.stroke();
+    // Head remains upright; profile shifts the facial features to the direction faced.
+    ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(profileShift,-44+bob,side?11.5:12.5,13.5,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=1.8;ctx.stroke();
+    ctx.fillStyle=hair;ctx.beginPath();
+    if(back){
+      ctx.moveTo(profileShift-12,-48+bob);ctx.quadraticCurveTo(profileShift-15,-61,profileShift,-61);ctx.quadraticCurveTo(profileShift+15,-60,profileShift+13,-44+bob);ctx.quadraticCurveTo(profileShift+8,-39,profileShift,-42+bob);ctx.quadraticCurveTo(profileShift-9,-40,profileShift-12,-48+bob);
+    }else if(side){
+      const sign=faceX<0?-1:1;
+      ctx.moveTo(profileShift-sign*11,-48+bob);ctx.quadraticCurveTo(profileShift-sign*14,-61,profileShift,-61);ctx.quadraticCurveTo(profileShift+sign*14,-59,profileShift+sign*11,-46+bob);ctx.lineTo(profileShift+sign*14,-43+bob);ctx.quadraticCurveTo(profileShift+sign*7,-44+bob,profileShift+sign*4,-48+bob);ctx.quadraticCurveTo(profileShift-sign*4,-42+bob,profileShift-sign*11,-48+bob);
+    }else{
+      ctx.moveTo(-12,-48+bob);ctx.quadraticCurveTo(-15,-61,0,-61);ctx.quadraticCurveTo(15,-60,13,-44+bob);ctx.quadraticCurveTo(8,-49,4,-49);ctx.quadraticCurveTo(-3,-42,-12,-48+bob);
+    }
+    ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=1.8;ctx.stroke();
     if(!back){
-      const eyeX=side?(dir.includes("left")||dir==="left"?-4:4):0;
+      const eyeColor=p.eyes==="緑"?"#638b5d":p.eyes==="茶"?"#986442":"#54728e";
       if(side){
+        const eyeX=profileShift+(faceX<0?-4.5:4.5);
         ctx.fillStyle="#fff7e7";ctx.beginPath();ctx.ellipse(eyeX,-43+bob,2.5,3.1,0,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle=p.eyes==="緑"?"#638b5d":p.eyes==="茶"?"#986442":"#54728e";ctx.beginPath();ctx.arc(eyeX,-43+bob,1.35,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=eyeColor;ctx.beginPath();ctx.arc(eyeX,-43+bob,1.35,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=skin;ctx.beginPath();ctx.moveTo(profileShift+(faceX<0?-9:9),-41+bob);ctx.lineTo(profileShift+(faceX<0?-13:13),-39+bob);ctx.lineTo(profileShift+(faceX<0?-9:9),-38+bob);ctx.fill();
       }else{
-        for(const ex of [-4.5,4.5]){ctx.fillStyle="#fff7e7";ctx.beginPath();ctx.ellipse(ex,-43+bob,2.4,3,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=p.eyes==="緑"?"#638b5d":p.eyes==="茶"?"#986442":"#54728e";ctx.beginPath();ctx.arc(ex,-43+bob,1.3,0,Math.PI*2);ctx.fill();}
+        for(const ex of [-4.5,4.5]){ctx.fillStyle="#fff7e7";ctx.beginPath();ctx.ellipse(ex,-43+bob,2.4,3,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=eyeColor;ctx.beginPath();ctx.arc(ex,-43+bob,1.3,0,Math.PI*2);ctx.fill();}
         ctx.strokeStyle="#a45c54";ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(0,-38+bob,2.2,.15,Math.PI-.15);ctx.stroke();
       }
     }
     if(p.accessory==="帽子"||p.role==="旅人"||p.role==="冒険者"){
-      ctx.fillStyle="#76543d";ctx.beginPath();ctx.ellipse(0,-55+bob,18,4.5,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle="#b58b5a";ctx.beginPath();ctx.moveTo(-11,-54+bob);ctx.quadraticCurveTo(-8,-70,2,-70);ctx.quadraticCurveTo(12,-68,11,-54+bob);ctx.closePath();ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=1.8;ctx.stroke();
-      ctx.strokeStyle="#e5c68e";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-7,-57+bob);ctx.lineTo(7,-57+bob);ctx.stroke();
+      ctx.fillStyle="#76543d";ctx.beginPath();ctx.ellipse(profileShift,-55+bob,side?15:18,4.5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#b58b5a";ctx.beginPath();ctx.moveTo(profileShift-11,-54+bob);ctx.quadraticCurveTo(profileShift-8,-70,profileShift+2,-70);ctx.quadraticCurveTo(profileShift+12,-68,profileShift+11,-54+bob);ctx.closePath();ctx.fill();ctx.strokeStyle=ink;ctx.lineWidth=1.8;ctx.stroke();
+      ctx.strokeStyle="#e5c68e";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(profileShift-7,-57+bob);ctx.lineTo(profileShift+7,-57+bob);ctx.stroke();
     }else if(p.accessory==="眼鏡"){
       ctx.strokeStyle="#6c5b4d";ctx.lineWidth=1.5;ctx.beginPath();
-      if(side){ctx.arc(dir.includes("left")||dir==="left"?-4:4,-43+bob,4,0,Math.PI*2);}
+      if(side){ctx.arc(profileShift+(faceX<0?-4.5:4.5),-43+bob,4,0,Math.PI*2);}
       else{ctx.arc(-5,-43+bob,4,0,Math.PI*2);ctx.arc(5,-43+bob,4,0,Math.PI*2);ctx.moveTo(-1,-43+bob);ctx.lineTo(1,-43+bob);}ctx.stroke();
     }
     if(p.accessory==="マント"){ctx.fillStyle="#876b8d";ctx.beginPath();ctx.moveTo(-10,-34);ctx.quadraticCurveTo(-16,-22,-16,-13);ctx.lineTo(0,-18);ctx.lineTo(15,-13);ctx.quadraticCurveTo(15,-25,10,-34);ctx.closePath();ctx.fill();}
