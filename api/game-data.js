@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
 
     if (req.method === "POST") {
       const data = bodyOf(req).gameData;
-      if (!data || typeof data !== "object" || Array.isArray(data) || Buffer.byteLength(JSON.stringify(data), "utf8") > 20000) {
+      if (!data || typeof data !== "object" || Array.isArray(data) || Buffer.byteLength(JSON.stringify(data), "utf8") > 1000000) {
         return send(res, 400, { error: "冒険者データの形式が正しくありません。" });
       }
       await db("game_saves", { user_id: "eq." + session.sub }, {

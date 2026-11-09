@@ -233,3 +233,20 @@ img, canvas, .tile {
 }
 img,canvas,.tile{image-rendering:pixelated;image-rendering:crisp-edges}
 canvas{image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* World Sercher decision reference panel */
+#open-systems{background:#344966;border:1px solid #8da9ce;border-radius:5px;color:#fff;padding:8px 11px;font-weight:700;cursor:pointer}
+.systems-panel{position:absolute;z-index:12;inset:10px;padding:12px;background:#101d31;border:3px solid #b6a06c;box-shadow:0 0 0 2px #172b45,0 12px 32px #000b;display:flex;flex-direction:column;overflow:hidden}
+.systems-panel.hidden{display:none}
+.systems-panel .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.systems-panel .panel-head h2{margin:0;color:#fff2c8;font-size:21px}
+.systems-content{display:flex;flex-direction:column;min-height:0;flex:1;overflow:hidden}
+.ws-tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 2px;flex-shrink:0}
+.ws-tab{white-space:nowrap;padding:8px 11px;background:#253b59;border:2px solid #607b9d;color:#fff;border-radius:5px;cursor:pointer}
+.ws-tab.active{background:#0879d1;border-color:#8de0ff}
+.ws-details{overflow:auto;min-height:0;padding:2px 4px 12px}
+.ws-detail{display:none;margin:0 0 12px;padding:12px;background:#1b2c46;border:2px solid #8199b8;border-radius:7px;color:#f4f4ee}
+.ws-detail.active{display:block}
+.ws-detail h3{margin:0 0 9px;padding:7px;background:#075ba4;border:1px solid #83d9ff;border-radius:5px;color:#fff;font-size:16px}
+.ws-detail p{margin:0;color:#e0e8f4;line-height:1.8;font-size:14px;white-space:normal}
+@media(max-width:650px){.systems-panel{inset:4px;padding:7px}.systems-panel .panel-head h2{font-size:16px}.ws-detail p{font-size:12px}}

@@ -38,7 +38,7 @@
     ["西方ヴォルガ","火山・鉱山・鍛冶の町"],["南東アクア諸島","海辺の町・珊瑚・海底洞窟"],
     ["北東スカイ地方","山岳・古代文明・天空遺跡"],["忘れられた島","未知の生物・失われた文明"]
   ];
-  const CAPS = { player:100, job:50, skill:10, enhancement:10 };
+  const CAPS = { player:200, job:50, skill:10, enhancement:10 };
   const defaultData = () => ({
     schemaVersion:2, species:"人間", level:1, playerXp:0, gold:0,
     activeJob:null, lastJobChange:null, jobs:{}, jobSkills:{}, commonSkills:{},
