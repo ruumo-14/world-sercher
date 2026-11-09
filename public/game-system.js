@@ -56,6 +56,7 @@
   let saving = false;
   let ready = false;
   let lastSaveError = false;
+  let trainingFacility = false;
 
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const xpNeed = level => Math.floor(100 * Math.pow(level, 1.55));
@@ -160,11 +161,15 @@
   }
 
   function renderJobs() {
-    let html=section("職業のルール",[
+    let html=section("職業変更",[
+      '<div class="game-action-row"><select id="job-select">'+JOBS.map(job=>'<option value="'+esc(job)+'" '+(job===data.activeJob?'selected':'')+'>'+esc(job)+'</option>').join("")+'</select><button id="job-change" type="button">この職業に変更</button></div>',
+      row("変更頻度","1日1回"),row("現在の職業",data.activeJob||"未選択")
+    ].join(""));
+    html+=section("職業のルール",[
       row("同時に就ける職業","1つ"),
       row("変更できる頻度","1日1回"),
       row("変更場所","各町の職業ギルド"),
-      empty("職業変更はギルド内でのみ実行可能にします。現在は施設・位置判定が未実装のため、この画面から変更できません。職業ごとのレベルと経験値は切り替えても失われません。")
+      empty("職業ごとのレベルと経験値は、職業を変更しても失われません。")
     ].join(""));
     for(const group of JOB_GROUPS) {
       html+=section(group.name,group.jobs.map(job=>{
@@ -182,13 +187,13 @@
       row("成長上限","Lv."+CAPS.skill),
       row("強化場所","訓練所・スキル研究施設"),
       row("スキル習得","対応するスキル書を冒険で入手"),
-      empty("スキル書は使用しても消費されません。職業専用の本は対応職業のときだけ使用可能。習得記録は職業を変更しても残ります。")
+      empty(trainingFacility?"訓練所にいます。各スキルの「鍛える」ボタンを使えます。":"スキル強化は訓練所でのみ行えます。訓練所の近くでEキーを押してからメニューを開いてね。")
     ].join(""));
     if(job) {
       const levels=data.jobSkills[job]||{};
-      html+=section(job+"専用スキル",JOB_SKILLS[job].map(skill=>row(skill,"Lv."+skillLevel(levels,skill)+" / "+CAPS.skill)).join(""));
+      html+=section(job+"専用スキル",JOB_SKILLS[job].map(skill=>'<div class="skill-action">'+row(skill,"Lv."+skillLevel(levels,skill)+" / "+CAPS.skill)+'<button type="button" data-train-job="'+esc(skill)+'">鍛える</button></div>').join(""));
     } else html+=section("職業専用スキル",empty("職業を選ぶと、その職業のスキル一覧が表示されます。"));
-    html+=section("全職業共通スキル",COMMON_SKILLS.map(skill=>row(skill,"Lv."+skillLevel(data.commonSkills,skill)+" / "+CAPS.skill)).join(""));
+    html+=section("全職業共通スキル",COMMON_SKILLS.map(skill=>'<div class="skill-action">'+row(skill,"Lv."+skillLevel(data.commonSkills,skill)+" / "+CAPS.skill)+'<button type="button" data-train-common="'+esc(skill)+'">鍛える</button></div>').join(""));
     html+=section("所持スキル書",data.skillBooks.length?'<ul>'+list(data.skillBooks.map(book=>typeof book==="string"?book:(book.name||book.skill||"スキル書")) )+'</ul>':empty("まだスキル書はありません。入手方法・配置は後で設計します。"));
     return html;
   }
@@ -204,7 +209,7 @@
       if(typeof item==="string") return item;
       return (item.name||"装備")+"  "+(item.enhancement!=null?"+"+item.enhancement:"+0");
     }))+'</ul>':empty("装備データはまだありません。"))+
-    section("レアリティ",'<ol>'+list(["コモン","アンコモン","レア","エピック","レジェンダリー","ミシック","アーティファクト"])+'</ol>');
+    section("レアリティ",'<ol>'+list(["N（ノーマル）","R（レア）","SR（スーパーレア）","SSR（ダブルスーパーレア）","UR（ウルトラレア）"])+'</ol>');
   }
 
   function renderWorld() {
@@ -223,10 +228,10 @@
       row("共通イベント","失われた七つの遺産","任意参加。通常の冒険進行を妨げない")
     ].join(""));
     html+=section("家・交流・ランキング",[
-      row("自宅","リーフェルに自分の家","家具・収納・生産設備・友達招待"),
-      row("交流","協力型マルチプレイ","オープンワールドPvPなし"),
-      row("ランキング","全体ランキング","日・週・月／戦闘・採集・生産・商売・探索・ミニゲーム"),
-      row("取引","プレイヤー露店・市場","オークション／共通通貨")
+      row("自宅","リーフェルの指定住宅地","他プレイヤーは入室不可。訪問履歴なし"),
+      row("交流","同じ世界で他プレイヤーと冒険","パーティー・協力クエストなし。PvPは専用闘技場のみ"),
+      row("ランキング","累計記録の全体ランキング","総レベル・所持GOLD・ミニゲーム。毎週集計し直近10回を保存"),
+      row("取引","専用施設のマーケットのみ","個人露店なし。レア度別最低価格以上で自由価格")
     ].join(""));
     return html;
   }
@@ -244,6 +249,32 @@
   openBtn.addEventListener("click",async()=>{panel.classList.remove("hidden");if(!ready)await load();render();});
   if(closeBtn) closeBtn.addEventListener("click",()=>panel.classList.add("hidden"));
 
+  content.addEventListener("click",async event=>{
+    const change=event.target.closest("#job-change");
+    if(change){
+      const selected=content.querySelector("#job-select")?.value;
+      if(!JOBS.includes(selected))return;
+      const today=new Date().toLocaleDateString("sv-SE",{timeZone:"Asia/Tokyo"});
+      if(data.activeJob&&data.lastJobChange===today){say("職業変更は1日1回です。次の日に変更できます。");return;}
+      data.jobs[selected] ||= {level:1,xp:0};
+      data.activeJob=selected;data.lastJobChange=today;
+      await save();render();say(selected+"に変更しました。");return;
+    }
+    const jobSkill=event.target.closest("[data-train-job]");
+    const commonSkill=event.target.closest("[data-train-common]");
+    if(jobSkill||commonSkill){
+      if(!trainingFacility){say("スキル強化は訓練所でのみ行えます。");return;}
+      const skill=jobSkill?jobSkill.dataset.trainJob:commonSkill.dataset.trainCommon;
+      const group=jobSkill?(data.jobSkills[data.activeJob] ||= {}):data.commonSkills;
+      const level=Number(group[skill]||1);
+      if(level>=CAPS.skill){say("このスキルは最大レベルです。");return;}
+      group[skill]=level+1;await save();render();say(skill+"がLv."+group[skill]+"になりました。");
+    }
+  });
+  window.addEventListener("world:interact",event=>{
+    trainingFacility=event.detail?.name==="訓練所";
+    if(trainingFacility)say("訓練所にいます。スキルを鍛えられます。");
+  });
   // game.js announces this only after a successful login or session restore.
   window.addEventListener("world:entered",()=>{load();});
   window.addEventListener("beforeunload",()=>{ if(ready && !lastSaveError) save(); });
