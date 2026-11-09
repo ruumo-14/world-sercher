@@ -169,7 +169,7 @@
   loginTab.addEventListener("click",()=>setAuthMode("login"));registerTab.addEventListener("click",()=>setAuthMode("register"));
   async function readGameData(){try{const r=await fetch("/api/game-data",{credentials:"same-origin"});if(r.ok){const j=await r.json();gameData=j.gameData||{};applySavedAdminSettings();}}catch(e){gameData={}}}
   function applySavedAdminSettings(){const positions=gameData.buildingPositions||{};buildings.forEach((b,i)=>{const p=positions[b.name+"@"+i];if(p){if(Number.isFinite(Number(p.x)))b.x=Number(p.x);if(Number.isFinite(Number(p.y)))b.y=Number(p.y);}});}
-  async function saveGameData(){try{await fetch("/api/game-data",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({gameData})})}catch(e){}}
+  async function saveGameData(){try{const r=await fetch("/api/game-data",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({gameData})});return r.ok}catch(e){return false}}
   function openCreation(){const panel=$("creation-panel");if(panel)panel.classList.remove("hidden")}
   function closeCreation(){const panel=$("creation-panel");if(panel)panel.classList.add("hidden")}
   function initCreation(){
@@ -251,7 +251,7 @@
   function blocked(x,y){if(interior)return x<92||y<92||x>868||y>508;if(x<70||y<70||x>worldW-70||y>worldH-70)return true;if(Math.hypot(x-(water.x+water.w/2),y-(water.y+water.h/2))<220)return true;return buildings.some(b=>x+12>b.x&&x-12<b.x+b.w&&y+8>b.y+32&&y-8<b.y+b.h)}
   const worldW=3000,worldH=2300;
   window.addEventListener("keydown",e=>{
-    if(e.ctrlKey&&e.shiftKey&&e.code==="Digit5"){e.preventDefault();e.stopPropagation();keys.clear();if(started)openAdminGate();return;}
+    if(e.ctrlKey&&e.shiftKey&&(e.code==="Digit5"||e.key==="%")){e.preventDefault();e.stopPropagation();keys.clear();if(started)openAdminGate();return;}
     const k=e.key.toLowerCase();
     if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();
     if($("admin-gate")&&!$("admin-gate").classList.contains("hidden")&&e.key==="Escape"){closeAdminGate();return;}
@@ -465,10 +465,10 @@
       put(6,16,12,9,cloth);put(4,17,4,7,dark);put(16,17,4,7,dark);
       put(4,22,3,3,skin);put(17,22,3,3,skin);put(8,16,8,2,"#e7d4a4");
       put(10,19,4,4,"#d7c18d");put(9,14,6,4,skin);
-      put(6,5,12,10,hair);put(5,8,2,7,hair);put(17,8,2,7,hair);
+      if(p.style==="短髪"){put(6,5,12,7,hair);put(5,8,2,4,hair);put(17,8,2,4,hair);}else{put(6,5,12,10,hair);put(5,8,2,7,hair);put(17,8,2,7,hair);if(p.style==="長髪"){put(5,13,3,8,hair);put(16,13,3,8,hair);}if(p.style==="ポニーテール"){put(17,7,4,8,hair);put(19,13,3,5,hair);}}
       put(7,7,10,9,skin);put(8,10,2,2,"#fff4d9");put(14,10,2,2,"#fff4d9");
       put(9,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");
-      put(15,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");put(11,13,2,1,"#a94e50");
+      put(15,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");put(11,13,2,1,"#a94e50");if(p.accessory==="帽子"){put(5,3,14,3,"#9a633e");put(8,1,8,3,"#c18b4d");}
       if(p.role==="衛兵"){put(5,4,14,3,"#5e8052");put(8,2,8,3,"#d8c69a");}
       else if(p.role==="鍛冶師"){put(5,4,14,3,"#5d5048");put(8,6,8,1,"#a68a69");}
       else put(6,4,12,3,hair);
@@ -558,9 +558,9 @@
   function openAdminPanel(){const select=$("admin-building");select.innerHTML="";buildings.forEach((b,i)=>{const o=document.createElement("option");o.value=String(i);o.textContent=b.name+" ("+(i+1)+")";select.appendChild(o);});$("admin-gold").value=String(Math.max(0,Number(gameData.gold)||0));$("admin-hair").value=player.hair;$("admin-skin").value=player.skin;$("admin-eyes").value=player.eyes;$("admin-style").value=player.style;$("admin-color").value=player.outfit;$("admin-accessory").value=player.accessory;loadAdminBuildingFields();$("admin-status").textContent="";$("admin-panel").classList.remove("hidden");}
   function loadAdminBuildingFields(){const b=buildings[Number($("admin-building").value)||0];if(b){$("admin-building-x").value=String(Math.round(b.x));$("admin-building-y").value=String(Math.round(b.y));}}
   $("admin-building").addEventListener("change",loadAdminBuildingFields);
-  $("admin-gold-save").addEventListener("click",async()=>{const gold=Math.max(0,Math.min(2000000000,Math.floor(Number($("admin-gold").value)||0)));gameData.gold=gold;await saveGameData();$("admin-gold").value=String(gold);$("admin-status").textContent="GOLDを保存しました。";});
-  $("admin-building-save").addEventListener("click",async()=>{const i=Number($("admin-building").value),b=buildings[i],x=Number($("admin-building-x").value),y=Number($("admin-building-y").value);if(!b||!Number.isFinite(x)||!Number.isFinite(y)){$("admin-status").textContent="X・Yを正しく入力してね。";return;}b.x=Math.max(80,Math.min(worldW-160,x));b.y=Math.max(80,Math.min(worldH-160,y));gameData.buildingPositions=gameData.buildingPositions||{};gameData.buildingPositions[b.name+"@"+i]={x:b.x,y:b.y};await saveGameData();$("admin-status").textContent=b.name+"の位置を保存しました。";});
-  $("admin-appearance-save").addEventListener("click",async()=>{player.hair=$("admin-hair").value;player.skin=$("admin-skin").value;player.eyes=$("admin-eyes").value;player.style=$("admin-style").value;player.outfit=$("admin-color").value;player.accessory=$("admin-accessory").value;player.customAppearance=true;gameData.appearance={hair:player.hair,skin:player.skin,eyes:player.eyes,style:player.style,color:player.outfit,accessory:player.accessory};gameData.customAppearance=true;await saveGameData();$("admin-status").textContent="キャラクターの見た目を保存しました。";});
+  $("admin-gold-save").addEventListener("click",async()=>{const gold=Math.max(0,Math.min(2000000000,Math.floor(Number($("admin-gold").value)||0)));gameData.gold=gold;const ok=await saveGameData();$("admin-gold").value=String(gold);$("admin-status").textContent=ok?"GOLDを保存しました。":"保存に失敗しました。通信を確認してね。";});
+  $("admin-building-save").addEventListener("click",async()=>{const i=Number($("admin-building").value),b=buildings[i],x=Number($("admin-building-x").value),y=Number($("admin-building-y").value);if(!b||!Number.isFinite(x)||!Number.isFinite(y)){$("admin-status").textContent="X・Yを正しく入力してね。";return;}b.x=Math.max(80,Math.min(worldW-160,x));b.y=Math.max(80,Math.min(worldH-160,y));gameData.buildingPositions=gameData.buildingPositions||{};gameData.buildingPositions[b.name+"@"+i]={x:b.x,y:b.y};const ok=await saveGameData();$("admin-status").textContent=ok?b.name+"の位置を保存しました。":"保存に失敗しました。通信を確認してね。";});
+  $("admin-appearance-save").addEventListener("click",async()=>{player.hair=$("admin-hair").value;player.skin=$("admin-skin").value;player.eyes=$("admin-eyes").value;player.style=$("admin-style").value;player.outfit=$("admin-color").value;player.accessory=$("admin-accessory").value;player.customAppearance=true;gameData.appearance={hair:player.hair,skin:player.skin,eyes:player.eyes,style:player.style,color:player.outfit,accessory:player.accessory};gameData.customAppearance=true;const ok=await saveGameData();$("admin-status").textContent=ok?"キャラクターの見た目を保存しました。":"保存に失敗しました。通信を確認してね。";});
   $("admin-close").addEventListener("click",()=>$("admin-panel").classList.add("hidden"));
   $("admin-password").addEventListener("keydown",e=>{if(e.key==="Escape")closeAdminGate();});
 
