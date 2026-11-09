@@ -565,8 +565,8 @@
     const colors=["#367d50","#47965a","#5baa65","#79bd72"];
     [[-13,-51,22], [8,-61,24],[-3,-78,25],[-23,-70,19],[20,-43,18]].forEach((v,i)=>{ctx.fillStyle=colors[(i+index)%4];ctx.beginPath();ctx.ellipse(p.x+v[0],p.y+v[1],v[2],v[2]*.83,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="rgba(203,239,151,.25)";ctx.beginPath();ctx.ellipse(p.x+v[0]-v[2]*.28,p.y+v[1]-v[2]*.3,v[2]*.35,v[2]*.2,-.5,0,Math.PI*2);ctx.fill();});
   }
-  function drawAnimePerson(p,isPlayer=false){
-    const q=isoProject(p.x,p.y);if(q.x<-80||q.x>W+80||q.y<-100||q.y>H+100)return;
+  function drawAnimePerson(p,isPlayer=false,screenSpace=false){
+    const q=screenSpace?{x:p.x,y:p.y}:isoProject(p.x,p.y);if(q.x<-80||q.x>W+80||q.y<-100||q.y>H+100)return;
     const moving=!!p.moving,phase=moving?Math.sin((p.walkClock||0)*10):0,step=phase*4;
     const skin={"明るい肌":"#f2c9a5","普通の肌":"#dca77f","褐色肌":"#b97858","色白":"#f5d9c2"}[p.skin]||"#f0c6a0";
     const hair={"栗色":"#70442f","金髪":"#e2b85c","黒髪":"#302a35","銀髪":"#c4cbd0","茶色":"#89543a","赤髪":"#a84e42","青髪":"#4e79a4","緑髪":"#58804c"}[p.hair]||"#70442f";
@@ -636,7 +636,7 @@
     ctx.font="14px 'Noto Sans JP',sans-serif";ctx.fillText("HP  "+battle.hp+" / "+battle.maxHp,32,73);ctx.fillText("MP  "+battle.mp+" / "+battle.maxMp,32,101);
     const bar=(x,y,w,v,max,color)=>{ctx.fillStyle="#77634d";ctx.beginPath();ctx.roundRect(x,y,w,10,5);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x+2,y+2,(w-4)*Math.max(0,v/max),6,3);ctx.fill();};
     bar(32,80,210,battle.hp,battle.maxHp,"#d75c58");bar(32,108,210,battle.mp,battle.maxMp,"#4b9fca");
-    drawAnimePerson({...player,x:battle.playerX,y:438-battle.playerY,moving:false},true);
+    drawAnimePerson({...player,x:battle.playerX,y:438-battle.playerY,moving:false},true,true);
     battle.enemies.forEach((e,i)=>{if(e.hp<=0)return;const ex=650+(i%3)*92,ey=420-Math.floor(i/3)*72;
       ctx.fillStyle="rgba(48,60,45,.25)";ctx.beginPath();ctx.ellipse(ex,ey+9,e.boss?43:31,10,0,0,Math.PI*2);ctx.fill();
       if(e.name.includes("スライム")){ctx.fillStyle="#328d9c";ctx.beginPath();ctx.ellipse(ex,ey-14,30,26,0,Math.PI,Math.PI*2);ctx.quadraticCurveTo(ex+30,ey+12,ex,ey+13);ctx.quadraticCurveTo(ex-30,ey+12,ex-30,ey-14);ctx.fill();ctx.fillStyle="#a7e3d9";ctx.beginPath();ctx.ellipse(ex-8,ey-29,12,6,-.3,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(ex-9,ey-13,5,0,Math.PI*2);ctx.arc(ex+9,ey-13,5,0,Math.PI*2);ctx.fill();ctx.fillStyle="#35545c";ctx.beginPath();ctx.arc(ex-8,ey-12,2,0,Math.PI*2);ctx.arc(ex+10,ey-12,2,0,Math.PI*2);ctx.fill();}
