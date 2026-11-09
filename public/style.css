@@ -551,3 +551,17 @@ body[data-graphic-style="pixel8"] button{border-radius:0}
 body[data-graphic-style="pixel8"] .hud-player,body[data-graphic-style="pixel8"] .hud-help,body[data-graphic-style="pixel8"] .notice{background:#263342;color:#f1e6c2;border:2px solid #9b8c62;border-radius:0;box-shadow:4px 4px 0 #101923}
 body[data-graphic-style="pixel8"] .bottom-info{color:#b7d28d}
 body[data-graphic-style="pixel8"] .graphic-style-label{background:#354b4c;border:2px solid #829c78;border-radius:0;color:#e1e8b5}
+
+
+/* Candidate 3: miniature 2.5D diorama presentation */
+body[data-graphic-style="diorama25d"]{background:#263b3c;color:#f3e7c7}
+body[data-graphic-style="diorama25d"] .canvas-wrap{border:5px solid #8e7956;border-radius:10px;background:#405b51;box-shadow:0 8px 0 #182b2b,0 14px 28px rgba(0,0,0,.28)}
+body[data-graphic-style="diorama25d"] canvas{image-rendering:pixelated;image-rendering:crisp-edges;filter:none}
+body[data-graphic-style="diorama25d"] .start-card{background:#e4d2aa!important;border:4px solid #8d704c!important;border-radius:12px!important;box-shadow:0 8px 0 #604d3b!important;color:#44392e!important}
+body[data-graphic-style="diorama25d"] .start-card h2{color:#6d5940!important}
+body[data-graphic-style="diorama25d"] .intro{color:#62513d!important}
+body[data-graphic-style="diorama25d"] input,body[data-graphic-style="diorama25d"] select{background:#fff1d1!important;border:2px solid #9a8057!important;border-radius:7px!important;color:#44392e!important}
+body[data-graphic-style="diorama25d"] button{border-radius:8px}
+body[data-graphic-style="diorama25d"] .hud-player,body[data-graphic-style="diorama25d"] .hud-help,body[data-graphic-style="diorama25d"] .notice{background:#e5d4ae;color:#44392e;border:2px solid #9b8058;border-radius:9px;box-shadow:0 4px 0 #66513b}
+body[data-graphic-style="diorama25d"] .bottom-info{color:#e1d3a8}
+body[data-graphic-style="diorama25d"] .graphic-style-label{background:#e4d2aa;border:2px solid #9b8058;border-radius:8px;color:#51412f}
