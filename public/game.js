@@ -479,8 +479,6 @@
     ctx.restore();
   }
 
-  function drawNpcPixelPerson(p)
-
   function drawNpcPixelPerson(p){const q=project(p.x,p.y);drawStorybookPersonAt(q.x,q.y,p,false,1.05);}
 
     function drawPixelPerson(p,isPlayer=false){const q=project(p.x,p.y);drawStorybookPersonAt(q.x,q.y,p,isPlayer,1.12);}
