@@ -272,6 +272,16 @@
     ].join(""));
   }
   function renderRanking() {
+    return section("ランキング",'<div class="ranking-controls"><button type="button" data-ranking="level">総レベル</button><button type="button" data-ranking="gold">所持GOLD</button><button type="button" data-ranking="minigame">ミニゲーム</button></div><p id="ranking-self">カテゴリを選んでランキングを読み込んでね。</p><div id="ranking-results"></div>')+
+      section("ランキングのルール",[
+        row("集計方式","ゲーム開始からの累計記録"),
+        row("表示順位","上位50人。圏外は「圏外」表示"),
+        row("週次確定","毎週"),
+        row("保存履歴","直近10回"),
+        empty("週次スナップショットと報酬配布は未実装です。")
+      ].join(""));
+  }
+
     const snapshots=Array.isArray(data.weeklyRankingSnapshots)?data.weeklyRankingSnapshots:[];
     return section("全体ランキング",[
       row("集計方式","ゲーム開始からの累計記録"),
@@ -306,6 +316,19 @@
       data.jobs[selected] ||= {level:1,xp:0};
       data.activeJob=selected;data.lastJobChange=today;
       await save();render();say(selected+"に変更しました。");return;
+    }
+    const rankingButton=event.target.closest("[data-ranking]");
+    if(rankingButton){
+      const resultBox=content.querySelector("#ranking-results"),selfBox=content.querySelector("#ranking-self");
+      if(!resultBox||!selfBox)return;
+      selfBox.textContent="ランキングを読み込んでいます…";
+      try{
+        const response=await fetch("/api/rankings?category="+encodeURIComponent(rankingButton.dataset.ranking),{credentials:"same-origin"});
+        const result=await response.json();if(!response.ok)throw new Error(result.error||"読み込めませんでした");
+        selfBox.textContent="自分の順位："+result.myRank+" / 記録："+(result.myScore??"未記録")+" / 参加："+result.totalPlayers+"人";
+        resultBox.innerHTML='<ol>'+result.top.map(x=>'<li>'+esc(x.name)+' — '+Number(x.score).toLocaleString("ja-JP")+'</li>').join("")+'</ol>'||"ランキングデータはありません。";
+      }catch(error){selfBox.textContent=error.message;}
+      return;
     }
     const jobSkill=event.target.closest("[data-train-job]");
     const commonSkill=event.target.closest("[data-train-common]");

@@ -26,6 +26,10 @@ grant usage on schema public to service_role;
 grant all privileges on all tables in schema public to service_role;
 grant all privileges on all sequences in schema public to service_role;
 
+
+alter table public.game_saves add column if not exists level_record_at timestamptz not null default now();
+alter table public.game_saves add column if not exists gold_record_at timestamptz not null default now();
+
 create table if not exists public.chat_blocked_terms (
   id bigint generated always as identity primary key,
   term text not null unique,

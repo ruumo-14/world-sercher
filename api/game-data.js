@@ -38,14 +38,24 @@ module.exports = async function handler(req, res) {
       }
       const level = Math.max(1, Math.min(200, Math.floor(Number(data.level) || 1)));
       const gold = Math.max(0, Math.min(2000000000, Math.floor(Number(data.gold) || 0)));
+      const previousRows = await db("game_saves", {
+        select: "level,gold,level_record_at,gold_record_at",
+        user_id: "eq." + session.sub,
+        limit: "1",
+      });
+      const previous = previousRows?.[0] || {};
+      const now = new Date().toISOString();
+      const patch = {
+        game_data: { ...data, level, gold },
+        level,
+        gold,
+        updated_at: now,
+      };
+      if (level > Number(previous.level || 1)) patch.level_record_at = now;
+      if (gold > Number(previous.gold || 0)) patch.gold_record_at = now;
       await db("game_saves", { user_id: "eq." + session.sub }, {
         method: "PATCH",
-        body: {
-          game_data: { ...data, level, gold },
-          level,
-          gold,
-          updated_at: new Date().toISOString(),
-        },
+        body: patch,
       });
       return send(res, 200, { ok: true, level, gold });
     }
