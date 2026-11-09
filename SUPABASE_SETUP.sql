@@ -64,6 +64,13 @@ create table if not exists public.player_reports (
   created_at timestamptz not null default now()
 );
 
+alter table public.player_reports add column if not exists attachment_path text;
+alter table public.player_reports add column if not exists operator_reply text;
+alter table public.player_reports add column if not exists responded_at timestamptz;
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+values('bug-reports','bug-reports',false,2097152,array['image/png','image/jpeg','image/webp'])
+on conflict(id) do update set public=false,file_size_limit=2097152,allowed_mime_types=array['image/png','image/jpeg','image/webp'];
+
 create table if not exists public.market_listings (
   id uuid primary key default gen_random_uuid(),
   seller_user_id uuid not null references public.game_users(id) on delete cascade,
@@ -381,9 +388,3 @@ grant all privileges on public.friend_requests,public.player_friends,public.play
 grant usage,select on all sequences in schema public to service_role;
 
 
-alter table public.player_reports add column if not exists attachment_path text;
-alter table public.player_reports add column if not exists operator_reply text;
-alter table public.player_reports add column if not exists responded_at timestamptz;
-insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values('bug-reports','bug-reports',false,2097152,array['image/png','image/jpeg','image/webp'])
-on conflict(id) do update set public=false,file_size_limit=2097152,allowed_mime_types=array['image/png','image/jpeg','image/webp'];
