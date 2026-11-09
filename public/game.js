@@ -541,6 +541,28 @@
       }
     }else if(!player.moving)encounterTimer=Math.max(0,encounterTimer-dt*.35);
   }
+  // Visual style experiments: cycle the complete game presentation without touching save data.
+  const graphicStyles=[
+    {id:"anime",name:"アニメRPG風",filter:"saturate(1.28) contrast(1.13) brightness(1.04)",frame:"anime"},
+    {id:"diorama",name:"立体ジオラマ風",filter:"saturate(1.08) contrast(1.08) brightness(1.02)",frame:"diorama"},
+    {id:"watercolor",name:"水彩イラスト風",filter:"saturate(.78) contrast(.94) sepia(.12) brightness(1.04)",frame:"watercolor"},
+    {id:"dark",name:"ダークファンタジー風",filter:"saturate(.78) contrast(1.2) brightness(.82)",frame:"dark"}
+  ];
+  let graphicStyleIndex=0;
+  function applyGraphicStyle(){
+    const style=graphicStyles[graphicStyleIndex],wrap=$("game").parentElement;
+    document.body.dataset.graphicStyle=style.frame;
+    wrap.dataset.graphicStyle=style.frame;
+    $("graphic-style-switch").textContent="グラフィック："+style.name+" ↻";
+    $("graphic-style-switch").setAttribute("aria-label","次のグラフィックへ。現在："+style.name);
+    $("game").style.filter=style.filter;
+  }
+  $("graphic-style-switch").addEventListener("click",()=>{
+    graphicStyleIndex=(graphicStyleIndex+1)%graphicStyles.length;
+    applyGraphicStyle();
+    say("グラフィックを「"+graphicStyles[graphicStyleIndex].name+"」に変更しました。");
+  });
+  applyGraphicStyle();
   function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
   document.querySelectorAll(".panel-tab").forEach(b=>b.addEventListener("click",()=>{}));
   $("open-adventurer").addEventListener("click",()=>{$("adventurer-panel").classList.remove("hidden")});$("close-adventurer").addEventListener("click",()=>$("adventurer-panel").classList.add("hidden"));
