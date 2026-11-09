@@ -2,7 +2,7 @@
 (() => {
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
   const W=960,H=600; canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=false;
-  const worldTileset=new Image();worldTileset.src="/assets/world-sercher-tileset.svg";window.WS_WORLD_TILESET=worldTileset;
+  const worldTileset=new Image();worldTileset.src="/assets/world-sercher-user-atlas.png";window.WS_WORLD_TILESET=worldTileset;
   let interior=null;
   // Load the approved protagonist walk sheet; field movement logic is intentionally preserved.
   const playerWalkSheet=new Image();
@@ -354,9 +354,10 @@
   function drawTree(wx,wy,index=0){
     const tp=project(wx,wy);
     if(worldTileset.complete&&worldTileset.naturalWidth){
-      const variants=[12,128,244],sx=variants[index%variants.length];
+      const variants=[{x:12,y:650,w:176,h:205},{x:190,y:650,w:190,h:205},{x:385,y:650,w:205,h:205},{x:600,y:650,w:190,h:205},{x:0,y:860,w:170,h:160},{x:175,y:860,w:175,h:160},{x:350,y:860,w:175,h:160}];
+      const a=variants[index%variants.length];
       ctx.save();ctx.imageSmoothingEnabled=false;
-      ctx.drawImage(worldTileset,sx,164,100,110,tp.x-38,tp.y-82,76,84);
+      ctx.drawImage(worldTileset,a.x,a.y,a.w,a.h,tp.x-39,tp.y-86,78,92);
       ctx.restore();return;
     }
     const p=project(wx,wy),x=p.x,y=p.y;if(x<-70||y<-90||x>W+70||y>H+70)return;
@@ -375,11 +376,29 @@
     if(x<-170||y<-170||x>W+170||y>H+170)return;
     const w=Math.max(66,Math.round(b.w*.82)),h=Math.max(58,Math.round(b.h*.72)),type=b.type;
     if(worldTileset.complete&&worldTileset.naturalWidth){
-      const variants=[8,200,392,584],sx=variants[index%variants.length];
+      const atlas={
+        "冒険者ギルド":[0,0,270,205],
+        "鍛冶屋":[275,0,265,205],
+        "道具屋":[535,210,210,200],
+        "住民の家":[810,0,260,205],
+        "宿屋":[1080,0,245,205],
+        "武器屋":[0,210,270,205],
+        "酒場":[280,210,250,205],
+        "市場":[535,210,210,200],
+        "銀行":[755,210,235,205],
+        "仕立て屋":[1000,210,245,205],
+        "服飾店":[1250,210,285,205],
+        "農家の作業小屋":[0,420,290,215],
+        "理髪店":[300,420,230,205]
+      };
+      const a=atlas[b.name]||atlas["住民の家"];
+      const maxW=Math.max(82,w+28),maxH=Math.max(76,h+48);
+      const scale=Math.min(maxW/a[2],maxH/a[3]);
+      const dw=a[2]*scale,dh=a[3]*scale;
       ctx.save();ctx.imageSmoothingEnabled=false;
-      ctx.drawImage(worldTileset,sx,8,182,124,x-w/2-8,y-h/2-22,w+16,h+28);
+      ctx.drawImage(worldTileset,a[0],a[1],a[2],a[3],Math.round(x-dw/2),Math.round(y-dh/2-8),Math.round(dw),Math.round(dh));
       ctx.restore();
-      if(b.name!=="住民の家"){ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#493a30";ctx.strokeText(b.name,x,y-h/2-34);ctx.fillStyle="#fff2c8";ctx.fillText(b.name,x,y-h/2-34);ctx.restore();}
+      if(b.name!=="住民の家"){ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#493a30";ctx.strokeText(b.name,x,y-dh/2-14);ctx.fillStyle="#fff2c8";ctx.fillText(b.name,x,y-dh/2-14);ctx.restore();}
       return;
     }
     const palettes={guild:["#85483d","#b9654d","#e1bd83"],forge:["#555d63","#777b78","#a99b80"],inn:["#9a493e","#ca7551","#e6c18b"],market:["#a85d3e","#d88a4d","#ecd09a"],farm:["#82613a","#b18a4c","#e1c184"],bank:["#596d76","#8d9d9b","#d2c8a8"],home:["#88483d","#b8644c","#e4c28e"],shop:["#914e49","#c8785b","#e6c28c"]};
