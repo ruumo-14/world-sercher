@@ -260,3 +260,5 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 .chat-form input{flex:1;min-width:0;padding:10px;background:#14243b;border:1px solid #647c9b;border-radius:4px;color:#fff}
 .chat-form button{padding:8px 14px;background:#0875c8;border:2px solid #8bdcff;border-radius:5px;color:#fff;font-weight:700}
 #chat-status{min-height:18px;color:#d8e3f0;font-size:12px}
+
+.chat-tools{display:inline-flex;gap:4px;margin-left:8px}.chat-tools button{font-size:10px;padding:2px 5px;color:#dbe8f7;background:#2b4261;border:1px solid #607a9b;border-radius:3px}

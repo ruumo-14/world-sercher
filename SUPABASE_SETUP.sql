@@ -290,3 +290,5 @@ end $$;
 
 revoke all on function public.market_create_listing(uuid,text,text,jsonb,text,integer,bigint,bigint) from public, anon, authenticated;
 grant execute on function public.market_create_listing(uuid,text,text,jsonb,text,integer,bigint,bigint) to service_role;
+
+grant usage,select on all sequences in schema public to service_role;
