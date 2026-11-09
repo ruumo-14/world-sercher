@@ -379,3 +379,11 @@ alter table public.chat_group_members enable row level security;
 alter table public.group_chat_messages enable row level security;
 grant all privileges on public.friend_requests,public.player_friends,public.player_private_messages,public.chat_groups,public.chat_group_members,public.group_chat_messages to service_role;
 grant usage,select on all sequences in schema public to service_role;
+
+
+alter table public.player_reports add column if not exists attachment_path text;
+alter table public.player_reports add column if not exists operator_reply text;
+alter table public.player_reports add column if not exists responded_at timestamptz;
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+values('bug-reports','bug-reports',false,2097152,array['image/png','image/jpeg','image/webp'])
+on conflict(id) do update set public=false,file_size_limit=2097152,allowed_mime_types=array['image/png','image/jpeg','image/webp'];

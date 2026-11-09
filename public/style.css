@@ -284,3 +284,10 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 @media(max-width:760px){.panel-tabs{width:120px}.panel-content{margin-left:125px}.panel-tab{font-size:10px}}
 
 .group-member{display:inline-flex;gap:4px;align-items:center;margin:4px;padding:4px 7px;background:#172a43;border:1px solid #536985;border-radius:4px;font-size:12px}
+
+#bug-report-form{display:flex;flex-direction:column;gap:7px}
+#bug-report-form label{font-size:12px;color:#ffe5a4}
+#bug-report-form textarea{min-height:65px;resize:vertical;padding:8px;background:#14243b;color:#fff;border:1px solid #647c9b;border-radius:4px}
+#bug-report-form input,#bug-report-form select{padding:8px;background:#14243b;color:#fff;border:1px solid #647c9b;border-radius:4px}
+.bug-report-row{padding:8px 0;border-bottom:1px solid #40536d;font-size:12px;overflow-wrap:anywhere}
+.bug-report-row small{display:block;color:#b9c8da;margin-top:3px}
