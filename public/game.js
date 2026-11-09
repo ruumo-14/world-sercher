@@ -737,6 +737,8 @@
   function drawPaintedHouse(b,index=0){
     const p=sideProject(b.x+b.w/2,b.y+b.h),w=Math.max(92,b.w*.55),h=90+Math.min(65,b.h*.28),x=p.x-w/2,y=p.y-h;
     if(x>W+200||x+w<-200||y>H+100||y<-260)return;
+    // 建物を足元中央基準で縮小し、低解像度画面でも家が大きく見えすぎないようにする。
+    ctx.save();ctx.translate(p.x*.45,p.y*.45);ctx.scale(.55,.55);
     sideEllipse(p.x,p.y+8,w*.58,13,"rgba(43,61,44,.24)");
     // stone foundation and plaster walls
     ctx.fillStyle="#796451";ctx.fillRect(x+5,y+48,w-10,h-48);
@@ -756,6 +758,7 @@
     // chimney and smoke
     if(index%2===0){ctx.fillStyle="#98644d";ctx.fillRect(x+w*.72,y-42,14,38);for(let k=0;k<3;k++)sideEllipse(x+w*.77+k*7,y-53-k*9,7-k,5-k*.5,"rgba(247,244,222,.28)");}
     ctx.fillStyle="#fff4df";ctx.font="bold 12px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#654b3a";ctx.strokeText(b.name,p.x,y-48);ctx.fillText(b.name,p.x,y-48);
+    ctx.restore();
   }
   function drawPaintedTree(wx,wy,index=0){
     const p=sideProject(wx,wy);if(p.x<-100||p.x>W+100||p.y<-160||p.y>H+100)return;
@@ -770,7 +773,7 @@
     const skin={"明るい肌":"#f0c6a3","普通の肌":"#d9a17c","褐色肌":"#ad7056","色白":"#f5d9c5"}[p.skin]||"#edc3a0";
     const hair={"栗色":"#70432f","金髪":"#d8ad5e","黒髪":"#342d32","銀髪":"#c6c9c6","茶色":"#8b563c","赤髪":"#a44e43","青髪":"#4d7091","緑髪":"#5b7d4c"}[p.hair]||"#70432f";
     const cloth=p.outfit||p.color||"#507fb3",side=p.dir==="left"||p.dir==="right",back=p.dir==="up";
-    ctx.save();ctx.translate(q.x,q.y);sideEllipse(0,3,17,6,"rgba(43,57,43,.3)");
+    ctx.save();ctx.translate(q.x,q.y);ctx.scale(.55,.55);sideEllipse(0,3,17,6,"rgba(43,57,43,.3)");
     // legs, angled boots, and coat tails
     ctx.fillStyle="#584238";ctx.beginPath();ctx.moveTo(-7,-28);ctx.lineTo(-3+step,-5);ctx.lineTo(-12+step,-3);ctx.lineTo(-15,-25);ctx.closePath();ctx.fill();
     ctx.beginPath();ctx.moveTo(5,-28);ctx.lineTo(9-step,-5);ctx.lineTo(1-step,-3);ctx.lineTo(-1,-25);ctx.closePath();ctx.fill();
@@ -791,7 +794,7 @@
     if(p.accessory==="マント"){sidePath([{x:-10,y:-65},{x:-19,y:-29},{x:-9,y:-22},{x:1,y:-43}],"#75628d");}
     if(isPlayer){sideEllipse(12,-57,3,3,"#f3d17a");}
     ctx.restore();
-    if(p.name){ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#425347";ctx.strokeText(p.name,q.x,q.y-124);ctx.fillStyle="#fff7e5";ctx.fillText(p.name,q.x,q.y-124);}
+    if(p.name){ctx.font="bold 7px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=2;ctx.strokeStyle="#425347";ctx.strokeText(p.name,q.x,q.y-68);ctx.fillStyle="#fff7e5";ctx.fillText(p.name,q.x,q.y-68);}
   }
   function drawPaintedDecor(item){
     const [type,wx,wy]=item,p=sideProject(wx,wy);if(p.x<-70||p.x>W+70||p.y<-100||p.y>H+100)return;
