@@ -294,7 +294,7 @@ grant execute on function public.market_create_listing(uuid,text,text,jsonb,text
 grant usage,select on all sequences in schema public to service_role;
 
 create or replace function public.market_return_expired(p_user_id uuid)
-returns integer language plpgsql security definer set search_path=public as $
+returns integer language plpgsql security definer set search_path=public as $$
 declare
   v_listing public.market_listings%rowtype;
   v_count integer:=0;
