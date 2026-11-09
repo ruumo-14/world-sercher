@@ -215,7 +215,7 @@ begin
     where seller_user_id=p_user_id and status='active' and expires_at>now();
   if v_count>=5 then raise exception 'listing limit'; end if;
   if p_quantity<1 or p_unit_price<1 or p_listing_fee<0 then raise exception 'invalid listing'; end if;
-  select e into v_owned from jsonb_array_elements(coalesce(v_save.game_data->'inventory','[]'::jsonb)) e
+  select e into v_owned from jsonb_array_elements(coalesce(v_save.game_data->'inventory','[]'::jsonb)) as items(e)
     where e->>'id'=p_item_id limit 1;
   if v_owned is null then raise exception 'item not owned'; end if;
   v_owned_qty=coalesce((v_owned->>'quantity')::integer,1);
@@ -224,7 +224,7 @@ begin
   select coalesce(jsonb_agg(
     case when e->>'id'=p_item_id then jsonb_set(e,'{quantity}',to_jsonb(v_owned_qty-p_quantity),true) else e end
   ),'[]'::jsonb) into v_new_inventory
-  from jsonb_array_elements(coalesce(v_save.game_data->'inventory','[]'::jsonb)) e
+  from jsonb_array_elements(coalesce(v_save.game_data->'inventory','[]'::jsonb)) as items(e)
   where e->>'id'<>p_item_id or v_owned_qty-p_quantity>0;
   update public.game_saves set gold=gold-p_listing_fee,
     game_data=jsonb_set(jsonb_set(coalesce(game_data,'{}'::jsonb),'{gold}',to_jsonb(gold-p_listing_fee),true),'{inventory}',v_new_inventory,true),
