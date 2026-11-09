@@ -16,8 +16,33 @@
   const others=new Map(),keys=new Set();let started=false,authMode="login",gameData={},camera={x:0,y:0},lastMoveSent=0,lastPresenceSent=0,noticeTimer=null,lastFrame=0;
   let realtimeClient=null,realtimeChannel=null,realtimeId=null;
   const town={x:1600,y:1300};
+  // リーフェルの街区を道路沿いに整理。中央広場と東西の大通りを空ける。
   const buildings=[
-    ["冒険者ギルド",1900,850,190,145,"#d5b47b","guild"],["武器屋",980,1080,150,120,"#bd8860","shop"],["鍛冶屋",1120,1660,150,125,"#8c6b59","forge"],["道具屋",2180,1080,155,125,"#c48e5e","shop"],["宿屋",1050,1740,180,140,"#b77d57","inn"],["酒場",1260,1900,150,120,"#98664e","inn"],["市場",1980,1800,180,120,"#c19a62","market"],["銀行",2160,1980,140,115,"#b5a17a","bank"],["町長の家",980,1500,165,130,"#a78a71","home"],["あなたの家",1480,2050,175,140,"#9a7eaa","home"],["服飾店",2060,1660,145,120,"#b77b8b","shop"],["農家の作業小屋",2300,2120,150,120,"#a18b57","farm"],["理髪店",2360,900,130,110,"#a6a1a0","shop"],["仕立て屋",2280,1840,145,115,"#a87989","shop"],["訓練所",880,850,155,120,"#8c9a72","guild"],["住民の家",700,570,125,100,"#b48a62","home"],["住民の家",930,570,130,105,"#a98268","home"],["住民の家",2110,570,130,105,"#b58e67","home"],["住民の家",2350,620,125,100,"#a67f60","home"],["住民の家",2500,1050,125,105,"#b18c69","home"],["住民の家",2510,1900,135,105,"#a67f60","home"],["住民の家",2050,2160,135,105,"#b58e67","home"],["住民の家",1000,2130,130,105,"#ad8967","home"],["住民の家",700,1840,130,105,"#b18c69","home"]  ].map(([name,x,y,w,h,color,type])=>({name,x,y,w,h,color,type}));
+    ["冒険者ギルド",1260,760,250,195,"#d5b47b","guild"],
+    ["武器屋",2040,760,155,125,"#bd8860","shop"],
+    ["鍛冶屋",1010,1010,160,130,"#8c6b59","forge"],
+    ["道具屋",2290,1010,160,130,"#c48e5e","shop"],
+    ["宿屋",1010,1640,185,145,"#b77d57","inn"],
+    ["酒場",1260,1880,155,125,"#98664e","inn"],
+    ["市場",2040,1880,185,130,"#c19a62","market"],
+    ["銀行",2290,1640,150,120,"#b5a17a","bank"],
+    ["町長の家",790,1430,165,130,"#a78a71","home"],
+    ["あなたの家",1500,2110,175,140,"#9a7eaa","home"],
+    ["服飾店",2040,1640,150,125,"#b77b8b","shop"],
+    ["農家の作業小屋",2290,2110,155,125,"#a18b57","farm"],
+    ["理髪店",2290,760,140,115,"#a6a1a0","shop"],
+    ["仕立て屋",2290,1880,150,120,"#a87989","shop"],
+    ["訓練所",790,1010,160,125,"#8c9a72","guild"],
+    ["住民の家",790,650,130,105,"#b48a62","home"],
+    ["住民の家",1010,650,130,105,"#a98268","home"],
+    ["住民の家",1230,650,130,105,"#b58e67","home"],
+    ["住民の家",1820,650,130,105,"#a67f60","home"],
+    ["住民の家",2040,650,130,105,"#b18c69","home"],
+    ["住民の家",2290,650,130,105,"#a67f60","home"],
+    ["住民の家",790,2110,135,105,"#b58e67","home"],
+    ["住民の家",1010,2110,135,105,"#ad8967","home"],
+    ["住民の家",1820,2110,135,105,"#b18c69","home"]
+  ].map(([name,x,y,w,h,color,type])=>({name,x,y,w,h,color,type}));
   const npcDefs=[
     ["エミリア","受付",1460,955,"#c86d83","#8a513b"],["ガルド","鍛冶師",1330,1250,"#7c8790","#51443b"],["ミーナ","道具屋",1850,1230,"#d58d57","#6b4936"],["ノア","農家",1880,1880,"#82a65f","#78543b"],["ロイド","宿屋",2040,1430,"#b88b62","#68472f"],["アルベルト","町長",1300,1570,"#7d8caa","#75604b"],
     ["セラ","武器屋",1130,1245,"#bd6e68","#513b32"],["トーマス","銀行員",1550,1740,"#8b9b9a","#564536"],["リナ","服飾職人",1030,1570,"#c47a9b","#684638"],["バルド","衛兵",900,1190,"#758b6d","#4a392f"],["ユリウス","衛兵",2210,1370,"#758b6d","#4a392f"],["マルタ","市場商人",1780,1690,"#d2a65f","#67452f"],
@@ -168,7 +193,15 @@
   function setAuthMode(mode){authMode=mode;const reg=mode==="register";loginTab.classList.toggle("active",!reg);registerTab.classList.toggle("active",reg);nameWrap.classList.toggle("hidden",!reg);password.autocomplete=reg?"new-password":"current-password";password.minLength=reg?10:1;authSubmit.textContent=reg?"アカウントを作成 ✦":"ログイン ▶";authMessage.textContent=reg?"ユーザーIDと10文字以上のパスワードを設定してね。":"登録済みのユーザーIDとパスワードを入力してね。"}
   loginTab.addEventListener("click",()=>setAuthMode("login"));registerTab.addEventListener("click",()=>setAuthMode("register"));
   async function readGameData(){try{const r=await fetch("/api/game-data",{credentials:"same-origin"});if(r.ok){const j=await r.json();gameData=j.gameData||{};applySavedAdminSettings();}}catch(e){gameData={}}}
-  function applySavedAdminSettings(){const positions=gameData.buildingPositions||{};buildings.forEach((b,i)=>{const p=positions[b.name+"@"+i];if(p){if(Number.isFinite(Number(p.x)))b.x=Number(p.x);if(Number.isFinite(Number(p.y)))b.y=Number(p.y);}});}
+  function applySavedAdminSettings(){
+    // Bump layout version once so old scattered coordinates do not override the new town plan.
+    if(gameData.buildingLayoutVersion!==2){gameData.buildingPositions={};gameData.buildingSizes={};gameData.buildingLayoutVersion=2;saveGameData();}
+    const positions=gameData.buildingPositions||{},sizes=gameData.buildingSizes||{};
+    buildings.forEach((b,i)=>{const key=b.name+"@"+i,p=positions[key],s=sizes[key];
+      if(p){if(Number.isFinite(Number(p.x)))b.x=Number(p.x);if(Number.isFinite(Number(p.y)))b.y=Number(p.y);}
+      if(s){if(Number.isFinite(Number(s.w)))b.w=Math.max(80,Math.min(420,Number(s.w)));if(Number.isFinite(Number(s.h)))b.h=Math.max(70,Math.min(320,Number(s.h)));}
+    });
+  }
   async function saveGameData(){try{const r=await fetch("/api/game-data",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({gameData})});return r.ok}catch(e){return false}}
   function openCreation(){const panel=$("creation-panel");if(panel)panel.classList.remove("hidden")}
   function closeCreation(){const panel=$("creation-panel");if(panel)panel.classList.add("hidden")}
@@ -378,12 +411,12 @@
     const w=Math.max(66,Math.round(b.w*.82)),h=Math.max(58,Math.round(b.h*.72)),type=b.type;
     if(worldTileset.complete&&worldTileset.naturalWidth){
       const atlas={
-        "冒険者ギルド":[1,0,42,32],
+        "冒険者ギルド":[1,36,42,33],
         "鍛冶屋":[47,0,42,32],
         "道具屋":[138,0,37,32],
         "住民の家":[138,0,37,32],
         "宿屋":[182,0,38,32],
-        "武器屋":[1,36,42,33],
+        "武器屋":[1,0,42,32],
         "酒場":[47,36,42,33],
         "市場":[90,36,35,33],
         "銀行":[127,36,39,33],
@@ -556,10 +589,10 @@
   $("admin-gate-form").addEventListener("submit",e=>{e.preventDefault();if($("admin-password").value!==ADMIN_PASSWORD){$("admin-gate-message").textContent="パスワードが違います。";return;}$("admin-gate").classList.add("hidden");openAdminPanel();});
   $("admin-gate-cancel").addEventListener("click",closeAdminGate);
   function openAdminPanel(){const select=$("admin-building");select.innerHTML="";buildings.forEach((b,i)=>{const o=document.createElement("option");o.value=String(i);o.textContent=b.name+" ("+(i+1)+")";select.appendChild(o);});$("admin-gold").value=String(Math.max(0,Number(gameData.gold)||0));$("admin-hair").value=player.hair;$("admin-skin").value=player.skin;$("admin-eyes").value=player.eyes;$("admin-style").value=player.style;$("admin-color").value=player.outfit;$("admin-accessory").value=player.accessory;loadAdminBuildingFields();$("admin-status").textContent="";$("admin-panel").classList.remove("hidden");}
-  function loadAdminBuildingFields(){const b=buildings[Number($("admin-building").value)||0];if(b){$("admin-building-x").value=String(Math.round(b.x));$("admin-building-y").value=String(Math.round(b.y));}}
+  function loadAdminBuildingFields(){const b=buildings[Number($("admin-building").value)||0];if(b){$("admin-building-x").value=String(Math.round(b.x));$("admin-building-y").value=String(Math.round(b.y));$("admin-building-w").value=String(Math.round(b.w));$("admin-building-h").value=String(Math.round(b.h));}}
   $("admin-building").addEventListener("change",loadAdminBuildingFields);
   $("admin-gold-save").addEventListener("click",async()=>{const gold=Math.max(0,Math.min(2000000000,Math.floor(Number($("admin-gold").value)||0)));gameData.gold=gold;const ok=await saveGameData();$("admin-gold").value=String(gold);$("admin-status").textContent=ok?"GOLDを保存しました。":"保存に失敗しました。通信を確認してね。";});
-  $("admin-building-save").addEventListener("click",async()=>{const i=Number($("admin-building").value),b=buildings[i],x=Number($("admin-building-x").value),y=Number($("admin-building-y").value);if(!b||!Number.isFinite(x)||!Number.isFinite(y)){$("admin-status").textContent="X・Yを正しく入力してね。";return;}b.x=Math.max(80,Math.min(worldW-160,x));b.y=Math.max(80,Math.min(worldH-160,y));gameData.buildingPositions=gameData.buildingPositions||{};gameData.buildingPositions[b.name+"@"+i]={x:b.x,y:b.y};const ok=await saveGameData();$("admin-status").textContent=ok?b.name+"の位置を保存しました。":"保存に失敗しました。通信を確認してね。";});
+  $("admin-building-save").addEventListener("click",async()=>{const i=Number($("admin-building").value),b=buildings[i],x=Number($("admin-building-x").value),y=Number($("admin-building-y").value),w=Number($("admin-building-w").value),h=Number($("admin-building-h").value);if(!b||![x,y,w,h].every(Number.isFinite)){$("admin-status").textContent="X・Y・幅・高さを正しく入力してね。";return;}b.x=Math.max(80,Math.min(worldW-160,x));b.y=Math.max(80,Math.min(worldH-160,y));b.w=Math.max(80,Math.min(420,w));b.h=Math.max(70,Math.min(320,h));const key=b.name+"@"+i;gameData.buildingPositions=gameData.buildingPositions||{};gameData.buildingSizes=gameData.buildingSizes||{};gameData.buildingPositions[key]={x:b.x,y:b.y};gameData.buildingSizes[key]={w:b.w,h:b.h};const ok=await saveGameData();$("admin-status").textContent=ok?b.name+"の位置・大きさを保存しました。":"保存に失敗しました。通信を確認してね。";});
   $("admin-appearance-save").addEventListener("click",async()=>{player.hair=$("admin-hair").value;player.skin=$("admin-skin").value;player.eyes=$("admin-eyes").value;player.style=$("admin-style").value;player.outfit=$("admin-color").value;player.accessory=$("admin-accessory").value;player.customAppearance=true;gameData.appearance={hair:player.hair,skin:player.skin,eyes:player.eyes,style:player.style,color:player.outfit,accessory:player.accessory};gameData.customAppearance=true;const ok=await saveGameData();$("admin-status").textContent=ok?"キャラクターの見た目を保存しました。":"保存に失敗しました。通信を確認してね。";});
   $("admin-close").addEventListener("click",()=>$("admin-panel").classList.add("hidden"));
   $("admin-password").addEventListener("keydown",e=>{if(e.key==="Escape")closeAdminGate();});
