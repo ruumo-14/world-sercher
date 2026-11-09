@@ -315,7 +315,7 @@ begin
     v_count:=v_count+1;
   end loop;
   return v_count;
-end $;
+end $$;
 revoke all on function public.market_return_expired(uuid) from public,anon,authenticated;
 grant execute on function public.market_return_expired(uuid) to service_role;
 
