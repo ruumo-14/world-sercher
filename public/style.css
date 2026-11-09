@@ -506,3 +506,27 @@ body[data-graphic-style="anime3d"] .hud-player,body[data-graphic-style="anime3d"
 body[data-graphic-style="anime3d"] .bottom-info{color:#627653}
 .graphic-style-label{display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;background:#fff0cf;border:1px solid #d6ad72;color:#80552f;font-size:11px;font-weight:800;white-space:nowrap}
 @media(max-width:650px){.graphic-style-label{font-size:9px;padding:6px 8px}}
+
+
+/* Candidate 2: hand-painted 2D side-view fantasy world */
+body[data-graphic-style="painted2d"]{background:#dce7d1;color:#4f4337;font-family:'Noto Sans JP',serif}
+body[data-graphic-style="painted2d"] #app{max-width:1180px}
+body[data-graphic-style="painted2d"] .topbar{padding:10px 4px 14px}
+body[data-graphic-style="painted2d"] .brand{color:#5d4a3b;font-family:Georgia,serif;letter-spacing:.08em}
+body[data-graphic-style="painted2d"] .brand-mark{color:#b77a51}
+body[data-graphic-style="painted2d"] .online{color:#60775b}
+body[data-graphic-style="painted2d"] .online-dot{background:#76a56e;box-shadow:0 0 8px #9acb83}
+body[data-graphic-style="painted2d"] .game-shell{padding:16px;background:linear-gradient(145deg,#f5ecd9,#e2d1b2);border:2px solid #9b7958;border-radius:8px;box-shadow:0 8px 22px rgba(72,57,40,.2)}
+body[data-graphic-style="painted2d"] .game-heading h1{font-family:Georgia,'Noto Serif JP',serif;color:#624934;font-weight:700}
+body[data-graphic-style="painted2d"] .eyebrow{color:#9d7650}
+body[data-graphic-style="painted2d"] .location-chip{background:#eee0c3;border:1px solid #b99569;border-radius:3px;color:#71573c}
+body[data-graphic-style="painted2d"] .canvas-wrap{border:4px solid #806348;border-radius:3px;background:#a9c9c0;box-shadow:0 5px 15px rgba(67,54,40,.22)}
+body[data-graphic-style="painted2d"] canvas{image-rendering:auto;filter:none}
+body[data-graphic-style="painted2d"] .start-card{background:#f5ead4!important;border:2px solid #a98760!important;border-radius:5px!important;box-shadow:0 8px 22px rgba(68,51,34,.2)!important;color:#554332!important}
+body[data-graphic-style="painted2d"] .start-card h2{color:#684b35!important;font-family:Georgia,'Noto Serif JP',serif}
+body[data-graphic-style="painted2d"] .intro{color:#7d6850!important}
+body[data-graphic-style="painted2d"] input,body[data-graphic-style="painted2d"] select{background:#fff9ec!important;border:1px solid #b99a74!important;border-radius:3px!important;color:#594735!important}
+body[data-graphic-style="painted2d"] button{border-radius:4px}
+body[data-graphic-style="painted2d"] .hud-player,body[data-graphic-style="painted2d"] .hud-help,body[data-graphic-style="painted2d"] .notice{background:#f4e8d0;color:#5a4634;border:1px solid #a98a64;border-radius:4px;box-shadow:0 3px 8px rgba(63,52,39,.14)}
+body[data-graphic-style="painted2d"] .bottom-info{color:#607453}
+body[data-graphic-style="painted2d"] .graphic-style-label{background:#eee0c3;border-color:#b99569;color:#70563b}
