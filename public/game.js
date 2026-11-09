@@ -917,7 +917,7 @@
   }
 
   // Current full-art experiment: 3D anime fantasy. Next candidates will replace this renderer entirely.
-  document.body.dataset.graphicStyle="pixel8";
+  document.body.dataset.graphicStyle="diorama25d";
   function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
   document.querySelectorAll(".panel-tab").forEach(b=>b.addEventListener("click",()=>{}));
   $("open-adventurer").addEventListener("click",()=>{$("adventurer-panel").classList.remove("hidden")});$("close-adventurer").addEventListener("click",()=>$("adventurer-panel").classList.add("hidden"));
