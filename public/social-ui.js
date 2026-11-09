@@ -15,8 +15,9 @@
       const r=await fetch("/api/social?action=global",{credentials:"same-origin"});
       const j=await r.json();
       if(!r.ok)throw new Error(j.error||"チャットを読み込めません");
-      list.innerHTML=(j.messages||[]).map(m=>{
-        const tools=m.sender_user_id?'<span class="chat-tools" data-user="'+esc(m.sender_user_id)+'"><button type="button" data-block>ブロック</button><button type="button" data-report>通報</button></span>':"";
+      selfId=j.me||"";
+      list.innerHTML=(j.messages||[]).slice(-20).map(m=>{
+        const tools=m.sender_user_id!==selfId?'<span class="chat-tools" data-user="'+esc(m.sender_user_id)+'"><button type="button" data-block>ブロック</button><button type="button" data-report>通報</button></span>':"";
         const time=new Date(m.created_at).toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"});
         return '<div class="chat-line"><strong>'+esc(m.username)+'</strong>'+esc(m.body)+tools+'<time>'+time+'</time></div>';
       }).join("")||"<p>まだメッセージはありません。</p>";
