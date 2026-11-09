@@ -1,7 +1,10 @@
 "use strict";
 (() => {
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
-  const W=960,H=600; canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=true;
+  const W=960,H=600;
+  // 120×75の仮想画面を960×600へ拡大し、1ドットを8×8画面ピクセルにする。
+  const pixelView=document.createElement("canvas");pixelView.width=120;pixelView.height=75;
+  const pixelViewCtx=pixelView.getContext("2d"); canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=true;
   const worldTileset=new Image();worldTileset.src="/assets/world-sercher-user-atlas.png";window.WS_WORLD_TILESET=worldTileset;
   const storybookTexture=new Image();storybookTexture.src="/assets/storybook-paper.svg";
   // 新しいGBA風タイルセット（建物・芝生・道）
@@ -661,6 +664,14 @@
       objects.push({depth:player.y,draw:()=>drawPaintedPerson(player,true)});
       objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
     }
+    // 8px単位の超低解像度表示。ゲーム内部の座標・当たり判定は変更しない。
+    pixelViewCtx.clearRect(0,0,120,75);
+    pixelViewCtx.imageSmoothingEnabled=true;
+    pixelViewCtx.drawImage(canvas,0,0,120,75);
+    ctx.clearRect(0,0,W,H);
+    ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(pixelView,0,0,W,H);
+    ctx.imageSmoothingEnabled=true;
   }
 
 
@@ -827,7 +838,7 @@
   }
 
   // Current full-art experiment: 3D anime fantasy. Next candidates will replace this renderer entirely.
-  document.body.dataset.graphicStyle="painted2d";
+  document.body.dataset.graphicStyle="pixel8";
   function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
   document.querySelectorAll(".panel-tab").forEach(b=>b.addEventListener("click",()=>{}));
   $("open-adventurer").addEventListener("click",()=>{$("adventurer-panel").classList.remove("hidden")});$("close-adventurer").addEventListener("click",()=>$("adventurer-panel").classList.add("hidden"));
