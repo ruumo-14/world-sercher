@@ -358,3 +358,45 @@ canvas{image-rendering:auto;image-rendering:high-quality}
 .auth-tabs .auth-tab.active{background:#d8ad72;color:#503a2a}
 .auth-message{color:#91683d}
 #logout-button{background:#fff4df;color:#624a35;border-color:#b99570}
+
+
+/* World Sercher — unified watercolor picture-book interface */
+:root{color-scheme:light;--bg:#e8dfc8;--panel:#f4ead2;--line:#a98b68;--gold:#b98245;--muted:#796b56}
+body{background:radial-gradient(ellipse at 50% 0%,#f7efd9 0,#e9dfc7 54%,#d5c5a6 100%)!important;color:#574633!important}
+#app{max-width:1180px}
+.topbar{color:#624b36}
+.brand{color:#644a34;letter-spacing:.12em}
+.brand-mark{color:#b77d43;text-shadow:0 1px 0 #fff0c9}
+.online{color:#78664d}
+.online-dot{background:#83a36a;box-shadow:0 0 10px #a4bd82}
+.game-shell{background:linear-gradient(145deg,#f7efd9,#e8d7b7)!important;border:2px solid #b99a70!important;border-radius:22px!important;box-shadow:0 18px 48px rgba(88,65,40,.18),inset 0 0 0 5px rgba(255,249,229,.52)!important}
+.game-heading h1{color:#614832;font-family:'Noto Sans JP',sans-serif;font-weight:700;letter-spacing:.04em}
+.eyebrow{color:#a66f3e}
+.location-chip{background:#f3e7c9;border:1px solid #c7a77b;color:#705439}
+.canvas-wrap{border:5px solid #a17b53!important;border-radius:18px!important;background:#d8d0a8!important;box-shadow:inset 0 0 0 2px #f4e4c3,0 12px 28px rgba(82,62,39,.2)!important}
+canvas{image-rendering:auto!important;image-rendering:smooth!important}
+.overlay{background:rgba(69,52,35,.36)!important;backdrop-filter:blur(3px)}
+.start-card{background:linear-gradient(155deg,#fff6df,#ead4ad)!important;border:2px solid #b48a5e!important;border-radius:20px!important;box-shadow:0 18px 45px rgba(74,50,30,.25),inset 0 0 0 5px rgba(255,255,255,.35)!important;color:#5d4530}
+.start-card h2{color:#694a32;font-weight:700}
+.intro{color:#816b4e}
+.start-card label{color:#654c34}
+.start-card input{background:#fff9e9;border:1px solid #c6a77b;color:#57432f;border-radius:9px}
+.start-card input:focus{border-color:#ad7945;box-shadow:0 0 0 3px rgba(173,121,69,.13)}
+.start-card button{background:linear-gradient(#e9c98a,#c99555)!important;color:#4d3826!important;border:1px solid #a97843!important;border-radius:10px!important;box-shadow:0 3px 0 #a77a4c}
+.start-card button:active{transform:translateY(2px);box-shadow:0 1px 0 #a77a4c}
+.crest{border:2px solid #bd925c;color:#a76d3b;background:#fff3d4}
+.auth-tabs .auth-tab{background:#e5d4b4!important;color:#72543a!important;border:1px solid #b9976c!important;border-radius:9px!important}
+.auth-tabs .auth-tab.active{background:#c18c50!important;color:#fff7e5!important;border-color:#9c6c3e!important}
+.auth-message{color:#8a623c}
+.small-note{color:#8b7657}
+.hud-player,.hud-help{background:rgba(255,247,222,.94)!important;border:1px solid #b58d61!important;border-radius:10px!important;color:#634a34!important;box-shadow:0 3px 12px rgba(69,49,29,.12)}
+.avatar{background:#d7b16f;color:#4f3b28}
+.notice{background:rgba(255,247,224,.97)!important;border:2px solid #b48a5e!important;color:#60472f!important;border-radius:12px!important;box-shadow:0 8px 24px rgba(67,48,30,.2)}
+.bottom-info{color:#79694f}
+.mobile-controls button{background:#f1e4c7;border:1px solid #b9956b;color:#60472f}
+.mobile-controls .interact-button{background:#d7ad6d;color:#4f3925}
+#logout-button{background:#fff3d8;border:1px solid #b48a5e;color:#62472e;border-radius:9px}
+#open-adventurer{background:#d7ad6d;border:1px solid #a87b49;color:#4f3925;border-radius:9px}
+.adventurer-panel{background:#f4e8cd!important;border:2px solid #b48a5e!important;color:#5e4732!important;border-radius:16px!important}
+.battle-help{background:rgba(255,246,220,.9);color:#624b34;border:1px solid #b48a5e;border-radius:9px}
+@media(max-width:650px){.game-shell{padding:10px}.canvas-wrap{border-width:3px!important;border-radius:12px!important}}
