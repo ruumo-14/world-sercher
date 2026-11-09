@@ -282,3 +282,5 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 .skill-action{display:flex;align-items:center;gap:8px;border-bottom:1px solid #435773}
 .skill-action .record-row{flex:1}
 @media(max-width:760px){.panel-tabs{width:120px}.panel-content{margin-left:125px}.panel-tab{font-size:10px}}
+
+.group-member{display:inline-flex;gap:4px;align-items:center;margin:4px;padding:4px 7px;background:#172a43;border:1px solid #536985;border-radius:4px;font-size:12px}
