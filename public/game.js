@@ -353,13 +353,6 @@
   }
   function drawTree(wx,wy,index=0){
     const tp=project(wx,wy);
-    if(worldTileset.complete&&worldTileset.naturalWidth){
-      const variants=[{x:12,y:650,w:176,h:205},{x:190,y:650,w:190,h:205},{x:385,y:650,w:205,h:205},{x:600,y:650,w:190,h:205},{x:0,y:860,w:170,h:160},{x:175,y:860,w:175,h:160},{x:350,y:860,w:175,h:160}];
-      const a=variants[index%variants.length];
-      ctx.save();ctx.imageSmoothingEnabled=false;
-      ctx.drawImage(worldTileset,a.x,a.y,a.w,a.h,tp.x-39,tp.y-86,78,92);
-      ctx.restore();return;
-    }
     const p=project(wx,wy),x=p.x,y=p.y;if(x<-70||y<-90||x>W+70||y>H+70)return;
     const palettes=[["#285b38","#397b43","#63a34c","#9bc75b"],["#24583f","#347b4d","#5b9b50","#a0c969"],["#365f34","#4c8740","#78ad4e","#b2ce67"],["#28584b","#367c60","#5d9f67","#a2c979"]];
     const a=palettes[index%palettes.length];
@@ -377,19 +370,19 @@
     const w=Math.max(66,Math.round(b.w*.82)),h=Math.max(58,Math.round(b.h*.72)),type=b.type;
     if(worldTileset.complete&&worldTileset.naturalWidth){
       const atlas={
-        "冒険者ギルド":[0,0,270,205],
-        "鍛冶屋":[275,0,265,205],
-        "道具屋":[535,210,210,200],
-        "住民の家":[810,0,260,205],
-        "宿屋":[1080,0,245,205],
-        "武器屋":[0,210,270,205],
-        "酒場":[280,210,250,205],
-        "市場":[535,210,210,200],
-        "銀行":[755,210,235,205],
-        "仕立て屋":[1000,210,245,205],
-        "服飾店":[1250,210,285,205],
-        "農家の作業小屋":[0,420,290,215],
-        "理髪店":[300,420,230,205]
+        "冒険者ギルド":[1,0,42,32],
+        "鍛冶屋":[47,0,42,32],
+        "道具屋":[138,0,37,32],
+        "住民の家":[138,0,37,32],
+        "宿屋":[182,0,38,32],
+        "武器屋":[1,36,42,33],
+        "酒場":[47,36,42,33],
+        "市場":[90,36,35,33],
+        "銀行":[127,36,39,33],
+        "仕立て屋":[170,36,39,33],
+        "服飾店":[210,36,45,33],
+        "農家の作業小屋":[1,71,46,33],
+        "理髪店":[51,71,36,33]
       };
       const a=atlas[b.name]||atlas["住民の家"];
       const maxW=Math.max(82,w+28),maxH=Math.max(76,h+48);
