@@ -400,3 +400,59 @@ canvas{image-rendering:auto!important;image-rendering:smooth!important}
 .adventurer-panel{background:#f4e8cd!important;border:2px solid #b48a5e!important;color:#5e4732!important;border-radius:16px!important}
 .battle-help{background:rgba(255,246,220,.9);color:#624b34;border:1px solid #b48a5e;border-radius:9px}
 @media(max-width:650px){.game-shell{padding:10px}.canvas-wrap{border-width:3px!important;border-radius:12px!important}}
+
+
+/* World Sercher unified 16-bit JRPG interface */
+:root{
+  color-scheme:dark;
+  --bg:#171b27;--panel:#263248;--line:#6e7890;--gold:#f0ca78;--muted:#c2c9d0;
+}
+body{background:#171b27;color:#f4ecd7;font-family:'Nunito','Noto Sans JP',sans-serif}
+#app{width:min(1160px,calc(100% - 28px));padding:18px 0 28px}
+.brand{letter-spacing:.09em;color:#fff0c8}
+.brand-mark{color:#f2ca73}
+.online{color:#d5d9d4}
+.online-dot{background:#8ed18b;box-shadow:0 0 0 3px #8ed18b25}
+.game-shell{padding:16px;background:#28364b;border:3px solid #9a835b;border-radius:5px;box-shadow:0 0 0 3px #121a29,0 12px 30px #0008}
+.game-heading h1{color:#fff0c8;text-shadow:2px 2px #453b36;letter-spacing:.04em}
+.eyebrow{color:#eac879}
+.location-chip{background:#34485a;border:2px solid #7f8d82;border-radius:3px;color:#f5e7c6}
+.canvas-wrap{border:4px solid #5b4638;border-radius:2px;background:#6a9c52;box-shadow:inset 0 0 0 2px #e1c48a,0 5px 0 #151d2a,0 10px 18px #0007}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;image-rendering: -moz-crisp-edges}
+.overlay{background:#111b2bd9;backdrop-filter:none}
+.start-card{background:#2b3d50;border:3px solid #b69b66;border-radius:4px;box-shadow:0 0 0 3px #192639,0 12px 30px #0009}
+.start-card h2{color:#fff0c8;text-shadow:2px 2px #594738}
+.intro{color:#e1d5bc}
+.start-card label{color:#f0dfbd}
+.start-card input,.creation-card select{background:#17283a;border:2px solid #7d8a91;border-radius:2px;color:#fff5df}
+.start-card input:focus{border-color:#f0ca78}
+.start-card button{background:#e8c477;border:2px solid #fff0bd;border-radius:2px;color:#342e2a;box-shadow:inset 0 -3px #a77b43}
+.auth-tabs .auth-tab{background:#34485a;border:2px solid #718394;border-radius:2px;color:#fff0d0}
+.auth-tabs .auth-tab.active{background:#e8c477;border-color:#fff0bd;color:#342e2a}
+.auth-message{color:#f0d28d}
+.small-note{color:#c1c9c6}
+.hud-player,.hud-help{background:#1c2b3ceF;border:2px solid #b79a62;border-radius:2px;color:#fff0d0;box-shadow:2px 2px #172334}
+.avatar{background:#e9c779;color:#3d342d;border-radius:2px}
+.notice{background:#27374a;border:2px solid #e3bd70;border-radius:3px;color:#fff0d0;box-shadow:3px 3px #182335}
+.bottom-info{color:#c5c9c3}
+.mobile-controls button{background:#34495d;border:2px solid #8a9ba1;border-radius:3px;color:#fff0d0;box-shadow:inset 0 -3px #1d2a3b}
+.mobile-controls .interact-button{background:#e8c477;color:#342e2a;border-color:#fff0bd}
+#logout-button,#open-adventurer,#open-systems,#open-chat,#open-friends,#open-market,#open-bug-report{
+  background:#34495d;border:2px solid #8798a2;border-radius:3px;color:#fff0d0;box-shadow:inset 0 -2px #1d2a3b;
+}
+#open-adventurer{background:#e2bd70;color:#342e2a;border-color:#fff0bd}
+.adventurer-panel,.systems-panel,.social-panel{background:#1c2a3eF7;border:3px solid #b69b66;border-radius:3px;box-shadow:0 0 0 3px #101a2b,0 12px 30px #0009}
+.panel-head{border-bottom:2px solid #66798a}
+.panel-head h2,.systems-panel .panel-head h2{color:#fff0c8;text-shadow:2px 2px #3c342e}
+.panel-close,.panel-tab,.panel-action,.ws-tab{background:#34495d;border:2px solid #8798a2;border-radius:3px;color:#fff0d0;box-shadow:inset 0 -2px #1d2a3b}
+.panel-tab.active,.ws-tab.active{background:#3276a4;border-color:#b7e2ec;color:#fff}
+.panel-content{color:#f1e7d2}
+.panel-content .stat,.social-section,.ws-detail{background:#2a3b50;border:2px solid #657b8d;border-radius:3px;color:#f2e7ce}
+.panel-content h3,.social-section h3,.ws-detail h3{color:#f3d58f}
+.panel-content select,.chat-form input,.chat-messages,.chat-form input{background:#17283a;border:2px solid #6d8090;border-radius:2px;color:#fff0d0}
+.chat-line{border-color:#51677b;color:#f2e7d2}
+.chat-line strong{color:#f2d48d}
+.battle-help{background:#1c2b3c;border:2px solid #b69b66;border-radius:3px;color:#fff0d0}
+.battle-actions button,.battle-move button{background:#34495d;border:2px solid #8798a2;border-radius:3px;color:#fff0d0;box-shadow:inset 0 -3px #1d2a3b}
+.battle-actions button:active,.battle-move button:active{background:#e8c477;color:#342e2a}
+@media(max-width:650px){.game-shell{padding:8px}.game-heading h1{font-size:16px}.canvas-wrap{border-width:3px}}
