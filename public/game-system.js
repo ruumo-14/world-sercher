@@ -282,17 +282,6 @@
       ].join(""));
   }
 
-    const snapshots=Array.isArray(data.weeklyRankingSnapshots)?data.weeklyRankingSnapshots:[];
-    return section("全体ランキング",[
-      row("集計方式","ゲーム開始からの累計記録"),
-      row("カテゴリ","総レベル・所持GOLD・ミニゲーム"),
-      row("報酬集計","毎週"),
-      row("表示順位","上位50人。圏外は「圏外」表示"),
-      row("保存履歴",snapshots.length+" / 10回"),
-      empty("ランキング集計APIと週次報酬処理はまだ接続されていません。")
-    ].join(""));
-  }
-
   function render() {
     if(!ready) { content.innerHTML=empty("ログイン後にデータを読み込みます。"); return; }
     document.querySelectorAll(".panel-tab").forEach(button=>button.classList.toggle("active",button.dataset.tab===activeTab));
