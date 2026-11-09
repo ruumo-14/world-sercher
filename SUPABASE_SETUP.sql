@@ -94,31 +94,6 @@ create table if not exists public.market_payouts (
   claimed_at timestamptz
 );
 
-create or replace function public.market_create_listing(
-  p_user_id uuid, p_seller_name text, p_item_data jsonb, p_rarity text,
-  p_quantity integer, p_unit_price bigint, p_listing_fee bigint
-) returns jsonb language plpgsql security definer set search_path=public as $$
-declare
-  v_save public.game_saves%rowtype;
-  v_listing public.market_listings%rowtype;
-  v_count integer;
-begin
-  select * into v_save from public.game_saves where user_id=p_user_id for update;
-  if not found then raise exception 'player save missing'; end if;
-  select count(*) into v_count from public.market_listings
-    where seller_user_id=p_user_id and status='active' and expires_at>now();
-  if v_count>=5 then raise exception 'listing limit'; end if;
-  if p_quantity<1 or p_unit_price<1 or p_listing_fee<0 then raise exception 'invalid listing'; end if;
-  if v_save.gold<p_listing_fee then raise exception 'not enough gold'; end if;
-  update public.game_saves set gold=gold-p_listing_fee,
-    game_data=jsonb_set(coalesce(game_data,'{}'::jsonb),'{gold}',to_jsonb(greatest(0,gold-p_listing_fee)),true),
-    updated_at=now() where user_id=p_user_id;
-  insert into public.market_listings(seller_user_id,seller_name,item_data,rarity,quantity,unit_price)
-    values(p_user_id,left(p_seller_name,16),v_owned,p_rarity,p_quantity,p_unit_price)
-    returning * into v_listing;
-  return to_jsonb(v_listing);
-end $$;
-
 create or replace function public.market_buy_listing(
   p_buyer_id uuid, p_listing_id uuid, p_quantity integer
 ) returns jsonb language plpgsql security definer set search_path=public as $$
@@ -189,11 +164,9 @@ begin
   return v_total;
 end $$;
 
-revoke all on function public.market_create_listing(uuid,text,jsonb,text,integer,bigint,bigint) from public, anon, authenticated;
 revoke all on function public.market_buy_listing(uuid,uuid,integer) from public, anon, authenticated;
 revoke all on function public.market_cancel_listing(uuid,uuid) from public, anon, authenticated;
 revoke all on function public.market_claim_payouts(uuid) from public, anon, authenticated;
-grant execute on function public.market_create_listing(uuid,text,jsonb,text,integer,bigint,bigint) to service_role;
 grant execute on function public.market_buy_listing(uuid,uuid,integer) to service_role;
 grant execute on function public.market_cancel_listing(uuid,uuid) to service_role;
 grant execute on function public.market_claim_payouts(uuid) to service_role;
@@ -329,10 +302,6 @@ begin
 end $$;
 revoke all on function public.market_return_expired(uuid) from public,anon,authenticated;
 grant execute on function public.market_return_expired(uuid) to service_role;
-
-
--- Remove the obsolete prototype overload; inventory-backed listings are authoritative.
-drop function if exists public.market_create_listing(uuid,text,jsonb,text,integer,bigint,bigint);
 
 
 -- Friends and private/group chat.
