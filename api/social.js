@@ -6,6 +6,10 @@ const cleanText = value => typeof value === "string"
   ? value.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 50)
   : "";
 
+function hasUnsafeContact(text) {
+  return /https?:\/\/|\bwww\.|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|(?:\+?81[- ]?)?0\d{1,4}[- ]?\d{1,4}[- ]?\d{3,4}/i.test(text);
+}
+
 async function isBlockedTerm(text) {
   const rows = await db("chat_blocked_terms", { select: "term", active: "eq.true", limit: "200" });
   const normalized = text.toLocaleLowerCase("ja-JP");
@@ -51,8 +55,8 @@ module.exports = async function handler(req, res) {
       const message = cleanText(body.message);
       if (!message) return send(res, 400, { error: "メッセージを入力してね。" });
       if (message.length > 50) return send(res, 400, { error: "全体チャットは50文字までです。" });
-      if (await isBlockedTerm(message)) {
-        return send(res, 400, { error: "不適切な表現が含まれているため送信できません。" });
+      if (hasUnsafeContact(message) || await isBlockedTerm(message)) {
+        return send(res, 400, { error: "連絡先などの個人情報や不適切な表現は送信できません。" });
       }
       const recent = await db("global_chat_messages", {
         select: "created_at",
