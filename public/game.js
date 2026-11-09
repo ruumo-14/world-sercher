@@ -17,7 +17,7 @@
   const $=id=>document.getElementById(id);
   const startPanel=$("start-panel"),authForm=$("auth-form"),accountName=$("account-name"),password=$("account-password"),characterName=$("character-name"),nameWrap=$("character-name-wrap"),authMessage=$("auth-message"),authSubmit=$("auth-submit"),loginTab=$("login-tab"),registerTab=$("register-tab"),notice=$("notice"),hudName=$("hud-name"),onlineCount=$("online-count"),connectionState=$("connection-state");
   const player={id:null,name:"冒険者",x:1600,y:1300,speed:155,dir:"down",species:"人間",hair:"栗色",skin:"明るい肌",eyes:"青",style:"旅人",outfit:"#4f78a5",accessory:"なし"};
-  const others=new Map(),keys=new Set();let started=false,authMode="login",gameData={},camera={x:0,y:0},lastMoveSent=0,lastPresenceSent=0,noticeTimer=null,lastFrame=0;
+  const others=new Map(),keys=new Set(),pixelSpriteCache=new Map();let started=false,authMode="login",gameData={},camera={x:0,y:0},lastMoveSent=0,lastPresenceSent=0,noticeTimer=null,lastFrame=0;
   let realtimeClient=null,realtimeChannel=null,realtimeId=null;
   const town={x:1600,y:1300};
   // リーフェルの街区を道路沿いに整理。中央広場と東西の大通りを空ける。
@@ -55,7 +55,12 @@
     ["旅人アレン","旅人",720,950,"#7892b4","#4e392d"],["商人ベラ","旅商人",2380,1120,"#bd8b63","#614330"],["旅人ノル","旅人",700,1800,"#829a91","#53402e"],["行商人リック","行商人",2370,1580,"#b88c5e","#60432f"],["衛兵ロウ","衛兵",1600,600,"#718a6c","#48392e"],["衛兵ミラ","衛兵",2470,1430,"#718a6c","#48392e"],["羊飼いテオ","牧童",2030,2040,"#a58c5d","#624630"],["釣り人ネネ","釣り人",520,1580,"#7196a5","#654832"],["薬草師イリス","薬草師",850,1900,"#83a66d","#634735"],["パン屋オットー","パン職人",1700,1900,"#c38a61","#64442f"],["吟遊詩人ルカ","旅芸人",1780,780,"#a68bb8","#563d32"],["見習い冒険者","冒険者",1450,760,"#6e9ca9","#503c32"]
   ];
   const npcDirections=["down","left","up","right","down","right","up","left"];
-  const npcs=npcDefs.map((n,i)=>({id:i,name:n[0],role:n[1],x:n[2],y:n[3],color:n[4],hair:n[5],dir:npcDirections[i%npcDirections.length],phase:(i%5)*.7}));
+  const npcHair=["黒髪","金髪","栗色","銀髪","赤髪","茶色","青髪","緑髪"];
+  const npcStyles=["短髪","長髪","ポニーテール","旅人","短髪","長髪","ポニーテール","旅人"];
+  const npcSkin=["明るい肌","普通の肌","色白","褐色肌"];
+  const npcEyes=["青","緑","茶","紫"];
+  const npcAccessories=["なし","帽子","マント","眼鏡","スカーフ","エプロン","なし","帽子"];
+  const npcs=npcDefs.map((n,i)=>({id:i,isNpc:true,name:n[0],role:n[1],x:n[2],y:n[3],color:n[4],hair:npcHair[i%npcHair.length],skin:npcSkin[i%npcSkin.length],eyes:npcEyes[i%npcEyes.length],style:npcStyles[i%npcStyles.length],accessory:npcAccessories[i%npcAccessories.length],dir:npcDirections[i%npcDirections.length],phase:(i%5)*.7}));
   const water={x:460,y:1350,w:470,h:850};
   const pathPoints=[[-150,1300],[2800,1300],[1600,360],[1600,2360],[460,1350],[2700,1350]];
 
@@ -376,6 +381,37 @@
     drawFountain(1600,1320);
   }
 
+  // Town details make the streets feel lived-in without blocking player movement.
+  const townDecor=[
+    ["lamp",1180,1120],["lamp",2020,1120],["lamp",1180,1540],["lamp",2020,1540],
+    ["bench",1390,1150],["bench",1810,1510],["bench",1450,1780],
+    ["flower",1160,980],["flower",1910,980],["flower",1210,1830],["flower",2200,1780],["flower",1740,1090],["flower",1760,1570],
+    ["barrel",930,1170],["barrel",2230,1170],["barrel",1940,1850],["barrel",2220,2020],
+    ["sign",1480,900],["sign",1700,1760],["sign",880,1510],
+    ["crate",1080,1190],["crate",2170,1190],["crate",1900,2010],["crate",2110,2010],
+    ["stall",1950,1990],["stall",2160,1990],
+    ["flower",920,1780],["flower",1060,1870],["flower",2320,1680],["flower",2350,930]
+  ];
+  function drawTownDecor(item){
+    const [type,wx,wy]=item,p=project(wx,wy),x=p.x,y=p.y;
+    if(x<-60||y<-70||x>W+60||y>H+60)return;
+    ellipse(x,y+7,15,5,"#557d42");
+    if(type==="lamp"){
+      rect(x-3,y-30,6,35,"#65482f");rect(x-8,y-36,16,12,"#4b4438");rect(x-6,y-34,12,8,"#f0d48a");rect(x-2,y-31,4,3,"#fff0b8");rect(x-10,y-38,20,3,"#8e7147");
+    }else if(type==="bench"){
+      rect(x-19,y-9,38,7,"#765035");rect(x-17,y-2,34,5,"#b9854c");rect(x-15,y+3,4,8,"#65452f");rect(x+11,y+3,4,8,"#65452f");rect(x-20,y-12,40,3,"#d5ae70");
+    }else if(type==="flower"){
+      rect(x-2,y-1,4,8,"#477a3e");rect(x-8,y-7,5,5,"#f1c3d2");rect(x-3,y-10,5,5,"#f5e7a4");rect(x+3,y-7,5,5,"#e97863");rect(x-2,y-5,5,5,"#f5e9ca");rect(x+7,y+1,3,3,"#6b9d4b");
+    }else if(type==="barrel"){
+      rect(x-9,y-12,18,20,"#8b5b36");rect(x-7,y-10,14,16,"#b77c45");rect(x-10,y-8,20,3,"#61452f");rect(x-10,y+2,20,3,"#61452f");rect(x-3,y-9,2,14,"#d3a16a");
+    }else if(type==="sign"){
+      rect(x-2,y-22,4,28,"#755033");rect(x-13,y-22,26,13,"#77553b");rect(x-10,y-19,20,7,"#e3cf9e");rect(x-7,y-17,14,2,"#a26c43");
+    }else if(type==="crate"){
+      rect(x-11,y-11,22,18,"#8b5b36");rect(x-8,y-8,16,12,"#c08a4d");rect(x-8,y-8,3,12,"#765034");rect(x+5,y-8,3,12,"#765034");rect(x-8,y-2,16,2,"#765034");
+    }else if(type==="stall"){
+      rect(x-22,y-1,44,9,"#765137");rect(x-19,y-15,4,16,"#755035");rect(x+15,y-15,4,16,"#755035");rect(x-23,y-18,46,8,"#d6ad62");for(let k=-2;k<=2;k++)rect(x+k*9-3,y-18,6,8,k%2?"#f0e5c8":"#b85d4b");rect(x-18,y+1,36,5,"#b9854d");
+    }
+  }
   function drawFountain(wx,wy){
     const p=project(wx,wy),x=p.x,y=p.y;
     // Small square-edged stone fountain viewed from directly above.
@@ -462,7 +498,7 @@
 
   function drawPixelPerson(p,isPlayer=false){
     const q=project(p.x,p.y);
-    if(!(isPlayer&&p.customAppearance)&&playerWalkSheet.complete&&playerWalkSheet.naturalWidth){
+    if(!p.isNpc&&!(isPlayer&&p.customAppearance)&&playerWalkSheet.complete&&playerWalkSheet.naturalWidth){
       // Rows: front/down=0, left=1, right=2, back/up=3. Columns are the 3 walking poses.
       const dir=String(p.dir||"down");
       const row=dir.includes("left")?1:dir.includes("right")?2:(dir==="up"||dir==="up-left"||dir==="up-right")?3:0;
@@ -496,17 +532,22 @@
       if(p.style==="短髪"){put(6,5,12,7,hair);put(5,8,2,4,hair);put(17,8,2,4,hair);}else{put(6,5,12,10,hair);put(5,8,2,7,hair);put(17,8,2,7,hair);if(p.style==="長髪"){put(5,13,3,8,hair);put(16,13,3,8,hair);}if(p.style==="ポニーテール"){put(17,7,4,8,hair);put(19,13,3,5,hair);}}
       put(7,7,10,9,skin);put(8,10,2,2,"#fff4d9");put(14,10,2,2,"#fff4d9");
       put(9,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");
-      put(15,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");put(11,13,2,1,"#a94e50");if(p.accessory==="帽子"){put(5,3,14,3,"#9a633e");put(8,1,8,3,"#c18b4d");}
-      if(p.role==="衛兵"){put(5,4,14,3,"#5e8052");put(8,2,8,3,"#d8c69a");}
-      else if(p.role==="鍛冶師"){put(5,4,14,3,"#5d5048");put(8,6,8,1,"#a68a69");}
-      else put(6,4,12,3,hair);
+      put(15,10,1,2,p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":"#426b9a");put(11,13,2,1,"#a94e50");if(p.accessory==="帽子"){put(4,3,16,3,"#80543b");put(7,1,10,3,"#c18b4d");}
+      else if(p.accessory==="マント"){put(3,17,18,10,"#7a4b83");put(5,18,14,7,cloth);}
+      else if(p.accessory==="眼鏡"){put(7,10,4,2,"#d7d7cf");put(14,10,4,2,"#d7d7cf");put(11,10,3,1,"#6b6256");}
+      else if(p.accessory==="スカーフ"){put(7,15,10,3,"#e0b45d");put(15,17,3,5,"#c17c45");}
+      else if(p.accessory==="エプロン"){put(7,17,10,8,"#e8d8b2");put(9,18,6,2,"#b78a5b");}
+      if(p.role==="衛兵"){put(5,4,14,3,"#5e8052");put(8,2,8,3,"#d8c69a");put(6,17,12,7,"#738b64");}
+      else if(p.role==="鍛冶師"){put(5,4,14,3,"#5d5048");put(8,6,8,1,"#a68a69");put(7,17,10,8,"#5b5550");}
+      else if(p.role==="受付"||p.role==="町長"){put(6,4,12,3,"#d3b56e");}
+      else if(p.accessory==="なし")put(6,4,12,3,hair);
       put(7,7,3,1,"#ffffff");put(8,17,3,1,"#ffffff");
       sprite=c;pixelSpriteCache.set(key,sprite);if(pixelSpriteCache.size>260)pixelSpriteCache.delete(pixelSpriteCache.keys().next().value);
     }
     ctx.save();ctx.imageSmoothingEnabled=false;
     const bob=moving&&phase%2===1?-1:0;
-    ctx.drawImage(sprite,x,y+bob,32,40);ctx.restore();
-    rect(x+8,y+37,16,3,"#42623b");
+    ctx.drawImage(sprite,x-4,y-5+bob,40,48);ctx.restore();
+    rect(x+3,y+39,22,4,"#42623b");
   }
   function drawPlayerName(p){
     const q=project(p.x,p.y);
@@ -519,7 +560,8 @@
     ctx.clearRect(0,0,W,H);if(battle){drawBattle();return;}if(interior){drawInterior();return;}drawGround();
     const objects=[];
     for(const b of buildings)objects.push({depth:b.y+b.h,draw:()=>drawHouse(b,buildings.indexOf(b))});
-    for(let i=0;i<110;i++){const x=160+Math.floor(hash(i,23)*2700),y=180+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<420||(x>280&&x<620&&y>700&&y<2200))continue;objects.push({depth:y,draw:()=>drawTree(x,y,i)});}
+    for(let i=0;i<110;i++){const x=160+Math.floor(hash(i,23)*2700),y=180+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<420||(x>280&&x<620&&y>700&&y<2200)||buildings.some(b=>x>b.x-80&&x<b.x+b.w+80&&y>b.y-80&&y<b.y+b.h+80))continue;objects.push({depth:y,draw:()=>drawTree(x,y,i)});}
+    for(const item of townDecor)objects.push({depth:item[2],draw:()=>drawTownDecor(item)});
     for(const n of npcs)objects.push({depth:n.y,draw:()=>drawPixelPerson(n)});
     for(const p of others.values())objects.push({depth:p.y,draw:()=>{drawPixelPerson(p);drawPlayerName(p)}});
     objects.push({depth:player.y,draw:()=>{drawPixelPerson(player,true);drawPlayerName(player)}});
