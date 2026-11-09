@@ -738,7 +738,7 @@
     sidePath([{x:x-13,y:y+37},{x:x+w*.5,y:y-35},{x:x+w+13,y:y+37},{x:x+w-5,y:y+45},{x:x+w*.5,y:y-17},{x:x+5,y:y+45}],"#744d49","#523b38",3);
     sidePath([{x:x-6,y:y+32},{x:x+w*.5,y:y-30},{x:x+w*.5,y:y-18},{x:x+6,y:y+40}],"#b86f60");
     sidePath([{x:x+w*.5,y:y-30},{x:x+w+6,y:y+32},{x:x+w-6,y:y+40},{x:x+w*.5,y:y-18}],"#965750");
-    ctx.strokeStyle="rgba(241,185,144,.48)";ctx.lineWidth=2;for(let k=1;k<5;k++){const xx=x+w*.5+(w*.5)*(k/5);ctx.beginPath();ctx.moveTo(xx,y-20+(k*2),xx,y+28);ctx.stroke();}
+    ctx.strokeStyle="rgba(241,185,144,.48)";ctx.lineWidth=2;for(let k=1;k<5;k++){const xx=x+w*.5+(w*.5)*(k/5);ctx.beginPath();ctx.moveTo(xx,y-20+(k*2));ctx.lineTo(xx,y+28);ctx.stroke();}
     // door, warm windows and flower boxes
     ctx.fillStyle="#583d32";ctx.fillRect(p.x-13,p.y-54,26,54);ctx.fillStyle="#9d704b";ctx.fillRect(p.x-9,p.y-50,18,50);sideEllipse(p.x+5,p.y-27,2,2,"#f2d18b");
     for(const wx of [x+w*.22,x+w*.72]){ctx.fillStyle="#62463a";ctx.fillRect(wx-12,y+60,25,30);ctx.fillStyle="#8bc3c5";ctx.fillRect(wx-9,y+63,19,23);ctx.fillStyle="#f8e3ad";ctx.fillRect(wx,y+63,3,23);ctx.fillRect(wx-9,y+73,19,3);ctx.fillStyle="#80563d";ctx.fillRect(wx-15,y+91,31,5);sideEllipse(wx-5,y+88,3,3,"#e8a5a0");sideEllipse(wx+5,y+87,3,3,"#f0d28b");}
