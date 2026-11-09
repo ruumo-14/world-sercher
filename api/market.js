@@ -9,6 +9,10 @@ module.exports = async function handler(req, res) {
 
     if (req.method === "GET") {
       await db("rpc/market_return_expired", {}, { method: "POST", body: { p_user_id: session.sub } });
+      if (String(req.query?.action || "global") === "mine") {
+        const mine = await db("market_listings", { select: "id,seller_user_id,seller_name,item_data,rarity,quantity,unit_price,created_at,expires_at", seller_user_id: "eq." + session.sub, status: "eq.active", expires_at: "gt." + new Date().toISOString(), order: "created_at.desc", limit: "5" });
+        return send(res, 200, { listings: mine || [] });
+      }
       const rows = await db("market_listings", {
         select: "id,seller_user_id,seller_name,item_data,rarity,quantity,unit_price,created_at,expires_at",
         status: "eq.active",

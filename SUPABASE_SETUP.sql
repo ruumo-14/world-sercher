@@ -230,7 +230,7 @@ begin
     game_data=jsonb_set(jsonb_set(coalesce(game_data,'{}'::jsonb),'{gold}',to_jsonb(gold-p_listing_fee),true),'{inventory}',v_new_inventory,true),
     updated_at=now() where user_id=p_user_id;
   insert into public.market_listings(seller_user_id,seller_name,item_data,rarity,quantity,unit_price)
-    values(p_user_id,left(p_seller_name,16),p_item_data,p_rarity,p_quantity,p_unit_price)
+    values(p_user_id,left(p_seller_name,16),v_owned,p_rarity,p_quantity,p_unit_price)
     returning * into v_listing;
   return to_jsonb(v_listing);
 end $$;
@@ -319,3 +319,59 @@ end $;
 revoke all on function public.market_return_expired(uuid) from public,anon,authenticated;
 grant execute on function public.market_return_expired(uuid) to service_role;
 
+
+-- Remove the obsolete prototype overload; inventory-backed listings are authoritative.
+drop function if exists public.market_create_listing(uuid,text,jsonb,text,integer,bigint,bigint);
+
+
+-- Friends and private/group chat.
+create table if not exists public.friend_requests (
+ id uuid primary key default gen_random_uuid(),
+ sender_user_id uuid not null references public.game_users(id) on delete cascade,
+ receiver_user_id uuid not null references public.game_users(id) on delete cascade,
+ status varchar(16) not null default 'pending' check(status in ('pending','accepted','declined','expired')),
+ created_at timestamptz not null default now(),
+ expires_at timestamptz not null default (now() + interval '7 days'),
+ check(sender_user_id <> receiver_user_id)
+);
+create unique index if not exists friend_requests_pending_pair_idx on public.friend_requests(sender_user_id,receiver_user_id) where status='pending';
+create table if not exists public.player_friends (
+ user_id uuid not null references public.game_users(id) on delete cascade,
+ friend_user_id uuid not null references public.game_users(id) on delete cascade,
+ created_at timestamptz not null default now(), primary key(user_id,friend_user_id), check(user_id <> friend_user_id)
+);
+create table if not exists public.player_private_messages (
+ id bigint generated always as identity primary key,
+ sender_user_id uuid not null references public.game_users(id) on delete cascade,
+ receiver_user_id uuid not null references public.game_users(id) on delete cascade,
+ message_type varchar(8) not null default 'text' check(message_type in ('text','stamp')),
+ body text not null default '', stamp_id varchar(64), created_at timestamptz not null default now(),
+ check(sender_user_id <> receiver_user_id),
+ check((message_type='text' and length(body)>0) or (message_type='stamp' and stamp_id is not null))
+);
+create index if not exists player_private_messages_pair_idx on public.player_private_messages(sender_user_id,receiver_user_id,created_at desc);
+create table if not exists public.chat_groups (
+ id uuid primary key default gen_random_uuid(), owner_user_id uuid not null references public.game_users(id) on delete cascade,
+ name varchar(40) not null, created_at timestamptz not null default now()
+);
+create table if not exists public.chat_group_members (
+ group_id uuid not null references public.chat_groups(id) on delete cascade,
+ user_id uuid not null references public.game_users(id) on delete cascade,
+ joined_at timestamptz not null default now(), primary key(group_id,user_id)
+);
+create table if not exists public.group_chat_messages (
+ id bigint generated always as identity primary key, group_id uuid not null references public.chat_groups(id) on delete cascade,
+ sender_user_id uuid not null references public.game_users(id) on delete cascade,
+ message_type varchar(8) not null default 'text' check(message_type in ('text','stamp')),
+ body text not null default '', stamp_id varchar(64), created_at timestamptz not null default now(),
+ check((message_type='text' and length(body)>0) or (message_type='stamp' and stamp_id is not null))
+);
+create index if not exists group_chat_messages_recent_idx on public.group_chat_messages(group_id,created_at desc);
+alter table public.friend_requests enable row level security;
+alter table public.player_friends enable row level security;
+alter table public.player_private_messages enable row level security;
+alter table public.chat_groups enable row level security;
+alter table public.chat_group_members enable row level security;
+alter table public.group_chat_messages enable row level security;
+grant all privileges on public.friend_requests,public.player_friends,public.player_private_messages,public.chat_groups,public.chat_group_members,public.group_chat_messages to service_role;
+grant usage,select on all sequences in schema public to service_role;

@@ -262,3 +262,16 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 #chat-status{min-height:18px;color:#d8e3f0;font-size:12px}
 
 .chat-tools{display:inline-flex;gap:4px;margin-left:8px}.chat-tools button{font-size:10px;padding:2px 5px;color:#dbe8f7;background:#2b4261;border:1px solid #607a9b;border-radius:3px}
+
+#open-friends,#open-market{background:#344966;border:1px solid #8da9ce;border-radius:5px;color:#fff;padding:8px 11px;font-weight:700;cursor:pointer}
+.social-panel{position:absolute;z-index:25;inset:10px;display:flex;flex-direction:column;padding:12px;background:#101d31;border:3px solid #b6a06c;box-shadow:0 0 0 2px #172b45,0 12px 32px #000b;color:#fff;min-height:0}
+.social-panel.hidden{display:none}.social-body{display:grid;grid-template-columns:1fr 1fr;gap:10px;overflow:auto;min-height:0;padding-top:10px}
+.social-section{background:#1b2c46;border:1px solid #8199b8;border-radius:6px;padding:9px;min-width:0}.social-section h3{margin:0 0 8px;color:#ffe5a4}
+.friend-row,.market-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #40536d}
+.friend-row span,.market-row div{min-width:0;display:flex;flex-direction:column;gap:3px}.friend-row small,.market-row small{color:#b9c8da;font-size:11px}
+.friend-row button,.market-row button,.social-panel button{background:#28527b;color:#fff;border:1px solid #90b9dc;border-radius:4px;padding:6px 9px;cursor:pointer}
+.social-panel input,.social-panel select{max-width:100%;padding:8px;background:#14243b;color:#fff;border:1px solid #647c9b;border-radius:4px}
+.social-form{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0}#friends-status,#market-status{min-height:20px;color:#ffe5a4;font-size:12px}
+#friend-chat{height:170px;overflow:auto;background:#14243b;padding:8px;margin:8px 0;border-radius:4px}.friend-message{padding:5px;border-bottom:1px solid #40536d;overflow-wrap:anywhere}
+#market-listings,#market-mine{max-height:220px;overflow:auto}
+@media(max-width:700px){.social-panel{inset:4px;padding:7px}.social-body{grid-template-columns:1fr}.social-section{padding:7px}.market-row,.friend-row{font-size:12px}}
