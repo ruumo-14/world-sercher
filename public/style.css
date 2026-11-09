@@ -530,3 +530,24 @@ body[data-graphic-style="painted2d"] button{border-radius:4px}
 body[data-graphic-style="painted2d"] .hud-player,body[data-graphic-style="painted2d"] .hud-help,body[data-graphic-style="painted2d"] .notice{background:#f4e8d0;color:#5a4634;border:1px solid #a98a64;border-radius:4px;box-shadow:0 3px 8px rgba(63,52,39,.14)}
 body[data-graphic-style="painted2d"] .bottom-info{color:#607453}
 body[data-graphic-style="painted2d"] .graphic-style-label{background:#eee0c3;border-color:#b99569;color:#70563b}
+
+/* Candidate 3: ultra-low-resolution 8px pixel world */
+body[data-graphic-style="pixel8"]{background:#151d27;color:#e9e2c8;font-family:monospace}
+body[data-graphic-style="pixel8"] .brand{color:#e7dba9;letter-spacing:.08em}
+body[data-graphic-style="pixel8"] .brand-mark{color:#f3c65c}
+body[data-graphic-style="pixel8"] .online{color:#b7d28d}
+body[data-graphic-style="pixel8"] .online-dot{background:#a7d66b;box-shadow:0 0 7px #a7d66b}
+body[data-graphic-style="pixel8"] .game-shell{padding:10px;background:#263342;border:4px solid #65788a;border-radius:0;box-shadow:0 0 0 4px #111923}
+body[data-graphic-style="pixel8"] .game-heading h1{color:#f0d98e;font-family:monospace;letter-spacing:.04em}
+body[data-graphic-style="pixel8"] .eyebrow{color:#9fc5b0}
+body[data-graphic-style="pixel8"] .location-chip{background:#354b4c;border:2px solid #829c78;border-radius:0;color:#d9e5b0}
+body[data-graphic-style="pixel8"] .canvas-wrap{border:4px solid #8394a0;border-radius:0;background:#182b3b;box-shadow:0 0 0 3px #111923}
+body[data-graphic-style="pixel8"] canvas{image-rendering:pixelated;image-rendering:crisp-edges;filter:none}
+body[data-graphic-style="pixel8"] .start-card{background:#263342!important;border:4px solid #9b8c62!important;border-radius:0!important;box-shadow:6px 6px 0 #101923!important;color:#f1e6c2!important}
+body[data-graphic-style="pixel8"] .start-card h2{color:#f3d77e!important;font-family:monospace}
+body[data-graphic-style="pixel8"] .intro{color:#c2d0b3!important}
+body[data-graphic-style="pixel8"] input,body[data-graphic-style="pixel8"] select{background:#172633!important;border:2px solid #829c78!important;border-radius:0!important;color:#f5edcf!important}
+body[data-graphic-style="pixel8"] button{border-radius:0}
+body[data-graphic-style="pixel8"] .hud-player,body[data-graphic-style="pixel8"] .hud-help,body[data-graphic-style="pixel8"] .notice{background:#263342;color:#f1e6c2;border:2px solid #9b8c62;border-radius:0;box-shadow:4px 4px 0 #101923}
+body[data-graphic-style="pixel8"] .bottom-info{color:#b7d28d}
+body[data-graphic-style="pixel8"] .graphic-style-label{background:#354b4c;border:2px solid #829c78;border-radius:0;color:#e1e8b5}
