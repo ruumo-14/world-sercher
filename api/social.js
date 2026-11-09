@@ -10,6 +10,10 @@ function hasUnsafeContact(text) {
   return /https?:\/\/|\bwww\.|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|(?:\+?81[- ]?)?0\d{1,4}[- ]?\d{1,4}[- ]?\d{3,4}/i.test(text);
 }
 
+function hasUnsafeContact(text) {
+  return /https?:\\/\\/|\\bwww\\.|[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}|(?:\\+?81[- ]?)?0\\d{1,4}[- ]?\\d{1,4}[- ]?\\d{3,4}/i.test(text);
+}
+
 async function isBlockedTerm(text) {
   const rows = await db("chat_blocked_terms", { select: "term", active: "eq.true", limit: "200" });
   const normalized = text.toLocaleLowerCase("ja-JP");

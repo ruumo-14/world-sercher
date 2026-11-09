@@ -103,7 +103,7 @@ begin
     game_data=jsonb_set(coalesce(game_data,'{}'::jsonb),'{gold}',to_jsonb(greatest(0,gold-p_listing_fee)),true),
     updated_at=now() where user_id=p_user_id;
   insert into public.market_listings(seller_user_id,seller_name,item_data,rarity,quantity,unit_price)
-    values(p_user_id,left(p_seller_name,16),p_item_data,p_rarity,p_quantity,p_unit_price)
+    values(p_user_id,left(p_seller_name,16),v_owned,p_rarity,p_quantity,p_unit_price)
     returning * into v_listing;
   return to_jsonb(v_listing);
 end $$;
