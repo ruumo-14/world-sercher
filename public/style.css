@@ -480,3 +480,29 @@ body[data-graphic-style="dark"] .start-card h2,body[data-graphic-style="dark"] .
 body[data-graphic-style="dark"] .start-card input{background:#1d2731!important;color:#fff!important;border-color:#7d8a91!important}
 body[data-graphic-style="dark"] .hud-player,body[data-graphic-style="dark"] .hud-help,body[data-graphic-style="dark"] .notice{background:#303b46!important;color:#f1e8d8!important;border-color:#87939a!important}
 @media(max-width:650px){.topbar-actions{gap:6px}.graphic-style-switch{font-size:10px;padding:7px 9px}.online{font-size:10px}}
+
+
+/* Candidate 1: complete 3D anime fantasy presentation */
+body[data-graphic-style="anime3d"]{color:#514238;background:linear-gradient(180deg,#b9dff0 0%,#e5efd9 42%,#c3d7ad 100%);font-family:'Nunito','Noto Sans JP',sans-serif}
+body[data-graphic-style="anime3d"] #app{max-width:1180px}
+body[data-graphic-style="anime3d"] .topbar{margin-bottom:14px}
+body[data-graphic-style="anime3d"] .brand{color:#5a493c;letter-spacing:.1em}
+body[data-graphic-style="anime3d"] .brand-mark{color:#df9b4d;text-shadow:0 2px 0 #fff0c7}
+body[data-graphic-style="anime3d"] .online{color:#526d58}
+body[data-graphic-style="anime3d"] .online-dot{background:#62b77b;box-shadow:0 0 10px #8be09d}
+body[data-graphic-style="anime3d"] .game-shell{padding:18px;background:linear-gradient(145deg,#fff8e8,#e7d5b4);border:3px solid #a77c52;border-radius:24px;box-shadow:0 14px 0 #8b6748,0 25px 55px rgba(57,76,55,.25)}
+body[data-graphic-style="anime3d"] .game-heading h1{color:#604431;font-weight:800;text-shadow:0 1px #fff4dc}
+body[data-graphic-style="anime3d"] .eyebrow{color:#bd7a3c}
+body[data-graphic-style="anime3d"] .location-chip{background:#f4e5c4;border:2px solid #c69a62;border-radius:999px;color:#745337;font-weight:800}
+body[data-graphic-style="anime3d"] .canvas-wrap{border:5px solid #f8e7c6;border-radius:20px;background:#a8d7e7;box-shadow:0 0 0 2px #a77c52,0 12px 24px rgba(74,68,48,.22)}
+body[data-graphic-style="anime3d"] canvas{image-rendering:auto;image-rendering:high-quality;filter:none}
+body[data-graphic-style="anime3d"] .start-card{background:linear-gradient(155deg,#fff9e9,#f0dfbd)!important;border:3px solid #c99b62!important;border-radius:22px!important;box-shadow:0 12px 28px rgba(69,53,39,.25)!important;color:#5b4433!important}
+body[data-graphic-style="anime3d"] .start-card h2{color:#65452f!important}
+body[data-graphic-style="anime3d"] .intro{color:#80664d!important}
+body[data-graphic-style="anime3d"] .auth-tab{border-radius:12px}
+body[data-graphic-style="anime3d"] input,body[data-graphic-style="anime3d"] select{background:#fffaf0!important;border:2px solid #d2b58b!important;border-radius:10px!important;color:#594637!important}
+body[data-graphic-style="anime3d"] button{border-radius:12px}
+body[data-graphic-style="anime3d"] .hud-player,body[data-graphic-style="anime3d"] .hud-help,body[data-graphic-style="anime3d"] .notice{background:#fff4dd;color:#5a4432;border:2px solid #c99a61;border-radius:14px;box-shadow:0 5px 12px rgba(63,52,39,.16)}
+body[data-graphic-style="anime3d"] .bottom-info{color:#627653}
+.graphic-style-label{display:inline-flex;align-items:center;padding:7px 12px;border-radius:999px;background:#fff0cf;border:1px solid #d6ad72;color:#80552f;font-size:11px;font-weight:800;white-space:nowrap}
+@media(max-width:650px){.graphic-style-label{font-size:9px;padding:6px 8px}}
