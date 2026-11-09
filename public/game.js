@@ -650,28 +650,104 @@
     if(battleMessage&&performance.now()<battleMessageUntil){ctx.fillStyle="rgba(40,52,48,.5)";ctx.beginPath();ctx.roundRect(250,210,460,58,15);ctx.fill();ctx.fillStyle="#fff3db";ctx.beginPath();ctx.roundRect(255,205,450,48,12);ctx.fill();ctx.fillStyle="#514035";ctx.textAlign="center";ctx.font="bold 18px 'Noto Sans JP',sans-serif";ctx.fillText(battleMessage,480,235);}
   }
 
+
+  // Candidate 3: 2.5D miniature diorama. Game coordinates and collision remain unchanged.
+  function dioProject(wx,wy){
+    const dx=wx-camera.x,dy=wy-camera.y;
+    return {x:W/2+(dx-dy)*.235,y:300+(dx+dy)*.105};
+  }
+  function dioPoly(points,fill,stroke=null){
+    ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
+    ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
+  }
+  function dioDiamond(x,y,rx,ry,fill,stroke){
+    dioPoly([{x,y:y-ry},{x:x+rx,y},{x,y:y+ry},{x:x-rx,y}],fill,stroke);
+  }
+  function dioBox(x,y,w,h,depth,top,front,side){
+    ctx.fillStyle=side;ctx.fillRect(x+w,y-depth,w*.18,depth);
+    dioPoly([{x,y:y-depth},{x:x+w,y:y-depth},{x:x+w+w*.18,y:y-depth+depth*.12},{x:x+w*.18,y:y-depth+depth*.12}],top);
+    ctx.fillStyle=front;ctx.fillRect(x,y-depth,w,h+depth);
+    dioPoly([{x:x+w,y:y-depth},{x:x+w+w*.18,y:y-depth+depth*.12},{x:x+w+w*.18,y:y+h},{x:x+w,y:y+h}],side);
+  }
+  function drawDioramaGround(){
+    const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#9fc9d4");sky.addColorStop(1,"#e5d9ad");ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+    // Floating layered island base
+    dioPoly([{x:70,y:390},{x:480,y:270},{x:890,y:390},{x:480,y:560}],"#527a55","#34563e");
+    dioPoly([{x:70,y:390},{x:480,y:270},{x:890,y:390},{x:480,y:430}],"#83ad68","#557d50");
+    dioPoly([{x:70,y:390},{x:480,y:430},{x:480,y:560}],"#496d4d");
+    dioPoly([{x:480,y:430},{x:890,y:390},{x:480,y:560}],"#3f6248");
+    // tiled grass patches and a winding river
+    for(let i=0;i<46;i++){const x=115+(i*173)%730,y=315+(i*71)%170;dioDiamond(x,y,20,9,i%3===0?"#9abd72":i%3===1?"#76a65f":"#86b36b");}
+    dioPoly([{x:100,y:380},{x:235,y:342},{x:370,y:388},{x:515,y:345},{x:650,y:385},{x:800,y:345},{x:824,y:366},{x:665,y:414},{x:515,y:375},{x:370,y:420},{x:235,y:375},{x:120,y:410}],"#559eae","#d0e6c7");
+    // raised path tiles
+    for(let i=0;i<13;i++){const x=250+i*37,y=425+Math.sin(i*.65)*13;dioDiamond(x,y,22,11,i%2?"#c6ad7c":"#d7c18e","#9b865f");}
+    for(let i=0;i<6;i++){const x=145+i*142,y=300+(i%2)*28;dioPoly([{x,y:y-12},{x:x+34,y:y-22},{x:x+66,y:y-8},{x:x+32,y:y+5}],"#b6cf9c");}
+  }
+  function drawDioramaHouse(b,index){
+    const p=dioProject(b.x+b.w/2,b.y+b.h/2),w=Math.max(40,Math.min(86,b.w*.34)),h=Math.max(26,Math.min(48,b.h*.22)),x=p.x-w/2,y=p.y;
+    if(x<-100||x>W+100||y<100||y>H+100)return;
+    // small collectible-style building with a visible plinth and three-dimensional roof
+    dioDiamond(p.x,y+5,w*.78,15,"rgba(28,48,36,.24)");
+    dioPoly([{x:x-7,y:y-h*.45},{x:x+w*.5,y:y-h-20},{x:x+w+7,y:y-h*.45},{x:x+w,y:y-h*.25},{x:x+w*.5,y:y-h+2},{x,y:y-h*.25}],"#765144","#4e3935");
+    dioPoly([{x:x-7,y:y-h*.45},{x:x+w*.5,y:y-h-20},{x:x+w*.5,y:y-h+2},{x,y:y-h*.25}],"#c17b5c");
+    dioPoly([{x:x+w*.5,y:y-h-20},{x:x+w+7,y:y-h*.45},{x:x+w,y:y-h*.25},{x:x+w*.5,y:y-h+2}],"#945747");
+    dioBox(x+5,y-h*.32,w-10,h*.8,12,"#d9c49b",index%2?"#b99070":"#d0ad85","#8b6a53");
+    // doorway and bright windows
+    ctx.fillStyle="#60483d";ctx.fillRect(x+w*.42,y-h*.05,w*.18,h*.52);
+    ctx.fillStyle="#f2d995";ctx.fillRect(x+w*.17,y-h*.12,8,9);ctx.fillRect(x+w*.72,y-h*.12,8,9);
+    dioDiamond(x+w*.5,y+12,w*.72,7,"#a28b65");
+  }
+  function drawDioramaTree(wx,wy,i){
+    const p=dioProject(wx,wy);if(p.x<-40||p.x>W+40||p.y<100||p.y>H+50)return;
+    dioDiamond(p.x,p.y+7,17,8,"#5c7046");
+    ctx.fillStyle="#76543c";ctx.fillRect(p.x-4,p.y-27,9,32);
+    dioPoly([{x:p.x-24,y:p.y-24},{x:p.x-18,y:p.y-48},{x:p.x-4,y:p.y-59},{x:p.x+17,y:p.y-48},{x:p.x+25,y:p.y-27},{x:p.x+12,y:p.y-15},{x:p.x-13,y:p.y-15}],i%3===0?"#54875a":i%3===1?"#65965b":"#477b53","#355d43");
+    dioPoly([{x:p.x-17,y:p.y-40},{x:p.x-4,y:p.y-57},{x:p.x+8,y:p.y-48},{x:p.x+2,y:p.y-32}],"#9cbd70");
+  }
+  function drawDioramaPerson(person,isPlayer=false){
+    const p=dioProject(person.x,person.y);if(p.x<-30||p.x>W+30||p.y<90||p.y>H+70)return;
+    const step=person.moving?Math.sin((person.walkClock||0)*13)*3:0;
+    dioDiamond(p.x,p.y+5,12,6,"rgba(28,43,31,.35)");
+    // chunky toy-like body, boots, tunic and head
+    ctx.fillStyle="#493e38";ctx.fillRect(p.x-7+step,p.y-11,6,12);ctx.fillRect(p.x+2-step,p.y-11,6,12);
+    dioPoly([{x:p.x-11,y:p.y-28},{x:p.x+10,y:p.y-28},{x:p.x+13,y:p.y-10},{x:p.x,y:p.y-5},{x:p.x-13,y:p.y-10}],isPlayer?"#4f79a2":"#a16b4f","#3f3a36");
+    ctx.fillStyle="#d4a77d";ctx.fillRect(p.x-8,p.y-48,17,19);
+    ctx.fillStyle=person.hair==="金髪"?"#d8b35e":"#76503b";ctx.fillRect(p.x-9,p.y-51,19,8);ctx.fillRect(p.x-9,p.y-46,5,8);
+    ctx.fillStyle="#f5e5bd";ctx.fillRect(p.x-5,p.y-40,3,3);ctx.fillRect(p.x+3,p.y-40,3,3);
+    if(isPlayer){ctx.fillStyle="#e6c76e";ctx.fillRect(p.x-3,p.y-31,7,4);}
+  }
+  function drawDioramaInterior(){
+    ctx.fillStyle="#d9c49b";ctx.fillRect(0,0,W,H);ctx.fillStyle="#9c795c";ctx.fillRect(0,0,W,90);
+    dioPoly([{x:70,y:190},{x:480,y:90},{x:890,y:190},{x:480,y:320}],"#b78f67");
+    dioPoly([{x:70,y:190},{x:480,y:320},{x:480,y:555},{x:70,y:410}],"#8f6a4e");
+    dioPoly([{x:480,y:320},{x:890,y:190},{x:890,y:410},{x:480,y:555}],"#a77d5c");
+    dioBox(350,360,170,58,18,"#d8bd8e","#795b46","#5f493e");
+    dioBox(180,275,78,60,20,"#b88759","#8b5e42","#624637");
+    for(let i=0;i<4;i++){ctx.fillStyle="#e6ce9b";ctx.fillRect(100+i*210,115,85,10);}
+  }
+  function drawDioramaBattle(){
+    const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#8195a2");sky.addColorStop(1,"#d4b88b");ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+    dioPoly([{x:0,y:390},{x:480,y:285},{x:960,y:390},{x:480,y:565}],"#69805b","#415541");
+    for(let i=0;i<7;i++){const x=90+i*130;dioDiamond(x,420+(i%2)*26,38,16,i%2?"#a38d68":"#7f9468");}
+    for(let i=0;i<(battle?.enemies||[]).length;i++){const e=battle.enemies[i];if(e.hp<=0)continue;const x=650+i*80,y=390-(i%2)*26;dioDiamond(x,y+5,22,9,"#405044");ctx.fillStyle=e.color||"#78b5a4";ctx.fillRect(x-15,y-38,30,30);ctx.fillStyle="#f3e4c6";ctx.fillRect(x-9,y-32,5,5);ctx.fillRect(x+5,y-32,5,5);}
+    dioDiamond(245,468,22,9,"#405044");ctx.fillStyle="#4d78a0";ctx.fillRect(229,416,32,46);ctx.fillStyle="#d4a77d";ctx.fillRect(233,393,25,24);ctx.fillStyle="#76503b";ctx.fillRect(231,389,29,9);
+    ctx.fillStyle="#fff0cc";ctx.font="bold 20px sans-serif";ctx.fillText(battle?.enemyName||"モンスター",650,105);
+  }
   function render(){
     ctx.clearRect(0,0,W,H);
-    if(battle)drawPaintedBattle();
-    else if(interior)drawPaintedInterior();
+    if(battle)drawDioramaBattle();
+    else if(interior)drawDioramaInterior();
     else{
-      drawPaintedLandscape();const objects=[];
-      for(let i=0;i<buildings.length;i++){const b=buildings[i];objects.push({depth:b.y+b.h,draw:()=>drawPaintedHouse(b,i)});}
-      for(let i=0;i<110;i++){const x=160+Math.floor(hash(i,23)*2700),y=180+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<420||(x>280&&x<620&&y>700&&y<2200)||buildings.some(b=>x>b.x-80&&x<b.x+b.w+80&&y>b.y-80&&y<b.y+b.h+80))continue;objects.push({depth:y,draw:()=>drawPaintedTree(x,y,i)});}
-      for(const item of townDecor)objects.push({depth:item[2],draw:()=>drawPaintedDecor(item)});
-      for(const n of npcs)objects.push({depth:n.y,draw:()=>drawPaintedPerson(n)});
-      for(const p of others.values())objects.push({depth:p.y,draw:()=>drawPaintedPerson(p)});
-      objects.push({depth:player.y,draw:()=>drawPaintedPerson(player,true)});
+      drawDioramaGround();const objects=[];
+      for(let i=0;i<buildings.length;i++){const b=buildings[i];objects.push({depth:b.x+b.y+b.w+b.h,draw:()=>drawDioramaHouse(b,i)});}
+      for(let i=0;i<64;i++){const x=120+Math.floor(hash(i,23)*2700),y=150+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<460||buildings.some(b=>x>b.x-100&&x<b.x+b.w+100&&y>b.y-100&&y<b.y+b.h+100))continue;objects.push({depth:x+y,draw:()=>drawDioramaTree(x,y,i)});}
+      for(const n of npcs)objects.push({depth:n.x+n.y,draw:()=>drawDioramaPerson(n)});
+      for(const p of others.values())objects.push({depth:p.x+p.y,draw:()=>drawDioramaPerson(p)});
+      objects.push({depth:player.x+player.y,draw:()=>drawDioramaPerson(player,true)});
       objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
     }
-    // 8px単位の超低解像度表示。ゲーム内部の座標・当たり判定は変更しない。
-    pixelViewCtx.clearRect(0,0,120,75);
-    pixelViewCtx.imageSmoothingEnabled=true;
-    pixelViewCtx.drawImage(canvas,0,0,120,75);
-    ctx.clearRect(0,0,W,H);
-    ctx.imageSmoothingEnabled=false;
-    ctx.drawImage(pixelView,0,0,W,H);
-    ctx.imageSmoothingEnabled=true;
+    pixelViewCtx.clearRect(0,0,120,75);pixelViewCtx.imageSmoothingEnabled=true;pixelViewCtx.drawImage(canvas,0,0,120,75);
+    ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;ctx.drawImage(pixelView,0,0,W,H);ctx.imageSmoothingEnabled=true;
   }
 
 
