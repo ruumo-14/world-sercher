@@ -292,3 +292,30 @@ revoke all on function public.market_create_listing(uuid,text,text,jsonb,text,in
 grant execute on function public.market_create_listing(uuid,text,text,jsonb,text,integer,bigint,bigint) to service_role;
 
 grant usage,select on all sequences in schema public to service_role;
+
+create or replace function public.market_return_expired(p_user_id uuid)
+returns integer language plpgsql security definer set search_path=public as $
+declare
+  v_listing public.market_listings%rowtype;
+  v_count integer:=0;
+begin
+  perform 1 from public.game_saves where user_id=p_user_id for update;
+  for v_listing in
+    select * from public.market_listings
+    where seller_user_id=p_user_id and status='active' and expires_at<=now()
+    for update
+  loop
+    update public.game_saves set game_data=jsonb_set(
+      coalesce(game_data,'{}'::jsonb),'{inventory}',
+      coalesce(game_data->'inventory','[]'::jsonb) || jsonb_build_array(jsonb_build_object(
+        'id',gen_random_uuid()::text,'item',v_listing.item_data,'rarity',v_listing.rarity,'quantity',v_listing.quantity
+      )),true),updated_at=now()
+      where user_id=p_user_id;
+    update public.market_listings set status='expired' where id=v_listing.id;
+    v_count:=v_count+1;
+  end loop;
+  return v_count;
+end $;
+revoke all on function public.market_return_expired(uuid) from public,anon,authenticated;
+grant execute on function public.market_return_expired(uuid) to service_role;
+

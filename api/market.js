@@ -8,6 +8,7 @@ module.exports = async function handler(req, res) {
     if (!session) return send(res, 401, { error: "ログインが必要です。" });
 
     if (req.method === "GET") {
+      await db("rpc/market_return_expired", {}, { method: "POST", body: { p_user_id: session.sub } });
       const rows = await db("market_listings", {
         select: "id,seller_user_id,seller_name,item_data,rarity,quantity,unit_price,created_at,expires_at",
         status: "eq.active",
