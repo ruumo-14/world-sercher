@@ -139,7 +139,7 @@
     // Preserve the protagonist's exact walk sprite in battle too.
     const px=battle.playerX,py=438-battle.playerY;
     ellipse(px,py+8,23,8,"#58634c");
-    if(playerWalkSheet.complete&&playerWalkSheet.naturalWidth){
+    if(isPlayer&&playerWalkSheet.complete&&playerWalkSheet.naturalWidth){
       const row=0,frame=1;ctx.save();ctx.imageSmoothingEnabled=false;
       ctx.drawImage(playerWalkSheet,frame*64,row*64,64,64,Math.round(px-34),Math.round(py-76),68,68);ctx.restore();
     }
@@ -352,6 +352,13 @@
     rect(x-49,y-15,98,4,"#e0bd7d");rect(x-49,y+11,98,4,"#e0bd7d");
   }
   function drawTree(wx,wy,index=0){
+    const tp=project(wx,wy);
+    if(worldTileset.complete&&worldTileset.naturalWidth){
+      const variants=[12,128,244],sx=variants[index%variants.length];
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      ctx.drawImage(worldTileset,sx,164,100,110,tp.x-38,tp.y-82,76,84);
+      ctx.restore();return;
+    }
     const p=project(wx,wy),x=p.x,y=p.y;if(x<-70||y<-90||x>W+70||y>H+70)return;
     const palettes=[["#285b38","#397b43","#63a34c","#9bc75b"],["#24583f","#347b4d","#5b9b50","#a0c969"],["#365f34","#4c8740","#78ad4e","#b2ce67"],["#28584b","#367c60","#5d9f67","#a2c979"]];
     const a=palettes[index%palettes.length];
@@ -367,6 +374,14 @@
     const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;
     if(x<-170||y<-170||x>W+170||y>H+170)return;
     const w=Math.max(66,Math.round(b.w*.82)),h=Math.max(58,Math.round(b.h*.72)),type=b.type;
+    if(worldTileset.complete&&worldTileset.naturalWidth){
+      const variants=[8,200,392,584],sx=variants[index%variants.length];
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      ctx.drawImage(worldTileset,sx,8,182,124,x-w/2-8,y-h/2-22,w+16,h+28);
+      ctx.restore();
+      if(b.name!=="住民の家"){ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#493a30";ctx.strokeText(b.name,x,y-h/2-34);ctx.fillStyle="#fff2c8";ctx.fillText(b.name,x,y-h/2-34);ctx.restore();}
+      return;
+    }
     const palettes={guild:["#85483d","#b9654d","#e1bd83"],forge:["#555d63","#777b78","#a99b80"],inn:["#9a493e","#ca7551","#e6c18b"],market:["#a85d3e","#d88a4d","#ecd09a"],farm:["#82613a","#b18a4c","#e1c184"],bank:["#596d76","#8d9d9b","#d2c8a8"],home:["#88483d","#b8644c","#e4c28e"],shop:["#914e49","#c8785b","#e6c28c"]};
     const a=palettes[type]||palettes.home,roof=a[0],roofLight=a[1],wall=a[2];
     // Ground shadow, stone foundation and front-facing timber walls.
