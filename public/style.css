@@ -329,3 +329,5 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .bottom-info{color:#e1d2a6}
 #notice{border:3px solid #c6ad76;border-radius:2px;background:#2e4735;color:#fff0c6}
 @media(max-width:700px){#app{width:calc(100% - 10px);padding-top:5px}.game-shell{padding:5px}.game-heading{align-items:flex-start;gap:5px}.location-chip{font-size:10px;padding:5px}.start-card{padding:14px}.social-panel{border-width:3px}}
+
+.dash-portrait{display:block;width:88px;height:88px;object-fit:contain;background:#314b39;border:3px solid #c6ad76;border-radius:2px;image-rendering:pixelated;image-rendering:crisp-edges}

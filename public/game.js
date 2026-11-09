@@ -2,8 +2,12 @@
 (() => {
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
   const W=960,H=600; canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=false;
-  // Simple shape-only graphics: no external image assets are loaded.
-  const atlasReady=false;
+  // Load the approved protagonist walk sheet; field movement logic is intentionally preserved.
+  const playerWalkSheet=new Image();
+  window.WS_PLAYER_WALK_SHEET=playerWalkSheet;
+  fetch("/assets/player-walk-12.b64",{cache:"force-cache"}).then(r=>{if(!r.ok)throw new Error("sprite sheet unavailable");return r.text();})
+    .then(data=>{playerWalkSheet.src="data:image/png;base64,"+data.trim();})
+    .catch(()=>{console.warn("主人公スプライトを読み込めませんでした。");});
   const $=id=>document.getElementById(id);
   const startPanel=$("start-panel"),authForm=$("auth-form"),accountName=$("account-name"),password=$("account-password"),characterName=$("character-name"),nameWrap=$("character-name-wrap"),authMessage=$("auth-message"),authSubmit=$("auth-submit"),loginTab=$("login-tab"),registerTab=$("register-tab"),notice=$("notice"),hudName=$("hud-name"),onlineCount=$("online-count"),connectionState=$("connection-state");
   const player={id:null,name:"冒険者",x:1600,y:1300,speed:155,dir:"down",species:"人間",hair:"栗色",skin:"明るい肌",eyes:"青",style:"旅人",outfit:"#4f78a5",accessory:"なし"};
