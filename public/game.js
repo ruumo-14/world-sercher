@@ -3,6 +3,9 @@
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
   const W=960,H=600; canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=false;
   const worldTileset=new Image();worldTileset.src="/assets/world-sercher-user-atlas.png";window.WS_WORLD_TILESET=worldTileset;
+  // 新しいGBA風タイルセット（建物・芝生・道）
+  const townArt=new Image();
+  fetch("/assets/world-sercher-gba-atlas.b64",{cache:"force-cache"}).then(r=>{if(!r.ok)throw new Error("town art unavailable");return r.text();}).then(data=>{townArt.src="data:image/png;base64,"+data.trim();}).catch(()=>console.warn("新しい街素材を読み込めませんでした。"));
   let interior=null;
   // Load the approved protagonist walk sheet; field movement logic is intentionally preserved.
   const playerWalkSheet=new Image();
@@ -332,7 +335,7 @@
     for(let wy=gy0;wy<=gy1;wy+=16)for(let wx=gx0;wx<=gx1;wx+=16){
       const p=project(wx,wy),v=hash(wx/16,wy/16);
       const base=v>.82?"#7dbb58":v>.53?"#72ad50":v>.2?"#6aa34b":"#639947";
-      rect(p.x-8,p.y-8,16,16,base);
+      if(townArt.complete&&townArt.naturalWidth){ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(townArt,0,80,16,16,p.x-8,p.y-8,16,16);ctx.restore();}else{rect(p.x-8,p.y-8,16,16,base);}
       if(v>.72){rect(p.x-5,p.y-4,2,4,"#4e8a40");rect(p.x+2,p.y+1,2,4,"#4e8a40");rect(p.x+4,p.y-5,2,2,"#a4cf68");}
       else if(v<.16){rect(p.x-3,p.y+3,3,2,"#b4c66a");rect(p.x+3,p.y-4,2,2,"#d0d58a");}
       if(v>.94){rect(p.x-1,p.y-1,2,2,"#f1d889");}
@@ -351,7 +354,7 @@
       const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/8);
       for(let i=0;i<=n;i++){const t=i/n,cx=x1+(x2-x1)*t,cy=y1+(y2-y1)*t;
         for(let o=-width/2;o<=width/2;o+=16){const p=project(cx+(x2===x1?o:0),cy+(y2===y1?o:0)),v=hash(Math.floor(cx/16)+o,Math.floor(cy/16));
-          rect(p.x-8,p.y-8,16,16,v>.5?"#d4bd88":"#c5ad7b");
+          if(townArt.complete&&townArt.naturalWidth){ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(townArt,16,80,16,16,p.x-8,p.y-8,16,16);ctx.restore();}else{rect(p.x-8,p.y-8,16,16,v>.5?"#d4bd88":"#c5ad7b");}
           rect(p.x-7,p.y-7,14,1,"#ead8ad");rect(p.x-7,p.y+6,14,2,"#a58e63");
           if(v>.84){rect(p.x-2,p.y-2,3,3,"#9c8a68");}
         }
@@ -409,6 +412,17 @@
     const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;
     if(x<-170||y<-170||x>W+170||y>H+170)return;
     const w=Math.max(66,Math.round(b.w*.82)),h=Math.max(58,Math.round(b.h*.72)),type=b.type;
+    if((b.name==="冒険者ギルド"||b.name==="鍛冶屋")&&townArt.complete&&townArt.naturalWidth){
+      const a=b.name==="冒険者ギルド"?[0,0,96,66]:[100,0,72,70];
+      const maxW=Math.max(82,w+28),maxH=Math.max(76,h+48);
+      const scale=Math.min(maxW/a[2],maxH/a[3]);
+      const dw=a[2]*scale,dh=a[3]*scale;
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      ctx.drawImage(townArt,a[0],a[1],a[2],a[3],Math.round(x-dw/2),Math.round(y-dh/2-8),Math.round(dw),Math.round(dh));
+      ctx.restore();
+      ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#493a30";ctx.strokeText(b.name,x,y-dh/2-14);ctx.fillStyle="#fff2c8";ctx.fillText(b.name,x,y-dh/2-14);ctx.restore();
+      return;
+    }
     if(worldTileset.complete&&worldTileset.naturalWidth){
       const atlas={
         "冒険者ギルド":[1,36,42,33],
