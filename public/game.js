@@ -340,11 +340,15 @@
     const gy0=Math.floor((camera.y-H/2-16)/16)*16,gy1=camera.y+H/2+16;
     for(let wy=gy0;wy<=gy1;wy+=16)for(let wx=gx0;wx<=gx1;wx+=16){
       const p=project(wx,wy),v=hash(wx/16,wy/16);
-      const base=v>.82?"#7dbb58":v>.53?"#72ad50":v>.2?"#6aa34b":"#639947";
-      if(townArt.complete&&townArt.naturalWidth){ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(townArt,0,48,16,16,p.x-8,p.y-8,16,16);ctx.restore();}else{rect(p.x-8,p.y-8,16,16,base);}
-      if(v>.72){rect(p.x-5,p.y-4,2,4,"#4e8a40");rect(p.x+2,p.y+1,2,4,"#4e8a40");rect(p.x+4,p.y-5,2,2,"#a4cf68");}
-      else if(v<.16){rect(p.x-3,p.y+3,3,2,"#b4c66a");rect(p.x+3,p.y-4,2,2,"#d0d58a");}
-      if(v>.94){rect(p.x-1,p.y-1,2,2,"#f1d889");}
+      const base=v>.82?"#78b45a":v>.53?"#70aa50":v>.2?"#689f49":"#609344";
+      rect(p.x-8,p.y-8,16,16,base);
+      // Hand-authored pixel clusters: quiet grass variation, not noisy random speckles.
+      const pattern=Math.floor(hash(wx/16+17,wy/16+9)*4);
+      if(pattern===0){rect(p.x-6,p.y-4,3,2,"#82bd60");rect(p.x+2,p.y+3,2,2,"#4f843e");}
+      else if(pattern===1){rect(p.x-4,p.y+2,4,2,"#83b95a");rect(p.x+3,p.y-5,2,3,"#568b40");}
+      else if(pattern===2){rect(p.x-6,p.y-2,2,3,"#4f843e");rect(p.x+1,p.y+4,4,2,"#83bd61");}
+      else{rect(p.x-3,p.y-5,3,2,"#86c365");rect(p.x+4,p.y+1,2,3,"#54883e");}
+      if(v>.94){rect(p.x-1,p.y-1,2,2,"#e7d58c");}
     }
     // River with sandbanks, bright ripples and a gently winding course.
     for(let wy=560;wy<2250;wy+=16){
@@ -360,9 +364,15 @@
       const n=Math.ceil(Math.hypot(x2-x1,y2-y1)/8);
       for(let i=0;i<=n;i++){const t=i/n,cx=x1+(x2-x1)*t,cy=y1+(y2-y1)*t;
         for(let o=-width/2;o<=width/2;o+=16){const p=project(cx+(x2===x1?o:0),cy+(y2===y1?o:0)),v=hash(Math.floor(cx/16)+o,Math.floor(cy/16));
-          if(townArt.complete&&townArt.naturalWidth){ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(townArt,16,48,16,16,p.x-8,p.y-8,16,16);ctx.restore();}else{rect(p.x-8,p.y-8,16,16,v>.5?"#d4bd88":"#c5ad7b");}
-          rect(p.x-7,p.y-7,14,1,"#ead8ad");rect(p.x-7,p.y+6,14,2,"#a58e63");
-          if(v>.84){rect(p.x-2,p.y-2,3,3,"#9c8a68");}
+          rect(p.x-8,p.y-8,16,16,v>.5?"#cfb782":"#c4aa76");
+          // Soft stepped edges and small packed-earth flecks.
+          rect(p.x-8,p.y-8,16,2,"#ddc995");rect(p.x-8,p.y+6,16,2,"#a58c5e");
+          rect(p.x-7,p.y-6,14,1,"#e6d3a1");
+          const grain=Math.floor(hash(Math.floor(cx/16)+o+41,Math.floor(cy/16)+7)*5);
+          if(grain===0){rect(p.x-4,p.y-2,3,2,"#b39a69");rect(p.x+3,p.y+3,2,2,"#dfc894");}
+          else if(grain===1){rect(p.x+1,p.y-4,3,2,"#b49a68");rect(p.x-5,p.y+3,2,2,"#e0ca94");}
+          else if(grain===2){rect(p.x-1,p.y+1,2,2,"#a98f60");}
+          if(v>.92){rect(p.x-2,p.y-2,3,3,"#9c8a68");}
         }
       }
     };
@@ -447,56 +457,145 @@
 
   function drawHouse(b,index=0){
     const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;
-    if(x<-170||y<-170||x>W+170||y>H+170)return;
-    const w=Math.max(66,Math.round(b.w*.82)),h=Math.max(58,Math.round(b.h*.72)),type=b.type;
-    if(townArt.complete&&townArt.naturalWidth){
-      const spriteIndex={
-        "冒険者ギルド":0,"鍛冶屋":1,"道具屋":2,"住民の家":10,
-        "武器屋":3,"宿屋":4,"酒場":5,"市場":6,"銀行":7,
-        "服飾店":8,"仕立て屋":8,"理髪店":9,"農家の作業小屋":10,
-        "訓練所":3,"町長の家":10,"あなたの家":10
-      };
-      const si=spriteIndex[b.name]??10;
-      const sx=si*34,sy=0,sw=34,sh=48;
-      const maxW=Math.max(92,w+38),maxH=Math.max(86,h+54);
-      const scale=Math.min(maxW/sw,maxH/sh);
-      const dw=sw*scale,dh=sh*scale;
-      ctx.save();ctx.imageSmoothingEnabled=false;
-      ctx.drawImage(townArt,sx,sy,sw,sh,Math.round(x-dw/2),Math.round(y-dh/2-8),Math.round(dw),Math.round(dh));
-      ctx.restore();
-      return;
+    if(x<-190||y<-190||x>W+190||y>H+190)return;
+    const w=Math.max(72,Math.round(b.w*.82)),h=Math.max(62,Math.round(b.h*.72)),type=b.type;
+    const palettes={
+      guild:["#526b86","#7896ad","#dfc99a","#8e493b"],
+      forge:["#55545a","#77716b","#b8a080","#a34f36"],
+      inn:["#8d493f","#bb7050","#e5c995","#6d4937"],
+      market:["#a45a42","#d18a4d","#edd29b","#6d4937"],
+      farm:["#7b633c","#a98a50","#e0c28a","#6d4937"],
+      bank:["#536c72","#819796","#d8cba7","#8b704b"],
+      home:["#865044","#b86e53","#e7c995","#70503a"],
+      shop:["#87505a","#bd7d69","#e8c99b","#70503a"]
+    };
+    const a=palettes[type]||palettes.home;
+    // Ground shadow, raised stone foundation and visible side wall.
+    ellipse(x,y+h*.39,w*.62,9,"#4e7742");
+    poly([{x:x-w*.49,y:y-h*.08},{x:x+w*.39,y:y-h*.08},{x:x+w*.49,y:y+h*.30},{x:x-w*.39,y:y+h*.30}], "#75604a","#493c32",2);
+    poly([{x:x+w*.34,y:y-h*.10},{x:x+w*.49,y:y-h*.22},{x:x+w*.49,y:y+h*.24},{x:x+w*.34,y:y+h*.34}], "#9a7956","#594333",2);
+    rect(x-w*.42,y-h*.05,w*.76,h*.37,a[2]);
+    rect(x-w*.39,y-h*.01,w*.70,3,"#f1dfb8");
+    // Timber framing, stone courses and front facade details.
+    rect(x-w*.42,y+h*.20,w*.76,5,"#76513a");
+    for(let i=0;i<5;i++)rect(x-w*.38+i*w*.17,y+h*.23,Math.max(2,w*.025),h*.10,"#b18b62");
+    rect(x-w*.10,y+h*.02,w*.20,h*.29,"#513a2d");
+    rect(x-w*.075,y+h*.04,w*.15,h*.25,"#a66d43");
+    rect(x+w*.035,y+h*.15,3,3,"#f2d28a");
+    // Windows with wooden frames and crossbars.
+    for(const wx of [x-w*.30,x+w*.15]){
+      rect(wx-9,y+h*.015,19,22,"#604333");rect(wx-6,y+h*.045,13,16,"#5c94a0");
+      rect(wx-1,y+h*.045,2,16,"#e4d1a5");rect(wx-6,y+h*.11,13,2,"#e4d1a5");
+      rect(wx-8,y+h*.005,17,3,"#d5b77f");
     }
-    const palettes={guild:["#85483d","#b9654d","#e1bd83"],forge:["#555d63","#777b78","#a99b80"],inn:["#9a493e","#ca7551","#e6c18b"],market:["#a85d3e","#d88a4d","#ecd09a"],farm:["#82613a","#b18a4c","#e1c184"],bank:["#596d76","#8d9d9b","#d2c8a8"],home:["#88483d","#b8644c","#e4c28e"],shop:["#914e49","#c8785b","#e6c28c"]};
-    const a=palettes[type]||palettes.home,roof=a[0],roofLight=a[1],wall=a[2];
-    // Ground shadow, stone foundation and front-facing timber walls.
-    rect(x-w/2-8,y-h/2+15,w+16,h+17,"#4c7945");
-    rect(x-w/2-3,y-h/2+9,w+6,h+10,"#765a42");
-    rect(x-w/2,y-h/2+4,w,h-2,wall);
-    rect(x-w/2+5,y-h/2+10,w-10,h-15,"#f0d8a2");
-    // Side wall gives each building a readable 2.5D silhouette.
-    poly([{x:x+w/2-13,y:y-h/2+5},{x:x+w/2+5,y:y-h/2-5},{x:x+w/2+5,y:y+h/2+4},{x:x+w/2-13,y:y+h/2+12}],type==="forge"?"#806d5a":"#b18a62","#674a3c",2);
-    // Stepped tiled roof with bright ridge, dark eaves and individual tile seams.
-    poly([{x:x-w/2-7,y:y-h/2+5},{x:x-4,y:y-h/2-28},{x:x+w/2+8,y:y-h/2+5},{x:x+w/2-7,y:y+5},{x:x-5,y:y-20},{x:x-w/2-7,y:y+5}],roof,"#633b36",3);
-    for(let row=0;row<4;row++){
-      const yy=y-h/2-12+row*9;
-      rect(x-w/2+7,yy,w-14,2,roofLight);
-      for(let xx=x-w/2+12+(row%2)*7;xx<x+w/2-8;xx+=18){rect(xx,yy+3,10,2,row%2?"#743f39":"#a45a46");}
+    // Large pitched tiled roof with layered eaves and visible tile rows.
+    poly([{x:x-w*.53,y:y-h*.12},{x:x-w*.06,y:y-h*.66},{x:x+w*.53,y:y-h*.12},{x:x+w*.39,y:y+h*.04},{x:x-w*.06,y:y-h*.43},{x:x-w*.39,y:y+h*.04}],a[0],"#453a36",3);
+    poly([{x:x-w*.06,y:y-h*.66},{x:x+w*.53,y:y-h*.12},{x:x+w*.39,y:y+h*.04},{x:x-w*.06,y:y-h*.43}],a[1],"#554039",2);
+    for(let row=0;row<5;row++){
+      const yy=y-h*.53+row*h*.105;
+      const left=x-w*.43+row*w*.055,right=x+w*.42-row*w*.04;
+      rect(left,yy,Math.max(12,right-left),3,row%2?"#d28c65":"#c47a58");
+      for(let xx=left+7+(row%2)*5;xx<right-4;xx+=14){
+        rect(xx,yy+4,9,3,row%2?"#70443d":"#8c5144");
+        rect(xx+1,yy+4,5,1,"#e0a078");
+      }
     }
-    rect(x-3,y-h/2-25,6,h*.72,"#e0a66c");rect(x-w/2-5,y+3,w+10,3,"#653e36");
-    // Door, stone steps, windows and warm reflected light.
-    rect(x-10,y+h/2-21,20,23,"#51392e");rect(x-7,y+h/2-18,14,19,"#a96c43");rect(x+3,y+h/2-9,2,2,"#f4d58c");
-    rect(x-18,y+h/2+2,36,4,"#9d8766");rect(x-14,y+h/2+6,28,3,"#d5c39c");
-    rect(x-w/2+10,y+4,12,11,"#568b9a");rect(x+w/2-23,y+4,12,11,"#568b9a");
-    rect(x-w/2+11,y+5,10,2,"#bce3d9");rect(x+w/2-22,y+5,10,2,"#bce3d9");
-    rect(x-w/2+15,y+4,2,11,"#e5d6ad");rect(x+w/2-18,y+4,2,11,"#e5d6ad");
-    if(type==="forge"){rect(x+w/2-25,y-h/2-12,14,20,"#4e514c");rect(x+w/2-22,y-h/2-9,8,13,"#e3a34f");}
-    if(type==="inn"||type==="guild"||type==="market"){rect(x-24,y-h/2-5,48,9,"#f2d79b");rect(x-21,y-h/2-3,42,5,type==="guild"?"#8a4a39":"#a34f3e");}
+    rect(x-w*.54,y-h*.13,w*1.08,5,"#493b34");
+    rect(x-w*.50,y-h*.09,w,3,"#d39a69");
+    // Ridge cap and roof-end details.
+    rect(x-w*.075,y-h*.65,w*.15,5,"#e1b27a");
+    rect(x-w*.055,y-h*.69,w*.11,4,"#f0d29a");
+    // Distinctive pixel sign/emblem for each business.
+    const emblem=b.name==="冒険者ギルド"?"shield":b.name==="鍛冶屋"?"hammer":
+      b.name==="武器屋"?"sword":b.name==="道具屋"?"potion":
+      b.name==="銀行"?"coin":b.name==="宿屋"?"bed":
+      b.name==="酒場"?"mug":b.name==="市場"?"stall":
+      b.name==="理髪店"?"comb":b.name==="仕立て屋"||b.name==="服飾店"?"needle":
+      b.name==="農家の作業小屋"?"wheat":"home";
+    if(b.name!=="住民の家"&&b.name!=="あなたの家"&&b.name!=="町長の家"){
+      const sx=x,sy=y-h*.19;
+      rect(sx-17,sy-11,34,22,"#493a30");rect(sx-14,sy-8,28,16,"#e6d4a7");
+      if(emblem==="shield"){poly([{x:sx-7,y:sy-6},{x:sx+7,y:sy-6},{x:sx+6,y:sy+3},{x:sx,y:sy+8},{x:sx-6,y:sy+3}],"#6685a2","#33465a",1);rect(sx-1,sy-5,2,11,"#e8d39a");rect(sx-5,sy-1,10,2,"#e8d39a");}
+      else if(emblem==="hammer"){rect(sx-2,sy-5,4,14,"#80543a");rect(sx-8,sy-7,16,5,"#66717a");rect(sx+4,sy-7,4,5,"#9ca4a2");}
+      else if(emblem==="sword"){rect(sx-1,sy-7,3,13,"#b8d0d0");rect(sx-5,sy+3,11,2,"#8c5b38");rect(sx-2,sy+5,5,3,"#67432f");}
+      else if(emblem==="coin"){ellipse(sx,sy,7,7,"#d5a846");ellipse(sx,sy,4,4,"#f4d985");rect(sx-1,sy-4,2,8,"#9b7134");}
+      else if(emblem==="potion"){rect(sx-3,sy-6,6,3,"#6b5039");rect(sx-5,sy-3,10,11,"#7c9eb2");rect(sx-3,sy+1,6,5,"#c45c68");}
+      else if(emblem==="bed"){rect(sx-9,sy+1,18,5,"#8d6043");rect(sx-8,sy-4,7,5,"#eee0bd");rect(sx-1,sy-2,10,4,"#9e6d54");}
+      else if(emblem==="mug"){rect(sx-5,sy-5,10,11,"#a66b43");rect(sx+5,sy-3,4,6,"#a66b43");rect(sx-4,sy-3,8,2,"#f1d9a5");}
+      else if(emblem==="stall"){rect(sx-9,sy-3,18,3,"#b95e4c");rect(sx-7,sy,14,7,"#c99a5b");}
+      else if(emblem==="comb"){rect(sx-7,sy-5,14,3,"#8d5b43");for(let k=-5;k<=5;k+=3)rect(sx+k,sy-1,1,8,"#8d5b43");}
+      else if(emblem==="needle"){rect(sx-1,sy-7,2,15,"#87969b");rect(sx-4,sy-6,8,2,"#87969b");}
+      else if(emblem==="wheat"){rect(sx-1,sy-7,2,15,"#8c9a4d");for(let k=-1;k<=1;k++)rect(sx+k*4,sy-5+Math.abs(k)*2,3,3,"#d6b45c");}
+      else{rect(sx-6,sy-5,12,11,"#a96f4b");rect(sx-2,sy-1,4,7,"#51392e");}
+    }
     if(b.name!=="住民の家"){
-      ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineJoin="round";ctx.lineWidth=3;ctx.strokeStyle="#493a30";ctx.strokeText(b.name,x,y-h/2-34);ctx.fillStyle="#fff2c8";ctx.fillText(b.name,x,y-h/2-34);ctx.restore();
+      ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineJoin="round";ctx.lineWidth=3;ctx.strokeStyle="#493a30";ctx.strokeText(b.name,x,y-h*.73);ctx.fillStyle="#fff2c8";ctx.fillText(b.name,x,y-h*.73);ctx.restore();
     }
   }
 
+  function drawNpcPixelPerson(p){
+    const q=project(p.x,p.y),x=q.x-20,y=q.y-42;
+    if(x<-55||y<-70||x>W+55||y>H+55)return;
+    const moving=!!p.moving,frame=moving?Math.floor((p.walkClock||0)*8)%4:0;
+    const dir=String(p.dir||"down");
+    const key=["npc",p.id,p.color,p.hair,p.skin,p.eyes,p.style,p.accessory,p.role,dir,frame].join(":");
+    let sprite=pixelSpriteCache.get(key);
+    if(!sprite){
+      const c=document.createElement("canvas");c.width=32;c.height=40;
+      const g=c.getContext("2d");g.imageSmoothingEnabled=false;
+      const put=(xx,yy,w,h,col)=>{g.fillStyle=col;g.fillRect(xx,yy,w,h);};
+      const hairMap={"栗色":"#794b32","金髪":"#e7bd55","黒髪":"#30272b","銀髪":"#b7c1c9","茶色":"#8a5938","赤髪":"#b64d38","青髪":"#426eaa","緑髪":"#52784a"};
+      const skinMap={"明るい肌":"#f0c49a","普通の肌":"#dba77e","褐色肌":"#b97850","色白":"#f4d8bd"};
+      const hair=hairMap[p.hair]||"#754a34",skin=skinMap[p.skin]||"#f0c49a",cloth=p.color||"#527caa";
+      const dark="#332d32",trim="#e8d2a2",eye=p.eyes==="緑"?"#477a4d":p.eyes==="茶"?"#805238":p.eyes==="紫"?"#76518d":"#426b9a";
+      const step=frame===1?2:frame===3?-2:0;
+      // Boots and legs with a four-frame walking cycle.
+      put(8+step,32,6,5,"#49352b");put(19-step,32,6,5,"#49352b");
+      put(8+step,30,6,3,"#d8bd8b");put(19-step,30,6,3,"#d8bd8b");
+      // Tunic, sleeves, belt, collar and small stitched highlights.
+      put(7,19,18,12,cloth);put(5,20,4,9,dark);put(23,20,4,9,dark);
+      put(6,27,3,4,skin);put(25,27,3,4,skin);
+      put(9,19,14,3,trim);put(14,22,4,7,"#8c6547");put(10,29,12,2,dark);
+      put(12,20,8,2,"#f2e5c5");put(15,23,2,5,"#d8bd8b");
+      // Hair silhouette differs by style and direction.
+      const back=dir==="up"||dir==="up-left"||dir==="up-right";
+      const left=dir==="left"||dir==="up-left",right=dir==="right"||dir==="up-right";
+      if(back){
+        put(8,5,16,12,hair);put(6,9,4,12,hair);put(22,9,4,12,hair);
+        if(p.style==="長髪"){put(7,15,5,10,hair);put(20,15,5,10,hair);}
+        if(p.style==="ポニーテール"){put(23,8,5,10,hair);put(25,16,3,5,hair);}
+      }else{
+        put(8,5,16,8,hair);put(7,8,3,8,hair);put(22,8,3,8,hair);
+        if(p.style==="長髪"){put(6,12,5,12,hair);put(21,12,5,12,hair);}
+        if(p.style==="ポニーテール"){put(23,8,5,9,hair);put(25,15,3,6,hair);}
+        put(9,11,14,10,skin);
+        if(left){put(10,14,2,2,eye);put(12,14,2,2,"#fff4d9");}
+        else if(right){put(20,14,2,2,eye);put(18,14,2,2,"#fff4d9");}
+        else{put(11,14,2,2,"#fff4d9");put(19,14,2,2,"#fff4d9");put(12,14,1,2,eye);put(20,14,1,2,eye);}
+        put(15,18,2,1,"#a94e50");
+      }
+      // Role-specific silhouettes and equipment, not recolored copies of the player.
+      if(p.role==="衛兵"){put(7,4,18,4,"#647d55");put(10,1,12,5,"#d7c69b");put(8,21,16,9,"#708b68");put(24,20,3,13,"#b6b6a4");}
+      else if(p.role==="鍛冶師"){put(7,5,18,5,"#51463e");put(9,7,14,3,"#9b876d");put(8,21,16,10,"#56514d");put(25,23,3,8,"#a6a6a0");}
+      else if(p.role==="商人"||p.role==="旅商人"||p.role==="行商人"){put(5,3,22,5,"#9c6844");put(8,1,16,3,"#e1bd72");put(7,21,18,3,"#f0d9a4");}
+      else if(p.role==="冒険者"||p.role==="旅人"){put(6,3,20,4,"#6d5947");put(8,1,16,3,"#c49a62");put(6,20,20,10,"#6b7f88");put(23,22,4,9,"#9a9d9b");}
+      else if(p.role==="受付"||p.role==="町長"){put(9,4,14,3,"#d3b56e");put(10,21,12,8,"#e7d9bd");}
+      else if(p.accessory==="帽子"){put(5,5,22,4,"#80543b");put(9,2,14,4,"#c18b4d");}
+      else if(p.accessory==="マント"){put(4,20,24,12,"#76517c");put(7,21,18,8,cloth);}
+      else if(p.accessory==="眼鏡"){put(8,14,6,2,"#d7d7cf");put(18,14,6,2,"#d7d7cf");put(14,14,4,1,"#6b6256");}
+      else if(p.accessory==="スカーフ"){put(9,19,14,3,"#e0b45d");put(21,21,3,7,"#c17c45");}
+      else if(p.accessory==="エプロン"){put(9,20,14,10,"#e8d8b2");put(12,22,8,2,"#b78a5b");}
+      // Dark pixel outline and tiny highlights keep the sprite crisp at native resolution.
+      put(7,5,2,8,dark);put(23,5,2,8,dark);put(8,4,16,2,dark);
+      put(9,18,14,1,dark);put(8,30,6,2,dark);put(19,30,6,2,dark);
+      sprite=c;pixelSpriteCache.set(key,sprite);if(pixelSpriteCache.size>420)pixelSpriteCache.delete(pixelSpriteCache.keys().next().value);
+    }
+    ellipse(q.x,q.y-3,13,4,"#3d5138");
+    ctx.save();ctx.imageSmoothingEnabled=false;ctx.drawImage(sprite,Math.round(x),Math.round(y),40,50);ctx.restore();
+  }
+
   function drawPixelPerson(p,isPlayer=false){
+    if(p.isNpc){drawNpcPixelPerson(p);return;}
     const q=project(p.x,p.y);
     if(!p.isNpc&&!(isPlayer&&p.customAppearance)&&playerWalkSheet.complete&&playerWalkSheet.naturalWidth){
       // Rows: front/down=0, left=1, right=2, back/up=3. Columns are the 3 walking poses.
