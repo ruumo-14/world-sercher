@@ -275,3 +275,10 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 #friend-chat{height:170px;overflow:auto;background:#14243b;padding:8px;margin:8px 0;border-radius:4px}.friend-message{padding:5px;border-bottom:1px solid #40536d;overflow-wrap:anywhere}
 #market-listings,#market-mine{max-height:220px;overflow:auto}
 @media(max-width:700px){.social-panel{inset:4px;padding:7px}.social-body{grid-template-columns:1fr}.social-section{padding:7px}.market-row,.friend-row{font-size:12px}}
+
+.game-action-row{display:flex;gap:8px;flex-wrap:wrap;padding:8px 0}
+.game-action-row select{min-width:160px;padding:8px;background:#14243b;color:#fff;border:1px solid #647c9b;border-radius:4px}
+.game-action-row button,.skill-action button{padding:7px 10px;background:#0875c8;border:1px solid #8bdcff;border-radius:5px;color:#fff;font-weight:700}
+.skill-action{display:flex;align-items:center;gap:8px;border-bottom:1px solid #435773}
+.skill-action .record-row{flex:1}
+@media(max-width:760px){.panel-tabs{width:120px}.panel-content{margin-left:125px}.panel-tab{font-size:10px}}

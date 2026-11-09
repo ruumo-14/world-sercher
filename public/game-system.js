@@ -236,10 +236,57 @@
     return html;
   }
 
+
+  function renderInventory() {
+    const items=data.inventory||[];
+    return section("所持アイテム",items.length?'<ul>'+list(items.map(x=>{const o=x.item&&typeof x.item==="object"?x.item:x;return (o.name||o.title||"アイテム")+" ×"+(x.quantity||1)+" ["+(x.rarity||o.rarity||"N")+"]";}))+'</ul>':empty("所持アイテムはありません。"))+
+      section("所持上限",row("インベントリ","上限なし"));
+  }
+  function renderHome() {
+    const h=data.home||{};
+    return section("自宅",[
+      row("場所","リーフェルの指定住宅地"),
+      row("拡張段階",String(h.expansionLevel||0)+" / 10"),
+      row("部屋数",String(h.rooms||1)+" / 3"),
+      row("家具",String((h.furniture||[]).length)+"個"),
+      row("収納家具",String((h.storage||[]).length)+"個"),
+      row("公開設定","本人のみ。ほかのプレイヤーは入室できません"),
+      empty("外観は拡張しても変わらず、室内だけが広くなります。拡張費用の数値は未確定のため、購入操作はまだ有効にしていません。")
+    ].join(""));
+  }
+  function renderQuests() {
+    const active=Array.isArray(data.activeQuests)?data.activeQuests:[];
+    return section("クエスト",[
+      row("受注上限","10件"),
+      row("現在の受注数",active.length+" / 10"),
+      active.length?'<ul>'+list(active.map(q=>q.title||"クエスト"))+'</ul>':empty("受注中のクエストはありません。"),
+      empty("冒険者ギルドでクエストを受注します。依頼内容・報酬データの追加が必要です。")
+    ].join(""));
+  }
+  function renderAchievements() {
+    const earned=Array.isArray(data.achievements)?data.achievements:[];
+    return section("実績",[
+      row("達成数",String(earned.length)),
+      earned.length?'<ul>'+list(earned.map(x=>x.name||x.id||"実績"))+'</ul>':empty("まだ達成した実績はありません。"),
+      empty("戦闘・探索・採集・生活・交流・収集の実績データは今後追加します。")
+    ].join(""));
+  }
+  function renderRanking() {
+    const snapshots=Array.isArray(data.weeklyRankingSnapshots)?data.weeklyRankingSnapshots:[];
+    return section("全体ランキング",[
+      row("集計方式","ゲーム開始からの累計記録"),
+      row("カテゴリ","総レベル・所持GOLD・ミニゲーム"),
+      row("報酬集計","毎週"),
+      row("表示順位","上位50人。圏外は「圏外」表示"),
+      row("保存履歴",snapshots.length+" / 10回"),
+      empty("ランキング集計APIと週次報酬処理はまだ接続されていません。")
+    ].join(""));
+  }
+
   function render() {
     if(!ready) { content.innerHTML=empty("ログイン後にデータを読み込みます。"); return; }
     document.querySelectorAll(".panel-tab").forEach(button=>button.classList.toggle("active",button.dataset.tab===activeTab));
-    const views={status:renderStatus,job:renderJobs,skills:renderSkills,equipment:renderEquipment,world:renderWorld};
+    const views={status:renderStatus,job:renderJobs,skills:renderSkills,equipment:renderEquipment,inventory:renderInventory,home:renderHome,quests:renderQuests,achievements:renderAchievements,ranking:renderRanking,world:renderWorld};
     content.innerHTML=(views[activeTab]||renderStatus)();
   }
 
