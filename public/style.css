@@ -250,3 +250,13 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 .ws-detail h3{margin:0 0 9px;padding:7px;background:#075ba4;border:1px solid #83d9ff;border-radius:5px;color:#fff;font-size:16px}
 .ws-detail p{margin:0;color:#e0e8f4;line-height:1.8;font-size:14px;white-space:normal}
 @media(max-width:650px){.systems-panel{inset:4px;padding:7px}.systems-panel .panel-head h2{font-size:16px}.ws-detail p{font-size:12px}}
+
+#open-chat{background:#344966;border:1px solid #8da9ce;border-radius:5px;color:#fff;padding:8px 11px;font-weight:700;cursor:pointer}
+.chat-messages{flex:1;overflow:auto;min-height:0;padding:10px;background:#16243a;border:1px solid #617a99;border-radius:5px}
+.chat-line{padding:7px 4px;border-bottom:1px solid #40536d;color:#eaf0f7;font-size:13px;overflow-wrap:anywhere}
+.chat-line strong{color:#ffe4a6;margin-right:8px}
+.chat-line time{float:right;color:#9eafc4;font-size:10px}
+.chat-form{display:flex;gap:8px;margin-top:9px}
+.chat-form input{flex:1;min-width:0;padding:10px;background:#14243b;border:1px solid #647c9b;border-radius:4px;color:#fff}
+.chat-form button{padding:8px 14px;background:#0875c8;border:2px solid #8bdcff;border-radius:5px;color:#fff;font-weight:700}
+#chat-status{min-height:18px;color:#d8e3f0;font-size:12px}

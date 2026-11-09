@@ -21,11 +21,13 @@ module.exports = async function handler(req, res) {
       const action = String(req.query?.action || "global");
       if (action === "global") {
         const rows = await db("global_chat_messages", {
-          select: "id,username,body,created_at",
+          select: "id,sender_user_id,username,body,created_at",
           order: "created_at.desc",
           limit: "100",
         });
-        return send(res, 200, { messages: (rows || []).reverse() });
+        const blocks = await db("player_blocks", { select: "blocked_user_id", blocker_user_id: "eq." + session.sub });
+        const hidden = new Set((blocks || []).map(row => row.blocked_user_id));
+        return send(res, 200, { messages: (rows || []).filter(row => !hidden.has(row.sender_user_id)).reverse() });
       }
       if (action === "blocks") {
         const rows = await db("player_blocks", {
@@ -49,10 +51,6 @@ module.exports = async function handler(req, res) {
       const message = cleanText(body.message);
       if (!message) return send(res, 400, { error: "メッセージを入力してね。" });
       if (message.length > 50) return send(res, 400, { error: "全体チャットは50文字までです。" });
-      const blocked = await db("player_blocks", {
-        select: "blocked_user_id",
-        blocker_user_id: "eq." + session.sub,
-      });
       if (await isBlockedTerm(message)) {
         return send(res, 400, { error: "不適切な表現が含まれているため送信できません。" });
       }

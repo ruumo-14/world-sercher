@@ -37,10 +37,11 @@ module.exports = async function handler(req, res) {
         SSR: Number(process.env.MARKET_MIN_SSR || 0),
         UR: Number(process.env.MARKET_MIN_UR || 0),
       };
-      if (!item || typeof item !== "object" || !["N","R","SR","SSR","UR"].includes(rarity)) {
+      if (!item || typeof item !== "object" || typeof item.id !== "string" || !["N","R","SR","SSR","UR"].includes(rarity)) {
         return send(res, 400, { error: "出品アイテムの情報が正しくありません。" });
       }
-      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999999 || !Number.isSafeInteger(price) || price < Math.max(1, rarityMap[rarity])) {
+      if (rarityMap[rarity] <= 0) return send(res, 503, { error: "レア度ごとの最低価格がまだ設定されていません。" });
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999999 || !Number.isSafeInteger(price) || price < rarityMap[rarity]) {
         return send(res, 400, { error: "数量または価格が正しくありません。レア度ごとの最低価格を確認してね。" });
       }
       const fee = Number(process.env.MARKET_LISTING_FEE_GOLD);
@@ -52,6 +53,7 @@ module.exports = async function handler(req, res) {
         body: {
           p_user_id: session.sub,
           p_seller_name: session.username,
+          p_item_id: item.id,
           p_item_data: item,
           p_rarity: rarity,
           p_quantity: quantity,
