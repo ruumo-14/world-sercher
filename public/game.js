@@ -651,104 +651,89 @@
   }
 
 
-  // Candidate 4: original layered-paper fantasy world. No legacy sprite/art assets are used.
-  function paperPoint(wx,wy){const dx=wx-camera.x,dy=wy-camera.y;return {x:W/2+(dx-dy)*.31,y:300+(dx+dy)*.145};}
-  function paperShape(points,fill,edge="#6f5847",width=2){
-    ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
-    ctx.fillStyle=fill;ctx.fill();if(edge){ctx.strokeStyle=edge;ctx.lineWidth=width;ctx.stroke();}
+  // Candidate 5: clean, flat 2D top-down fantasy world.
+  function flatHouse(b,index){
+    const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;
+    const w=Math.max(66,b.w*.72),h=Math.max(54,b.h*.62);
+    if(x<-w-40||x>W+w+40||y<-h-50||y>H+h+50)return;
+    const palettes={guild:["#b96c56","#e8c99b"],forge:["#77716b","#c7b5a0"],inn:["#c87962","#f0d5a9"],market:["#d2a65e","#f3dfb7"],farm:["#879b62","#e4d5a8"],bank:["#6e9a9c","#e4e0c8"],home:["#c58b69","#f0d8b5"],shop:["#8191b2","#eee0c5"]};
+    const [roof,wall]=palettes[b.type]||palettes.home;
+    ellipse(x,y+h*.42,w*.55,10,"#66835b");
+    // A simple roof footprint, with a small front-facing entrance.
+    ctx.fillStyle="#6f5142";ctx.fillRect(x-w/2,y-h/2,w,h);
+    ctx.fillStyle=wall;ctx.fillRect(x-w/2+5,y-h/2+5,w-10,h-10);
+    ctx.fillStyle=roof;ctx.fillRect(x-w/2-4,y-h/2-5,w+8,h*.67);
+    ctx.fillStyle="rgba(255,255,255,.18)";ctx.fillRect(x-w/2+3,y-h/2-2,w-6,5);
+    ctx.fillStyle="#684b3c";ctx.fillRect(x-9,y+h*.13,18,h*.25);
+    ctx.fillStyle="#a9d6d2";ctx.fillRect(x-w*.29,y-h*.23,13,13);ctx.fillRect(x+w*.18,y-h*.23,13,13);
+    ctx.fillStyle="#fff4d9";ctx.font="bold 10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(b.name,x,y+h*.48);
   }
-  function paperShadow(x,y,rx,ry){ctx.save();ctx.fillStyle="rgba(48,42,37,.18)";ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.restore();}
-  function paperDiamond(x,y,rx,ry,fill,edge="#6f7650"){paperShape([{x,y:y-ry},{x:x+rx,y},{x,y:y+ry},{x:x-rx,y}],fill,edge,1.5);}
-  function paperGround(){
-    const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#d8e4d7");bg.addColorStop(1,"#f2dfbd");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    // Broad paper-cut terrain layers
-    paperShape([{x:-80,y:355},{x:170,y:240},{x:440,y:260},{x:680,y:215},{x:1040,y:350},{x:1000,y:670},{x:-80,y:670}],"#a9c68e","#799c78",3);
-    paperShape([{x:-70,y:410},{x:180,y:300},{x:420,y:326},{x:690,y:265},{x:1030,y:400},{x:1020,y:680},{x:-70,y:680}],"#7fa978","#638b67",3);
-    // river as a wide folded ribbon
-    paperShape([{x:-30,y:325},{x:140,y:285},{x:290,y:330},{x:440,y:288},{x:610,y:335},{x:790,y:280},{x:1010,y:326},{x:1010,y:365},{x:790,y:320},{x:610,y:375},{x:440,y:326},{x:290,y:370},{x:140,y:325},{x:-30,y:365}],"#78b9c4","#4e8d9a",3);
-    paperShape([{x:-20,y:337},{x:140,y:300},{x:290,y:345},{x:440,y:302},{x:610,y:350},{x:790,y:295},{x:1000,y:340}],"rgba(255,255,255,.55)",null);
-    // layered paper paths and meadow shapes
-    paperShape([{x:70,y:480},{x:265,y:420},{x:450,y:458},{x:635,y:405},{x:870,y:468},{x:920,y:510},{x:650,y:450},{x:455,y:505},{x:260,y:465},{x:85,y:525}],"#e4c995","#b69b70",2);
-    for(let i=0;i<24;i++){const x=(i*137+31)%1000,y=420+(i*59)%170;paperShape([{x,y},{x:x+14,y:y-8},{x:x+28,y:y+1},{x:x+13,y:y+10}],i%3===0?"#c2d49b":i%3===1?"#94b77f":"#d1dca5",null);}
-    // far paper hills and clouds
-    for(let i=0;i<5;i++){const x=i*235-30,y=160+(i%2)*35;paperShape([{x:x-65,y:y+55},{x:x-25,y:y-5},{x:x+20,y:y+18},{x:x+62,y:y-12},{x:x+110,y:y+55}],i%2?"#b7cfb1":"#c6d8bd",null);}
-    for(let i=0;i<4;i++){const x=90+i*270,y=82+(i%2)*30;paperShape([{x:x-38,y},{x:x-15,y:y-13},{x:x+8,y:y-8},{x:x+28,y:y-18},{x:x+51,y:y+1},{x:x+30,y:y+12},{x:x-23,y:y+10}],"#f8f3df",null);}
+  function flatTree(wx,wy,index){
+    const p=project(wx,wy),x=p.x,y=p.y;if(x<-50||x>W+50||y<-55||y>H+55)return;
+    ellipse(x,y+5,19,7,"#5f8754");
+    ctx.fillStyle="#80583e";ctx.fillRect(x-4,y-7,8,15);
+    const colors=["#4f9862","#65a96a","#78b879"];const r=18+(index%3)*2;
+    ellipse(x,y-17,r,r*.82,colors[index%3]);
+    ellipse(x-r*.35,y-19,r*.55,r*.5,colors[(index+1)%3]);
+    ellipse(x+r*.32,y-20,r*.58,r*.52,colors[(index+2)%3]);
+    ellipse(x-5,y-27,5,3,"#a4d18a");
   }
-  function paperBuilding(b,i){
-    const p=paperPoint(b.x+b.w/2,b.y+b.h/2),w=Math.max(42,Math.min(94,b.w*.38)),h=Math.max(26,Math.min(58,b.h*.27)),x=p.x-w/2,y=p.y;
-    if(x<-120||x>W+120||y<80||y>H+100)return;
-    paperShadow(p.x,y+7,w*.62,11);
-    // folded side wall and front wall
-    paperShape([{x:x+w*.52,y:y-h*.7},{x:x+w,y:y-h*.45},{x:x+w,y:y+4},{x:x+w*.52,y:y+12}],b.color||"#c7a77d","#765c48",2);
-    paperShape([{x,y:y-h*.52},{x:x+w*.52,y:y-h*.7},{x:x+w*.52,y:y+12},{x,y:y+4}],i%2?"#f0d9ad":"#e8cda0","#765c48",2);
-    // roof is a folded sheet, with a clear ridge
-    paperShape([{x:x-8,y:y-h*.48},{x:x+w*.48,y:y-h-25},{x:x+w+10,y:y-h*.42},{x:x+w*.52,y:y-h*.18}],i%3===0?"#a85f55":i%3===1?"#66816d":"#7d6d91","#59483f",2.5);
-    paperShape([{x:x-8,y:y-h*.48},{x:x+w*.48,y:y-h-25},{x:x+w*.52,y:y-h*.18},{x,y:y-h*.28}],i%2?"#d58a6b":"#c77b65",null);
-    paperShape([{x:x+w*.48,y:y-h-25},{x:x+w+10,y:y-h*.42},{x:x+w*.52,y:y-h*.18}], "#8d514b",null);
-    // door and cut-paper windows
-    paperShape([{x:x+w*.4,y:y-4},{x:x+w*.58,y:y},{x:x+w*.58,y:y+12},{x:x+w*.4,y:y+8}],"#73513f","#59483f",1);
-    paperShape([{x:x+w*.13,y:y-h*.25},{x:x+w*.28,y:y-h*.19},{x:x+w*.28,y:y-h*.02},{x:x+w*.13,y:y-h*.08}],"#8ec0bd","#f4e5bd",1.5);
-    paperShape([{x:x+w*.72,y:y-h*.18},{x:x+w*.87,y:y-h*.12},{x:x+w*.87,y:y+h*.04},{x:x+w*.72,y:y-h*.02}],"#8ec0bd","#f4e5bd",1.5);
-    ctx.fillStyle="#6b5744";ctx.font="bold 10px sans-serif";ctx.textAlign="center";ctx.fillText(b.name,p.x,y+h*.34);
+  function flatPerson(p,isPlayer=false){
+    const q=project(p.x,p.y),x=q.x,y=q.y;if(x<-30||x>W+30||y<-45||y>H+35)return;
+    const moving=!!p.moving,step=moving?Math.sin((p.walkClock||0)*12)*3:0;
+    ellipse(x,y+7,11,4,"rgba(40,65,45,.24)");
+    ctx.fillStyle="#57483d";
+    ctx.fillRect(x-5+step,y-1,4,9);ctx.fillRect(x+2-step,y-1,4,9);
+    ctx.fillStyle=isPlayer?(p.outfit||"#527fa4"):(p.color||"#b77b68");
+    ctx.beginPath();ctx.roundRect(x-9,y-17,18,19,5);ctx.fill();
+    ctx.fillStyle=p.skinColor||"#f0c59d";ellipse(x,y-20,7,7,"#f0c59d");
+    ctx.fillStyle=p.hairColor||"#76533f";ctx.beginPath();ctx.arc(x,y-22,7,Math.PI,Math.PI*2);ctx.fill();
+    // Direction marker keeps the facing direction readable without rotating the whole body.
+    const dir=p.dir||"down";ctx.fillStyle="#fff0ca";
+    if(dir==="up")ctx.fillRect(x-2,y-28,4,3);
+    else if(dir==="left")ctx.fillRect(x-8,y-21,3,4);
+    else if(dir==="right")ctx.fillRect(x+5,y-21,3,4);
+    else {ctx.fillStyle="#443b35";ctx.fillRect(x-3,y-20,2,2);ctx.fillRect(x+2,y-20,2,2);}
+    if(isPlayer){ctx.fillStyle="#f5df83";ctx.beginPath();ctx.moveTo(x,y-35);ctx.lineTo(x-5,y-29);ctx.lineTo(x+5,y-29);ctx.fill();}
   }
-  function paperTree(wx,wy,i){
-    const p=paperPoint(wx,wy);if(p.x<-55||p.x>W+55||p.y<70||p.y>H+65)return;
-    paperShadow(p.x,p.y+4,19,7);
-    paperShape([{x:p.x-4,y:p.y-10},{x:p.x+4,y:p.y-10},{x:p.x+5,y:p.y-37},{x:p.x-4,y:p.y-37}],"#8c6549","#70513d",1);
-    const col=i%3===0?"#4f8a66":i%3===1?"#6b9d66":"#779f72";
-    paperShape([{x:p.x-23,y:p.y-32},{x:p.x-17,y:p.y-51},{x:p.x-3,y:p.y-65},{x:p.x+12,y:p.y-57},{x:p.x+25,y:p.y-37},{x:p.x+16,y:p.y-21},{x:p.x-15,y:p.y-19}],col,"#456e55",2);
-    paperShape([{x:p.x-15,y:p.y-43},{x:p.x-4,y:p.y-61},{x:p.x+8,y:p.y-52},{x:p.x+1,y:p.y-38}],"#a7c58a",null);
-    if(i%4===0){ctx.fillStyle="#e9b9a0";ctx.beginPath();ctx.arc(p.x+11,p.y-43,4,0,Math.PI*2);ctx.fill();}
+  function flatInterior(){
+    ctx.fillStyle="#d9c7a6";ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#b58d68";ctx.fillRect(34,34,892,532);
+    ctx.fillStyle="#ead9b8";ctx.fillRect(48,48,864,500);
+    ctx.fillStyle="#c6a078";ctx.fillRect(75,85,810,105);
+    ctx.fillStyle="#8a6045";ctx.fillRect(345,245,270,95);
+    ctx.fillStyle="#d5b17b";ctx.fillRect(355,255,250,75);
+    ctx.fillStyle="#73513d";ctx.fillRect(440,360,80,125);
+    ctx.fillStyle="#f0d9ae";ctx.font="bold 22px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(interior?.building?.name||"室内",480,115);
+    flatPerson({...player,x:1600,y:1300,dir:"down"},true);
+    ctx.fillStyle="#5b4939";ctx.font="14px 'Noto Sans JP',sans-serif";ctx.fillText("操作ボタンで外へ出る",480,530);
   }
-  function paperPerson(person,isPlayer=false){
-    const p=paperPoint(person.x,person.y);if(p.x<-35||p.x>W+35||p.y<60||p.y>H+60)return;
-    const walk=person.moving?Math.sin((person.walkClock||0)*12)*3:0;
-    paperShadow(p.x,p.y+3,12,5);
-    paperShape([{x:p.x-7+walk,y:p.y-13},{x:p.x-1,y:p.y-13},{x:p.x-2,y:p.y},{x:p.x-9,y:p.y}],"#57493f","#57493f",1);
-    paperShape([{x:p.x+2,y:p.y-13},{x:p.x+8-walk,y:p.y-13},{x:p.x+10,y:p.y},{x:p.x+3,y:p.y}],"#57493f","#57493f",1);
-    const outfit=isPlayer?"#527fa4":(person.color||"#b77a63");
-    paperShape([{x:p.x-12,y:p.y-37},{x:p.x+8,y:p.y-37},{x:p.x+13,y:p.y-13},{x:p.x,y:p.y-7},{x:p.x-14,y:p.y-13}],outfit,"#59483e",2);
-    paperShape([{x:p.x-8,y:p.y-50},{x:p.x+7,y:p.y-50},{x:p.x+9,y:p.y-35},{x:p.x-7,y:p.y-33}],"#e2b58d","#725644",1.5);
-    paperShape([{x:p.x-10,y:p.y-50},{x:p.x-6,y:p.y-58},{x:p.x+7,y:p.y-57},{x:p.x+11,y:p.y-48},{x:p.x+5,y:p.y-45},{x:p.x-8,y:p.y-45}],person.hairColor||"#77533f","#5c4437",1);
-    ctx.fillStyle="#51443b";ctx.fillRect(p.x-4,p.y-43,2,2);ctx.fillRect(p.x+3,p.y-43,2,2);
-    if(isPlayer){paperShape([{x:p.x-5,y:p.y-34},{x:p.x+3,y:p.y-34},{x:p.x+1,y:p.y-27}],"#e8d18b",null);}
-  }
-  function paperInterior(){
-    ctx.fillStyle="#d9c8a8";ctx.fillRect(0,0,W,H);
-    paperShape([{x:100,y:145},{x:480,y:55},{x:860,y:145},{x:480,y:270}],"#f0dfbd","#8c7357",3);
-    paperShape([{x:100,y:145},{x:480,y:270},{x:480,y:565},{x:100,y:420}],"#bd9875","#8c7357",3);
-    paperShape([{x:480,y:270},{x:860,y:145},{x:860,y:420},{x:480,y:565}],"#a98264","#8c7357",3);
-    for(let i=0;i<5;i++){const x=160+i*155;paperShape([{x,y:190},{x:x+85,y:164},{x:x+85,y:177},{x,y:203}],"#dfc08a","#987755",1);}
-    paperShape([{x:350,y:390},{x:480,y:350},{x:610,y:390},{x:480,y:438}],"#d8b17a","#8c7357",2);
-    paperShape([{x:350,y:390},{x:480,y:438},{x:480,y:480},{x:350,y:430}],"#9c7658","#8c7357",2);
-    paperShape([{x:480,y:438},{x:610,y:390},{x:610,y:430},{x:480,y:480}],"#785a48","#8c7357",2);
-    paperShape([{x:395,y:280},{x:475,y:255},{x:555,y:280},{x:475,y:306}],"#78948a","#6b6553",2);
-  }
-  function paperBattle(){
-    const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#d6d9cb");bg.addColorStop(1,"#b7c79e");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    paperShape([{x:0,y:410},{x:480,y:270},{x:960,y:410},{x:480,y:590}],"#8eaa78","#607d5c",3);
-    for(let i=0;i<5;i++){const x=100+i*190;paperShape([{x:x-50,y:365},{x,y:335},{x:x+55,y:365},{x,y:393}],"#a9bd88","#71845e",2);}
-    // hero and monsters use the same cut-paper construction as town characters
-    paperPerson({x:player.x,y:player.y,color:"#527fa4",moving:false},true);
-    (battle?.enemies||[]).forEach((e,i)=>{if(e.hp<=0)return;const x=650+i*82,y=390-(i%2)*32;paperShadow(x,y+8,24,9);paperShape([{x:x-22,y:y-8},{x:x-18,y:y-42},{x:x-5,y:y-54},{x:x+15,y:y-47},{x:x+23,y:y-14},{x:x+9,y:y+2}],e.color||"#83b5a1","#52634f",2.5);paperShape([{x:x-14,y:y-38},{x:x-6,y:y-46},{x:x+5,y:y-42},{x:x+12,y:y-29}],"#d4e5be",null);ctx.fillStyle="#3f4a3c";ctx.fillRect(x-9,y-29,4,4);ctx.fillRect(x+7,y-29,4,4);});
-    ctx.fillStyle="#45584b";ctx.font="bold 22px sans-serif";ctx.textAlign="left";ctx.fillText(battle?.enemyName||"モンスター",45,65);
-    if(battleMessage&&performance.now()<battleMessageUntil){ctx.fillStyle="#fff7e5";ctx.font="bold 24px sans-serif";ctx.textAlign="center";ctx.fillText(battleMessage,480,245);}
+  function flatBattle(){
+    ctx.fillStyle="#b8d9d0";ctx.fillRect(0,0,W,H);
+    ctx.fillStyle="#8fc18a";ctx.fillRect(0,300,W,300);
+    for(let i=0;i<8;i++){ctx.fillStyle=i%2?"#7bb579":"#9bc98e";ellipse(70+i*125,350+(i%3)*35,65,20,"#7bb579");}
+    flatPerson({...player,x:0,y:0,dir:"right"},true);
+    // Battle actors remain in the established side-view battle coordinates.
+    drawBattle();
   }
   function render(){
     ctx.clearRect(0,0,W,H);
-    if(battle)paperBattle();
-    else if(interior)paperInterior();
-    else{
-      paperGround();const objects=[];
-      for(let i=0;i<buildings.length;i++){const b=buildings[i];objects.push({depth:b.x+b.y+b.w+b.h,draw:()=>paperBuilding(b,i)});}
-      for(let i=0;i<70;i++){const x=100+Math.floor(hash(i,23)*2700),y=140+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<430||buildings.some(b=>x>b.x-100&&x<b.x+b.w+100&&y>b.y-100&&y<b.y+b.h+100))continue;objects.push({depth:x+y,draw:()=>paperTree(x,y,i)});}
-      for(const n of npcs)objects.push({depth:n.x+n.y,draw:()=>paperPerson(n)});
-      for(const p of others.values())objects.push({depth:p.x+p.y,draw:()=>paperPerson(p)});
-      objects.push({depth:player.x+player.y,draw:()=>paperPerson(player,true)});
-      objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
+    if(battle){drawBattle();return;}
+    if(interior){flatInterior();return;}
+    drawGround();
+    const objects=[];
+    for(let i=0;i<buildings.length;i++){const b=buildings[i];objects.push({depth:b.y+b.h,draw:()=>flatHouse(b,i)});}
+    for(let i=0;i<62;i++){const x=90+Math.floor(hash(i,23)*2750),y=120+Math.floor(hash(i,31)*2450);
+      if(Math.hypot(x-1600,y-1320)<460||buildings.some(b=>x>b.x-90&&x<b.x+b.w+90&&y>b.y-90&&y<b.y+b.h+90))continue;
+      objects.push({depth:y,draw:()=>flatTree(x,y,i)});
     }
+    townDecor.forEach(item=>objects.push({depth:item[2]+5,draw:()=>drawTownDecor(item)}));
+    objects.push({depth:1325,draw:()=>drawFountain(1600,1320)});
+    for(const n of npcs)objects.push({depth:n.y,draw:()=>flatPerson(n)});
+    for(const p of others.values())objects.push({depth:p.y,draw:()=>flatPerson(p)});
+    objects.push({depth:player.y,draw:()=>flatPerson(player,true)});
+    objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
   }
-
 
     function update(dt){
     if(!started||!$("creation-panel").classList.contains("hidden"))return;
@@ -916,7 +901,7 @@
   }
 
   // Current full-art experiment: 3D anime fantasy. Next candidates will replace this renderer entirely.
-  document.body.dataset.graphicStyle="paperworld";
+  document.body.dataset.graphicStyle="flat2d";
   function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
   document.querySelectorAll(".panel-tab").forEach(b=>b.addEventListener("click",()=>{}));
   $("open-adventurer").addEventListener("click",()=>{$("adventurer-panel").classList.remove("hidden")});$("close-adventurer").addEventListener("click",()=>$("adventurer-panel").classList.add("hidden"));
