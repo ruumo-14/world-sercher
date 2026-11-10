@@ -565,3 +565,17 @@ body[data-graphic-style="diorama25d"] button{border-radius:8px}
 body[data-graphic-style="diorama25d"] .hud-player,body[data-graphic-style="diorama25d"] .hud-help,body[data-graphic-style="diorama25d"] .notice{background:#e5d4ae;color:#44392e;border:2px solid #9b8058;border-radius:9px;box-shadow:0 4px 0 #66513b}
 body[data-graphic-style="diorama25d"] .bottom-info{color:#e1d3a8}
 body[data-graphic-style="diorama25d"] .graphic-style-label{background:#e4d2aa;border:2px solid #9b8058;border-radius:8px;color:#51412f}
+
+
+/* Candidate 4: layered paper-cut fantasy art, rendered at full canvas resolution */
+body[data-graphic-style="paperworld"]{background:#34433c;color:#f7edda}
+body[data-graphic-style="paperworld"] .canvas-wrap{border:5px solid #8e7659;border-radius:4px;background:#d9e4d2;box-shadow:0 7px 0 #1f302a,0 14px 28px rgba(0,0,0,.25)}
+body[data-graphic-style="paperworld"] canvas{image-rendering:auto;filter:none}
+body[data-graphic-style="paperworld"] .start-card{background:#f0e4c9!important;border:3px solid #9d8060!important;border-radius:4px!important;box-shadow:7px 7px 0 #6c5946!important;color:#4c4538!important}
+body[data-graphic-style="paperworld"] .start-card h2{color:#6d7656!important}
+body[data-graphic-style="paperworld"] .intro{color:#6c6250!important}
+body[data-graphic-style="paperworld"] input,body[data-graphic-style="paperworld"] select{background:#fff8e8!important;border:2px solid #a88c67!important;border-radius:3px!important;color:#4c4538!important}
+body[data-graphic-style="paperworld"] button{border-radius:3px}
+body[data-graphic-style="paperworld"] .hud-player,body[data-graphic-style="paperworld"] .hud-help,body[data-graphic-style="paperworld"] .notice{background:#f1e5cc;color:#4c4538;border:2px solid #a88c67;border-radius:3px;box-shadow:4px 4px 0 rgba(76,69,56,.25)}
+body[data-graphic-style="paperworld"] .bottom-info{color:#e5e0c8}
+body[data-graphic-style="paperworld"] .graphic-style-label{background:#f1e5cc;border:2px solid #a88c67;border-radius:3px;color:#4c4538}
