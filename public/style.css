@@ -592,3 +592,14 @@ body[data-graphic-style="flat2d"] button{border-radius:6px}
 body[data-graphic-style="flat2d"] .hud-player,body[data-graphic-style="flat2d"] .hud-help,body[data-graphic-style="flat2d"] .notice{background:#253547;color:#edf2f7;border:1px solid #536b7b;border-radius:7px;box-shadow:0 3px 9px rgba(0,0,0,.15)}
 body[data-graphic-style="flat2d"] .bottom-info{color:#d5e2ec}
 body[data-graphic-style="flat2d"] .graphic-style-label{background:#253547;border:1px solid #536b7b;border-radius:6px;color:#edf2f7}
+
+/* Emoji-world style: no custom character or building sprites required */
+body[data-graphic-style="emojiworld"]{background:#17212b;color:#edf2f7}
+body[data-graphic-style="emojiworld"] .canvas-wrap{border:2px solid #536b7b;border-radius:8px;background:#9acb83;box-shadow:0 5px 16px rgba(0,0,0,.18)}
+body[data-graphic-style="emojiworld"] canvas{image-rendering:auto;filter:none}
+body[data-graphic-style="emojiworld"] .start-card{background:#253547!important;border:1px solid #536b7b!important;border-radius:10px!important;box-shadow:0 5px 16px rgba(0,0,0,.2)!important;color:#edf2f7!important}
+body[data-graphic-style="emojiworld"] .start-card h2{color:#f3f6fa!important}
+body[data-graphic-style="emojiworld"] .intro{color:#c5d1dc!important}
+body[data-graphic-style="emojiworld"] input,body[data-graphic-style="emojiworld"] select{background:#172534!important;border:1px solid #536b7b!important;border-radius:6px!important;color:#edf2f7!important}
+body[data-graphic-style="emojiworld"] button{border-radius:6px}
+body[data-graphic-style="emojiworld"] .hud-player,body[data-graphic-style="emojiworld"] .hud-help,body[data-graphic-style="emojiworld"] .notice{background:#253547;color:#edf2f7;border:1px solid #536b7b;border-radius:7px;box-shadow:0 3px 9px rgba(0,0,0,.15)}
