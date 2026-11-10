@@ -651,103 +651,102 @@
   }
 
 
-  // Candidate 3: 2.5D miniature diorama. Game coordinates and collision remain unchanged.
-  function dioProject(wx,wy){
-    const dx=wx-camera.x,dy=wy-camera.y;
-    return {x:W/2+(dx-dy)*.235,y:300+(dx+dy)*.105};
-  }
-  function dioPoly(points,fill,stroke=null){
+  // Candidate 4: original layered-paper fantasy world. No legacy sprite/art assets are used.
+  function paperPoint(wx,wy){const dx=wx-camera.x,dy=wy-camera.y;return {x:W/2+(dx-dy)*.31,y:300+(dx+dy)*.145};}
+  function paperShape(points,fill,edge="#6f5847",width=2){
     ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
-    ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
+    ctx.fillStyle=fill;ctx.fill();if(edge){ctx.strokeStyle=edge;ctx.lineWidth=width;ctx.stroke();}
   }
-  function dioDiamond(x,y,rx,ry,fill,stroke){
-    dioPoly([{x,y:y-ry},{x:x+rx,y},{x,y:y+ry},{x:x-rx,y}],fill,stroke);
+  function paperShadow(x,y,rx,ry){ctx.save();ctx.fillStyle="rgba(48,42,37,.18)";ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.restore();}
+  function paperDiamond(x,y,rx,ry,fill,edge="#6f7650"){paperShape([{x,y:y-ry},{x:x+rx,y},{x,y:y+ry},{x:x-rx,y}],fill,edge,1.5);}
+  function paperGround(){
+    const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#d8e4d7");bg.addColorStop(1,"#f2dfbd");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    // Broad paper-cut terrain layers
+    paperShape([{x:-80,y:355},{x:170,y:240},{x:440,y:260},{x:680,y:215},{x:1040,y:350},{x:1000,y:670},{x:-80,y:670}],"#a9c68e","#799c78",3);
+    paperShape([{x:-70,y:410},{x:180,y:300},{x:420,y:326},{x:690,y:265},{x:1030,y:400},{x:1020,y:680},{x:-70,y:680}],"#7fa978","#638b67",3);
+    // river as a wide folded ribbon
+    paperShape([{x:-30,y:325},{x:140,y:285},{x:290,y:330},{x:440,y:288},{x:610,y:335},{x:790,y:280},{x:1010,y:326},{x:1010,y:365},{x:790,y:320},{x:610,y:375},{x:440,y:326},{x:290,y:370},{x:140,y:325},{x:-30,y:365}],"#78b9c4","#4e8d9a",3);
+    paperShape([{x:-20,y:337},{x:140,y:300},{x:290,y:345},{x:440,y:302},{x:610,y:350},{x:790,y:295},{x:1000,y:340}],"rgba(255,255,255,.55)",null);
+    // layered paper paths and meadow shapes
+    paperShape([{x:70,y:480},{x:265,y:420},{x:450,y:458},{x:635,y:405},{x:870,y:468},{x:920,y:510},{x:650,y:450},{x:455,y:505},{x:260,y:465},{x:85,y:525}],"#e4c995","#b69b70",2);
+    for(let i=0;i<24;i++){const x=(i*137+31)%1000,y=420+(i*59)%170;paperShape([{x,y},{x:x+14,y:y-8},{x:x+28,y:y+1},{x:x+13,y:y+10}],i%3===0?"#c2d49b":i%3===1?"#94b77f":"#d1dca5",null);}
+    // far paper hills and clouds
+    for(let i=0;i<5;i++){const x=i*235-30,y=160+(i%2)*35;paperShape([{x:x-65,y:y+55},{x:x-25,y:y-5},{x:x+20,y:y+18},{x:x+62,y:y-12},{x:x+110,y:y+55}],i%2?"#b7cfb1":"#c6d8bd",null);}
+    for(let i=0;i<4;i++){const x=90+i*270,y=82+(i%2)*30;paperShape([{x:x-38,y},{x:x-15,y:y-13},{x:x+8,y:y-8},{x:x+28,y:y-18},{x:x+51,y:y+1},{x:x+30,y:y+12},{x:x-23,y:y+10}],"#f8f3df",null);}
   }
-  function dioBox(x,y,w,h,depth,top,front,side){
-    ctx.fillStyle=side;ctx.fillRect(x+w,y-depth,w*.18,depth);
-    dioPoly([{x,y:y-depth},{x:x+w,y:y-depth},{x:x+w+w*.18,y:y-depth+depth*.12},{x:x+w*.18,y:y-depth+depth*.12}],top);
-    ctx.fillStyle=front;ctx.fillRect(x,y-depth,w,h+depth);
-    dioPoly([{x:x+w,y:y-depth},{x:x+w+w*.18,y:y-depth+depth*.12},{x:x+w+w*.18,y:y+h},{x:x+w,y:y+h}],side);
+  function paperBuilding(b,i){
+    const p=paperPoint(b.x+b.w/2,b.y+b.h/2),w=Math.max(42,Math.min(94,b.w*.38)),h=Math.max(26,Math.min(58,b.h*.27)),x=p.x-w/2,y=p.y;
+    if(x<-120||x>W+120||y<80||y>H+100)return;
+    paperShadow(p.x,y+7,w*.62,11);
+    // folded side wall and front wall
+    paperShape([{x:x+w*.52,y:y-h*.7},{x:x+w,y:y-h*.45},{x:x+w,y:y+4},{x:x+w*.52,y:y+12}],b.color||"#c7a77d","#765c48",2);
+    paperShape([{x,y:y-h*.52},{x:x+w*.52,y:y-h*.7},{x:x+w*.52,y:y+12},{x,y:y+4}],i%2?"#f0d9ad":"#e8cda0","#765c48",2);
+    // roof is a folded sheet, with a clear ridge
+    paperShape([{x:x-8,y:y-h*.48},{x:x+w*.48,y:y-h-25},{x:x+w+10,y:y-h*.42},{x:x+w*.52,y:y-h*.18}],i%3===0?"#a85f55":i%3===1?"#66816d":"#7d6d91","#59483f",2.5);
+    paperShape([{x:x-8,y:y-h*.48},{x:x+w*.48,y:y-h-25},{x:x+w*.52,y:y-h*.18},{x,y:y-h*.28}],i%2?"#d58a6b":"#c77b65",null);
+    paperShape([{x:x+w*.48,y:y-h-25},{x:x+w+10,y:y-h*.42},{x:x+w*.52,y:y-h*.18}], "#8d514b",null);
+    // door and cut-paper windows
+    paperShape([{x:x+w*.4,y:y-4},{x:x+w*.58,y:y},{x:x+w*.58,y:y+12},{x:x+w*.4,y:y+8}],"#73513f","#59483f",1);
+    paperShape([{x:x+w*.13,y:y-h*.25},{x:x+w*.28,y:y-h*.19},{x:x+w*.28,y:y-h*.02},{x:x+w*.13,y:y-h*.08}],"#8ec0bd","#f4e5bd",1.5);
+    paperShape([{x:x+w*.72,y:y-h*.18},{x:x+w*.87,y:y-h*.12},{x:x+w*.87,y:y+h*.04},{x:x+w*.72,y:y-h*.02}],"#8ec0bd","#f4e5bd",1.5);
+    ctx.fillStyle="#6b5744";ctx.font="bold 10px sans-serif";ctx.textAlign="center";ctx.fillText(b.name,p.x,y+h*.34);
   }
-  function drawDioramaGround(){
-    const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#9fc9d4");sky.addColorStop(1,"#e5d9ad");ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
-    // Floating layered island base
-    dioPoly([{x:70,y:390},{x:480,y:270},{x:890,y:390},{x:480,y:560}],"#527a55","#34563e");
-    dioPoly([{x:70,y:390},{x:480,y:270},{x:890,y:390},{x:480,y:430}],"#83ad68","#557d50");
-    dioPoly([{x:70,y:390},{x:480,y:430},{x:480,y:560}],"#496d4d");
-    dioPoly([{x:480,y:430},{x:890,y:390},{x:480,y:560}],"#3f6248");
-    // tiled grass patches and a winding river
-    for(let i=0;i<46;i++){const x=115+(i*173)%730,y=315+(i*71)%170;dioDiamond(x,y,20,9,i%3===0?"#9abd72":i%3===1?"#76a65f":"#86b36b");}
-    dioPoly([{x:100,y:380},{x:235,y:342},{x:370,y:388},{x:515,y:345},{x:650,y:385},{x:800,y:345},{x:824,y:366},{x:665,y:414},{x:515,y:375},{x:370,y:420},{x:235,y:375},{x:120,y:410}],"#559eae","#d0e6c7");
-    // raised path tiles
-    for(let i=0;i<13;i++){const x=250+i*37,y=425+Math.sin(i*.65)*13;dioDiamond(x,y,22,11,i%2?"#c6ad7c":"#d7c18e","#9b865f");}
-    for(let i=0;i<6;i++){const x=145+i*142,y=300+(i%2)*28;dioPoly([{x,y:y-12},{x:x+34,y:y-22},{x:x+66,y:y-8},{x:x+32,y:y+5}],"#b6cf9c");}
+  function paperTree(wx,wy,i){
+    const p=paperPoint(wx,wy);if(p.x<-55||p.x>W+55||p.y<70||p.y>H+65)return;
+    paperShadow(p.x,p.y+4,19,7);
+    paperShape([{x:p.x-4,y:p.y-10},{x:p.x+4,y:p.y-10},{x:p.x+5,y:p.y-37},{x:p.x-4,y:p.y-37}],"#8c6549","#70513d",1);
+    const col=i%3===0?"#4f8a66":i%3===1?"#6b9d66":"#779f72";
+    paperShape([{x:p.x-23,y:p.y-32},{x:p.x-17,y:p.y-51},{x:p.x-3,y:p.y-65},{x:p.x+12,y:p.y-57},{x:p.x+25,y:p.y-37},{x:p.x+16,y:p.y-21},{x:p.x-15,y:p.y-19}],col,"#456e55",2);
+    paperShape([{x:p.x-15,y:p.y-43},{x:p.x-4,y:p.y-61},{x:p.x+8,y:p.y-52},{x:p.x+1,y:p.y-38}],"#a7c58a",null);
+    if(i%4===0){ctx.fillStyle="#e9b9a0";ctx.beginPath();ctx.arc(p.x+11,p.y-43,4,0,Math.PI*2);ctx.fill();}
   }
-  function drawDioramaHouse(b,index){
-    const p=dioProject(b.x+b.w/2,b.y+b.h/2),w=Math.max(40,Math.min(86,b.w*.34)),h=Math.max(26,Math.min(48,b.h*.22)),x=p.x-w/2,y=p.y;
-    if(x<-100||x>W+100||y<100||y>H+100)return;
-    // small collectible-style building with a visible plinth and three-dimensional roof
-    dioDiamond(p.x,y+5,w*.78,15,"rgba(28,48,36,.24)");
-    dioPoly([{x:x-7,y:y-h*.45},{x:x+w*.5,y:y-h-20},{x:x+w+7,y:y-h*.45},{x:x+w,y:y-h*.25},{x:x+w*.5,y:y-h+2},{x,y:y-h*.25}],"#765144","#4e3935");
-    dioPoly([{x:x-7,y:y-h*.45},{x:x+w*.5,y:y-h-20},{x:x+w*.5,y:y-h+2},{x,y:y-h*.25}],"#c17b5c");
-    dioPoly([{x:x+w*.5,y:y-h-20},{x:x+w+7,y:y-h*.45},{x:x+w,y:y-h*.25},{x:x+w*.5,y:y-h+2}],"#945747");
-    dioBox(x+5,y-h*.32,w-10,h*.8,12,"#d9c49b",index%2?"#b99070":"#d0ad85","#8b6a53");
-    // doorway and bright windows
-    ctx.fillStyle="#60483d";ctx.fillRect(x+w*.42,y-h*.05,w*.18,h*.52);
-    ctx.fillStyle="#f2d995";ctx.fillRect(x+w*.17,y-h*.12,8,9);ctx.fillRect(x+w*.72,y-h*.12,8,9);
-    dioDiamond(x+w*.5,y+12,w*.72,7,"#a28b65");
+  function paperPerson(person,isPlayer=false){
+    const p=paperPoint(person.x,person.y);if(p.x<-35||p.x>W+35||p.y<60||p.y>H+60)return;
+    const walk=person.moving?Math.sin((person.walkClock||0)*12)*3:0;
+    paperShadow(p.x,p.y+3,12,5);
+    paperShape([{x:p.x-7+walk,y:p.y-13},{x:p.x-1,y:p.y-13},{x:p.x-2,y:p.y},{x:p.x-9,y:p.y}],"#57493f","#57493f",1);
+    paperShape([{x:p.x+2,y:p.y-13},{x:p.x+8-walk,y:p.y-13},{x:p.x+10,y:p.y},{x:p.x+3,y:p.y}],"#57493f","#57493f",1);
+    const outfit=isPlayer?"#527fa4":(person.color||"#b77a63");
+    paperShape([{x:p.x-12,y:p.y-37},{x:p.x+8,y:p.y-37},{x:p.x+13,y:p.y-13},{x:p.x,y:p.y-7},{x:p.x-14,y:p.y-13}],outfit,"#59483e",2);
+    paperShape([{x:p.x-8,y:p.y-50},{x:p.x+7,y:p.y-50},{x:p.x+9,y:p.y-35},{x:p.x-7,y:p.y-33}],"#e2b58d","#725644",1.5);
+    paperShape([{x:p.x-10,y:p.y-50},{x:p.x-6,y:p.y-58},{x:p.x+7,y:p.y-57},{x:p.x+11,y:p.y-48},{x:p.x+5,y:p.y-45},{x:p.x-8,y:p.y-45}],person.hairColor||"#77533f","#5c4437",1);
+    ctx.fillStyle="#51443b";ctx.fillRect(p.x-4,p.y-43,2,2);ctx.fillRect(p.x+3,p.y-43,2,2);
+    if(isPlayer){paperShape([{x:p.x-5,y:p.y-34},{x:p.x+3,y:p.y-34},{x:p.x+1,y:p.y-27}],"#e8d18b",null);}
   }
-  function drawDioramaTree(wx,wy,i){
-    const p=dioProject(wx,wy);if(p.x<-40||p.x>W+40||p.y<100||p.y>H+50)return;
-    dioDiamond(p.x,p.y+7,17,8,"#5c7046");
-    ctx.fillStyle="#76543c";ctx.fillRect(p.x-4,p.y-27,9,32);
-    dioPoly([{x:p.x-24,y:p.y-24},{x:p.x-18,y:p.y-48},{x:p.x-4,y:p.y-59},{x:p.x+17,y:p.y-48},{x:p.x+25,y:p.y-27},{x:p.x+12,y:p.y-15},{x:p.x-13,y:p.y-15}],i%3===0?"#54875a":i%3===1?"#65965b":"#477b53","#355d43");
-    dioPoly([{x:p.x-17,y:p.y-40},{x:p.x-4,y:p.y-57},{x:p.x+8,y:p.y-48},{x:p.x+2,y:p.y-32}],"#9cbd70");
+  function paperInterior(){
+    ctx.fillStyle="#d9c8a8";ctx.fillRect(0,0,W,H);
+    paperShape([{x:100,y:145},{x:480,y:55},{x:860,y:145},{x:480,y:270}],"#f0dfbd","#8c7357",3);
+    paperShape([{x:100,y:145},{x:480,y:270},{x:480,y:565},{x:100,y:420}],"#bd9875","#8c7357",3);
+    paperShape([{x:480,y:270},{x:860,y:145},{x:860,y:420},{x:480,y:565}],"#a98264","#8c7357",3);
+    for(let i=0;i<5;i++){const x=160+i*155;paperShape([{x,y:190},{x:x+85,y:164},{x:x+85,y:177},{x,y:203}],"#dfc08a","#987755",1);}
+    paperShape([{x:350,y:390},{x:480,y:350},{x:610,y:390},{x:480,y:438}],"#d8b17a","#8c7357",2);
+    paperShape([{x:350,y:390},{x:480,y:438},{x:480,y:480},{x:350,y:430}],"#9c7658","#8c7357",2);
+    paperShape([{x:480,y:438},{x:610,y:390},{x:610,y:430},{x:480,y:480}],"#785a48","#8c7357",2);
+    paperShape([{x:395,y:280},{x:475,y:255},{x:555,y:280},{x:475,y:306}],"#78948a","#6b6553",2);
   }
-  function drawDioramaPerson(person,isPlayer=false){
-    const p=dioProject(person.x,person.y);if(p.x<-30||p.x>W+30||p.y<90||p.y>H+70)return;
-    const step=person.moving?Math.sin((person.walkClock||0)*13)*3:0;
-    dioDiamond(p.x,p.y+5,12,6,"rgba(28,43,31,.35)");
-    // chunky toy-like body, boots, tunic and head
-    ctx.fillStyle="#493e38";ctx.fillRect(p.x-7+step,p.y-11,6,12);ctx.fillRect(p.x+2-step,p.y-11,6,12);
-    dioPoly([{x:p.x-11,y:p.y-28},{x:p.x+10,y:p.y-28},{x:p.x+13,y:p.y-10},{x:p.x,y:p.y-5},{x:p.x-13,y:p.y-10}],isPlayer?"#4f79a2":"#a16b4f","#3f3a36");
-    ctx.fillStyle="#d4a77d";ctx.fillRect(p.x-8,p.y-48,17,19);
-    ctx.fillStyle=person.hair==="金髪"?"#d8b35e":"#76503b";ctx.fillRect(p.x-9,p.y-51,19,8);ctx.fillRect(p.x-9,p.y-46,5,8);
-    ctx.fillStyle="#f5e5bd";ctx.fillRect(p.x-5,p.y-40,3,3);ctx.fillRect(p.x+3,p.y-40,3,3);
-    if(isPlayer){ctx.fillStyle="#e6c76e";ctx.fillRect(p.x-3,p.y-31,7,4);}
-  }
-  function drawDioramaInterior(){
-    ctx.fillStyle="#d9c49b";ctx.fillRect(0,0,W,H);ctx.fillStyle="#9c795c";ctx.fillRect(0,0,W,90);
-    dioPoly([{x:70,y:190},{x:480,y:90},{x:890,y:190},{x:480,y:320}],"#b78f67");
-    dioPoly([{x:70,y:190},{x:480,y:320},{x:480,y:555},{x:70,y:410}],"#8f6a4e");
-    dioPoly([{x:480,y:320},{x:890,y:190},{x:890,y:410},{x:480,y:555}],"#a77d5c");
-    dioBox(350,360,170,58,18,"#d8bd8e","#795b46","#5f493e");
-    dioBox(180,275,78,60,20,"#b88759","#8b5e42","#624637");
-    for(let i=0;i<4;i++){ctx.fillStyle="#e6ce9b";ctx.fillRect(100+i*210,115,85,10);}
-  }
-  function drawDioramaBattle(){
-    const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#8195a2");sky.addColorStop(1,"#d4b88b");ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
-    dioPoly([{x:0,y:390},{x:480,y:285},{x:960,y:390},{x:480,y:565}],"#69805b","#415541");
-    for(let i=0;i<7;i++){const x=90+i*130;dioDiamond(x,420+(i%2)*26,38,16,i%2?"#a38d68":"#7f9468");}
-    for(let i=0;i<(battle?.enemies||[]).length;i++){const e=battle.enemies[i];if(e.hp<=0)continue;const x=650+i*80,y=390-(i%2)*26;dioDiamond(x,y+5,22,9,"#405044");ctx.fillStyle=e.color||"#78b5a4";ctx.fillRect(x-15,y-38,30,30);ctx.fillStyle="#f3e4c6";ctx.fillRect(x-9,y-32,5,5);ctx.fillRect(x+5,y-32,5,5);}
-    dioDiamond(245,468,22,9,"#405044");ctx.fillStyle="#4d78a0";ctx.fillRect(229,416,32,46);ctx.fillStyle="#d4a77d";ctx.fillRect(233,393,25,24);ctx.fillStyle="#76503b";ctx.fillRect(231,389,29,9);
-    ctx.fillStyle="#fff0cc";ctx.font="bold 20px sans-serif";ctx.fillText(battle?.enemyName||"モンスター",650,105);
+  function paperBattle(){
+    const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#d6d9cb");bg.addColorStop(1,"#b7c79e");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    paperShape([{x:0,y:410},{x:480,y:270},{x:960,y:410},{x:480,y:590}],"#8eaa78","#607d5c",3);
+    for(let i=0;i<5;i++){const x=100+i*190;paperShape([{x:x-50,y:365},{x,y:335},{x:x+55,y:365},{x,y:393}],"#a9bd88","#71845e",2);}
+    // hero and monsters use the same cut-paper construction as town characters
+    paperPerson({x:player.x,y:player.y,color:"#527fa4",moving:false},true);
+    (battle?.enemies||[]).forEach((e,i)=>{if(e.hp<=0)return;const x=650+i*82,y=390-(i%2)*32;paperShadow(x,y+8,24,9);paperShape([{x:x-22,y:y-8},{x:x-18,y:y-42},{x:x-5,y:y-54},{x:x+15,y:y-47},{x:x+23,y:y-14},{x:x+9,y:y+2}],e.color||"#83b5a1","#52634f",2.5);paperShape([{x:x-14,y:y-38},{x:x-6,y:y-46},{x:x+5,y:y-42},{x:x+12,y:y-29}],"#d4e5be",null);ctx.fillStyle="#3f4a3c";ctx.fillRect(x-9,y-29,4,4);ctx.fillRect(x+7,y-29,4,4);});
+    ctx.fillStyle="#45584b";ctx.font="bold 22px sans-serif";ctx.textAlign="left";ctx.fillText(battle?.enemyName||"モンスター",45,65);
+    if(battleMessage&&performance.now()<battleMessageUntil){ctx.fillStyle="#fff7e5";ctx.font="bold 24px sans-serif";ctx.textAlign="center";ctx.fillText(battleMessage,480,245);}
   }
   function render(){
     ctx.clearRect(0,0,W,H);
-    if(battle)drawDioramaBattle();
-    else if(interior)drawDioramaInterior();
+    if(battle)paperBattle();
+    else if(interior)paperInterior();
     else{
-      drawDioramaGround();const objects=[];
-      for(let i=0;i<buildings.length;i++){const b=buildings[i];objects.push({depth:b.x+b.y+b.w+b.h,draw:()=>drawDioramaHouse(b,i)});}
-      for(let i=0;i<64;i++){const x=120+Math.floor(hash(i,23)*2700),y=150+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<460||buildings.some(b=>x>b.x-100&&x<b.x+b.w+100&&y>b.y-100&&y<b.y+b.h+100))continue;objects.push({depth:x+y,draw:()=>drawDioramaTree(x,y,i)});}
-      for(const n of npcs)objects.push({depth:n.x+n.y,draw:()=>drawDioramaPerson(n)});
-      for(const p of others.values())objects.push({depth:p.x+p.y,draw:()=>drawDioramaPerson(p)});
-      objects.push({depth:player.x+player.y,draw:()=>drawDioramaPerson(player,true)});
+      paperGround();const objects=[];
+      for(let i=0;i<buildings.length;i++){const b=buildings[i];objects.push({depth:b.x+b.y+b.w+b.h,draw:()=>paperBuilding(b,i)});}
+      for(let i=0;i<70;i++){const x=100+Math.floor(hash(i,23)*2700),y=140+Math.floor(hash(i,31)*1950);if(Math.hypot(x-1600,y-1320)<430||buildings.some(b=>x>b.x-100&&x<b.x+b.w+100&&y>b.y-100&&y<b.y+b.h+100))continue;objects.push({depth:x+y,draw:()=>paperTree(x,y,i)});}
+      for(const n of npcs)objects.push({depth:n.x+n.y,draw:()=>paperPerson(n)});
+      for(const p of others.values())objects.push({depth:p.x+p.y,draw:()=>paperPerson(p)});
+      objects.push({depth:player.x+player.y,draw:()=>paperPerson(player,true)});
       objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
     }
-    pixelViewCtx.clearRect(0,0,120,75);pixelViewCtx.imageSmoothingEnabled=true;pixelViewCtx.drawImage(canvas,0,0,120,75);
-    ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;ctx.drawImage(pixelView,0,0,W,H);ctx.imageSmoothingEnabled=true;
   }
 
 
