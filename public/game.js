@@ -718,21 +718,97 @@
   }
   function render(){
     ctx.clearRect(0,0,W,H);
-    if(battle){drawBattle();return;}
-    if(interior){flatInterior();return;}
-    drawGround();
-    const objects=[];
-    for(let i=0;i<buildings.length;i++){const b=buildings[i];objects.push({depth:b.y+b.h,draw:()=>flatHouse(b,i)});}
-    for(let i=0;i<62;i++){const x=90+Math.floor(hash(i,23)*2750),y=120+Math.floor(hash(i,31)*2450);
-      if(Math.hypot(x-1600,y-1320)<460||buildings.some(b=>x>b.x-90&&x<b.x+b.w+90&&y>b.y-90&&y<b.y+b.h+90))continue;
-      objects.push({depth:y,draw:()=>flatTree(x,y,i)});
+    const emoji=(symbol,x,y,size=30)=>{
+      ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.font=size+"px system-ui, 'Apple Color Emoji','Segoe UI Emoji',sans-serif";
+      ctx.fillText(symbol,x,y);ctx.restore();
+    };
+    const label=(text,x,y)=>{
+      ctx.save();ctx.font="12px 'Noto Sans JP',sans-serif";ctx.textAlign="center";
+      const w=ctx.measureText(text).width+14;
+      ctx.fillStyle="rgba(24,35,48,.82)";ctx.beginPath();ctx.roundRect(x-w/2,y-10,w,20,7);ctx.fill();
+      ctx.fillStyle="#fff";ctx.textBaseline="middle";ctx.fillText(text,x,y);ctx.restore();
+    };
+    const shadow=(x,y,w=24)=>{
+      ctx.save();ctx.fillStyle="rgba(35,55,40,.17)";ctx.beginPath();ctx.ellipse(x,y,w/2,5,0,0,Math.PI*2);ctx.fill();ctx.restore();
+    };
+    const drawEmoji=(symbol,wx,wy,size=32,name=null)=>{
+      const p=project(wx,wy);if(p.x<-60||p.x>W+60||p.y<-60||p.y>H+60)return;
+      shadow(p.x,p.y+size*.28,size*.8);emoji(symbol,p.x,p.y,size);
+      if(name)label(name,p.x,p.y+size*.58);
+    };
+    if(battle){
+      ctx.fillStyle="#b9d9c8";ctx.fillRect(0,0,W,H);
+      ctx.fillStyle="#91bf83";ctx.fillRect(0,H*.55,W,H*.45);
+      for(let i=0;i<8;i++)emoji(i%2?"🌳":"🌲",i*135+35,H*.52,38);
+      // Battle UI and actors use native emoji rather than custom character art.
+      ctx.fillStyle="rgba(22,32,46,.88)";ctx.beginPath();ctx.roundRect(14,14,260,122,12);ctx.fill();
+      ctx.fillStyle="#fff";ctx.textAlign="left";ctx.font="bold 17px 'Noto Sans JP',sans-serif";
+      ctx.fillText("🧙 冒険者",30,43);ctx.font="14px 'Noto Sans JP',sans-serif";
+      ctx.fillText("HP  "+battle.hp+" / "+battle.maxHp,30,75);
+      ctx.fillText("MP  "+battle.mp+" / "+battle.maxMp,30,101);
+      emoji("🧙",battle.playerX,H*.72,48);
+      battle.enemies.forEach((e,i)=>{
+        if(e.hp<=0)return;
+        const ex=620+(i%3)*105,ey=H*.62-Math.floor(i/3)*85;
+        const icon=e.name.includes("スライム")?"🟦":e.name.includes("ウルフ")?"🐺":e.name.includes("ゴブリン")?"👺":"🐉";
+        emoji(icon,ex,ey, e.boss?58:43);label(e.name,ex,ey+34);
+        ctx.fillStyle="#5a3030";ctx.fillRect(ex-31,ey+43,62,6);
+        ctx.fillStyle="#e85b58";ctx.fillRect(ex-30,ey+44,60*Math.max(0,e.hp/e.maxHp),4);
+      });
+      if(battleMessage&&performance.now()<battleMessageUntil){
+        ctx.fillStyle="rgba(22,32,46,.9)";ctx.beginPath();ctx.roundRect(260,205,440,54,10);ctx.fill();
+        ctx.fillStyle="#fff";ctx.textAlign="center";ctx.font="bold 17px 'Noto Sans JP',sans-serif";ctx.fillText(battleMessage,480,237);
+      }
+      return;
     }
-    townDecor.forEach(item=>objects.push({depth:item[2]+5,draw:()=>drawTownDecor(item)}));
-    objects.push({depth:1325,draw:()=>drawFountain(1600,1320)});
-    for(const n of npcs)objects.push({depth:n.y,draw:()=>flatPerson(n)});
-    for(const p of others.values())objects.push({depth:p.y,draw:()=>flatPerson(p)});
-    objects.push({depth:player.y,draw:()=>flatPerson(player,true)});
-    objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
+    if(interior){
+      ctx.fillStyle="#e8d9bd";ctx.fillRect(0,0,W,H);
+      ctx.fillStyle="#c9a77e";ctx.fillRect(26,26,W-52,H-52);
+      ctx.fillStyle="#f4e7cf";ctx.fillRect(42,42,W-84,H-84);
+      emoji("🪟",130,115,54);emoji("🪟",830,115,54);
+      emoji(interior.building?.type==="forge"?"🔥":interior.building?.type==="inn"?"🛏️":"🪑",480,290,76);
+      emoji("🧙",480,440,42);
+      label(interior.building?.name||"室内",480,78);
+      label("操作ボタンで外へ出る",480,530);
+      return;
+    }
+    // Flat, readable world: plain grass, broad paths, a river, and emoji objects.
+    ctx.fillStyle="#9acb83";ctx.fillRect(0,0,W,H);
+    for(let i=0;i<90;i++){
+      const x=(i*173)%W,y=(i*97)%H;
+      ctx.fillStyle=i%3?"rgba(255,255,255,.12)":"rgba(70,130,70,.10)";
+      ctx.fillRect(x,y,3,3);
+    }
+    const river=[];
+    for(let y=300;y<=2550;y+=70)river.push([420+Math.sin(y/155)*62,y]);
+    ctx.beginPath();river.forEach((pt,i)=>{const p=project(pt[0],pt[1]);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)});
+    ctx.strokeStyle="#75b9d2";ctx.lineWidth=150;ctx.lineCap="round";ctx.stroke();
+    ctx.strokeStyle="rgba(255,255,255,.3)";ctx.lineWidth=3;ctx.stroke();
+    const road=(x1,y1,x2,y2,width=78)=>{
+      const a=project(x1,y1),b=project(x2,y2);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+      ctx.strokeStyle="#d8bd8e";ctx.lineWidth=width;ctx.lineCap="round";ctx.stroke();
+    };
+    road(1600,350,1600,2380,86);road(650,1320,2680,1320,86);
+    const buildingIcons={guild:"🏰",shop:"🏪",forge:"⚒️",inn:"🏨",market:"🛒",bank:"🏦",home:"🏠",farm:"🌾"};
+    const objects=[];
+    buildings.forEach(b=>objects.push({y:b.y+b.h,fn:()=>drawEmoji(buildingIcons[b.type]||"🏠",b.x+b.w/2,b.y+b.h/2,Math.max(32,Math.min(54,b.w*.22)),b.name)}));
+    for(let i=0;i<46;i++){
+      const x=80+Math.floor(hash(i,23)*2780),y=100+Math.floor(hash(i,31)*2500);
+      if(Math.hypot(x-1600,y-1320)<480||buildings.some(b=>x>b.x-100&&x<b.x+b.w+100&&y>b.y-100&&y<b.y+b.h+100))continue;
+      objects.push({y,fn:()=>drawEmoji(i%4===0?"🌲":"🌳",x,y,34+(i%3)*5)});
+    }
+    townDecor.forEach(item=>{
+      const symbols={lamp:"🏮",bench:"🪑",flower:"🌼",barrel:"🛢️",crate:"📦",sign:"🪧",stall:"🛍️"};
+      objects.push({y:item[2],fn:()=>drawEmoji(symbols[item[0]]||"🌼",item[1],item[2],25)});
+    });
+    objects.push({y:1325,fn:()=>drawEmoji("⛲",1600,1320,48,"広場")});
+    const npcIcon=n=>n.role?.includes("衛兵")?"💂":n.role?.includes("農")?"🧑‍🌾":n.role?.includes("鍛冶")?"🧑‍🏭":n.role?.includes("受付")?"🧑‍💼":"🧑";
+    npcs.forEach(n=>objects.push({y:n.y,fn:()=>drawEmoji(npcIcon(n),n.x,n.y,29,n.name)}));
+    for(const p of others.values())objects.push({y:p.y,fn:()=>drawEmoji("🧑‍🚀",p.x,p.y,32,p.name)});
+    objects.push({y:player.y,fn:()=>drawEmoji("🧙",player.x,player.y,36,player.name)});
+    objects.sort((a,b)=>a.y-b.y).forEach(o=>o.fn());
+    fieldEnemies.filter(e=>e.alive&&e.hp>0).forEach(e=>drawEmoji(e.name.includes("スライム")?"🟦":e.name.includes("ウルフ")?"🐺":e.name.includes("ゴブリン")?"👺":"🐉",e.x,e.y,e.boss?46:34,e.name));
   }
 
     function update(dt){
@@ -901,7 +977,7 @@
   }
 
   // Current full-art experiment: 3D anime fantasy. Next candidates will replace this renderer entirely.
-  document.body.dataset.graphicStyle="flat2d";
+  document.body.dataset.graphicStyle="emojiworld";
   function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
   document.querySelectorAll(".panel-tab").forEach(b=>b.addEventListener("click",()=>{}));
   $("open-adventurer").addEventListener("click",()=>{$("adventurer-panel").classList.remove("hidden")});$("close-adventurer").addEventListener("click",()=>$("adventurer-panel").classList.add("hidden"));
