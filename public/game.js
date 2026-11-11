@@ -420,59 +420,182 @@
     for(let i=0;i<5;i++){ellipse(x-18+(i*13)%38,y-50+(i%3)*14,3,2,"#b5d37a");}
   }
   function drawHouse(b,index=0){
-    const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;if(x<-220||y<-240||x>W+220||y>H+240)return;
-    const w=Math.max(86,b.w*.86),h=Math.max(72,b.h*.7);
+    const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;
+    if(x<-260||y<-280||x>W+260||y>H+280)return;
+    const w=Math.max(92,b.w*.92),h=Math.max(78,b.h*.82);
+    const kind=b.name==="道具屋"?"item":b.name==="武器屋"?"weapon":b.name==="理髪店"?"barber":
+      b.name==="冒険者ギルド"?"guild":b.name==="鍛冶屋"?"forge":b.name==="宿屋"?"inn":"home";
     ctx.save();
-    ctx.globalAlpha=1;
-    ctx.globalCompositeOperation="source-over";
-    const palette={guild:["#a64c43","#d6a76a","#ead6a9"],forge:["#574a43","#9b7455","#d2b18a"],inn:["#9a5147","#d49a68","#f0d8ac"],market:["#a45c42","#d6aa6d","#f0dfb8"],farm:["#74834b","#b9a36a","#e8d8ad"],bank:["#557d81","#b3c4b2","#e5d8b5"],home:["#8e5948","#c99168","#ead5aa"],shop:["#6c718e","#b58d70","#ead9b8"]}[b.type]||["#8e5948","#c99168","#ead5aa"];
-    const top=y-h*.45,front=y-h*.05,base=y+h*.38;
-    // Opaque backing silhouette: closes gaps between decorative roof/wall shapes.
-    // This prevents the ground or characters behind the building from showing through.
-    poly([
-      {x:x-w*.55,y:front+2},{x:x-w*.08,y:top-28},
-      {x:x+w*.55,y:front-2},{x:x+w*.48,y:base},
-      {x:x-w*.43,y:base+4}
-    ],b.type==="forge"?"#75685b":"#8c684d","#4a3a32",4);
-    poly([
-      {x:x-w*.43,y:front},{x:x+w*.32,y:front-8},
-      {x:x+w*.32,y:base-8},{x:x-w*.43,y:base}
-    ],palette[2],"#4a3a32",3);
-    ellipse(x+8,base+6,w*.58,13,"#5d6845");
-    poly([{x:x-w*.43,y:front},{x:x+w*.32,y:front-8},{x:x+w*.48,y:base},{x:x-w*.35,y:base+4}],b.type==="forge"?"#75685b":"#8c684d","#4a3a32",3);
-    poly([{x:x-w*.43,y:front},{x:x+w*.32,y:front-8},{x:x+w*.32,y:base-8},{x:x-w*.43,y:base}],palette[2],PAL.ink,3);
-    poly([{x:x-w*.55,y:front+2},{x:x-w*.08,y:top-28},{x:x+w*.55,y:front-2},{x:x+w*.34,y:front+16},{x:x-w*.08,y:top+2},{x:x-w*.38,y:front+18}], "#54382f",PAL.ink,3);
-    poly([{x:x-w*.51,y:front},{x:x-w*.08,y:top-22},{x:x+w*.51,y:front-4},{x:x+w*.32,y:front+8},{x:x-w*.08,y:top+10},{x:x-w*.37,y:front+14}],palette[0],palette[1],2);
-    for(let r=0;r<5;r++){const yy=top+7+r*8;ctx.strokeStyle=r%2?"#e18a62":"#783d38";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-w*.35+r*1.5,yy+17);ctx.lineTo(x+w*.34-r*1.5,yy+17);ctx.stroke();}
-    rect(x-w*.38,front+8,5,h*.35,b.type==="forge"?"#66574a":"#8b5e3e");rect(x+w*.27,front+5,5,h*.35,"#8b5e3e");rect(x-w*.38,base-12,w*.66,5,"#8b5e3e");
-    for(let k=0;k<13;k++){const xx=x-w*.33+(k*29)%(w*.58),yy=front+12+(k*17)%(h*.25);rect(xx,yy,4+(k%3)*2,3,k%2?"#f3e3bf":"#c8ac80");}
-    for(const wx of [x-w*.25,x+w*.12]){rect(wx-10,front+14,23,29,"#54392f");rect(wx-7,front+17,17,23,"#d9c58f");rect(wx,front+17,3,23,"#e5d1a8");rect(wx-7,front+27,17,3,"#e5d1a8");}
-    rect(x-13,front+15,27,base-front-15,"#54382f");rect(x-9,front+19,19,base-front-19,"#a66d46");rect(x+4,base-26,3,3,"#f1d18a");
-    rect(x-4,top-23,8,20,palette[1]);rect(x-3,top-21,3,16,"#e6bc83");
-    // Large, unmistakable shop emblems and signature props.
-    const plaque=(yy=top-4)=>{rect(x-29,yy,58,36,"#5a4032");rect(x-25,yy+4,50,28,"#f2dcae");};
-    if(b.type==="guild"){
-      plaque();ctx.strokeStyle="#8e332d";ctx.lineWidth=5;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x,top+2);ctx.lineTo(x,top+25);ctx.moveTo(x-12,top+11);ctx.lineTo(x+12,top+11);ctx.moveTo(x,top+25);ctx.lineTo(x-7,top+31);ctx.stroke();
-      ctx.fillStyle="#8e332d";ctx.beginPath();ctx.moveTo(x,top-1);ctx.lineTo(x-5,top+8);ctx.lineTo(x+5,top+8);ctx.fill();
-    }else if(b.type==="forge"){
-      // Stone furnace, glowing fire and anvil beside the entrance.
-      rect(x+w*.25,front-8,24,h*.33,"#665c52");rect(x+w*.25-5,front-13,34,9,"#8a8174");
-      ellipse(x+w*.38,front+20,15,11,"#e77d3d");ellipse(x+w*.38,front+17,8,8,"#ffd36f");
-      poly([{x:x-w*.39,y:y+7},{x:x-w*.18,y:y+7},{x:x-w*.14,y:y+16},{x:x-w*.23,y:y+22},{x:x-w*.33,y:y+22}], "#4b4644","#282628",2);
-    }else if(b.type==="inn"){
-      plaque();ctx.fillStyle="#9b4e43";ctx.font="bold 20px serif";ctx.textAlign="center";ctx.fillText("✦",x,top+23);
-      rect(x+w*.28,front+20,25,7,"#8b5a3d");rect(x+w*.3,front+12,20,8,"#e4d2ad");
-    }else if(b.type==="market"||b.type==="shop"){
-      for(let k=0;k<4;k++){ctx.fillStyle=k%2?"#d9bd7e":"#b85d50";ctx.fillRect(x-w*.4+k*w*.2,front-2,w*.19,18);}
-      rect(x-w*.4,front+16,w*.8,6,"#67472f");
-      if(b.type==="shop"){ctx.fillStyle="#f3dba8";ctx.font="bold 18px serif";ctx.textAlign="center";ctx.fillText("⚒",x,top+18);}
-    }else if(b.type==="bank"){
-      for(let k=0;k<3;k++){rect(x-w*.27+k*w*.24,front+3,8,h*.29,"#e7e0c8");}
-      poly([{x:x-w*.38,y:front+5},{x,y:top-17},{x:x+w*.38,y:front+5}],"#e8e0c9","#6d8580",2);
-    }else if(b.type==="farm"){
-      for(let k=0;k<5;k++){ctx.strokeStyle="#a18a43";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x-w*.3+k*10,front+30);ctx.lineTo(x-w*.3+k*10-4,front+15);ctx.moveTo(x-w*.3+k*10,front+23);ctx.lineTo(x-w*.3+k*10+5,front+12);ctx.stroke();}
+    ctx.lineJoin="round";ctx.lineCap="round";
+    const path=(pts,fill,stroke="#72533e",width=3)=>{
+      ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+      for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);
+      ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+      if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke();}
+    };
+    const wash=(cx,cy,rx,ry,color,alpha=.18)=>{
+      ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();
+      ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.restore();
+    };
+    const line=(pts,color,width=3)=>{
+      ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+      for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);
+      ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
+    };
+    const round=(rx,ry,rw,rh,fill,stroke="#76563f",lw=2)=>{
+      ctx.beginPath();ctx.moveTo(rx+8,ry);ctx.quadraticCurveTo(rx,ry,rx,ry+8);
+      ctx.lineTo(rx,ry+rh-8);ctx.quadraticCurveTo(rx,ry+rh,rx+8,ry+rh);
+      ctx.lineTo(rx+rw-8,ry+rh);ctx.quadraticCurveTo(rx+rw,ry+rh,rx+rw,ry+rh-8);
+      ctx.lineTo(rx+rw,ry+8);ctx.quadraticCurveTo(rx+rw,ry,rx+rw-8,ry);
+      ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}
+    };
+    const gradient=(x1,y1,x2,y2,a,z)=>{
+      const g=ctx.createLinearGradient(x1,y1,x2,y2);g.addColorStop(0,a);g.addColorStop(1,z);return g;
+    };
+    const top=y-h*.48,front=y-h*.10,base=y+h*.39;
+    ellipse(x+7,base+13,w*.62,15,"rgba(75,86,54,.28)");
+    // A soft, slightly irregular wall silhouette with a visible side plane.
+    const wall=kind==="guild"?"#b85f4d":kind==="weapon"?"#aaa69b":kind==="forge"?"#746b61":
+      kind==="inn"?"#c28b5e":kind==="barber"?"#f0d8b5":kind==="item"?"#c59a6a":"#c79b70";
+    const roof=kind==="guild"?"#633b50":kind==="weapon"?"#46546a":kind==="forge"?"#514c49":
+      kind==="inn"?"#c46e43":kind==="barber"?"#d96e68":kind==="item"?"#77784d":"#8b5947";
+    path([[x-w*.49,front+5],[x-w*.05,top-5],[x+w*.49,front-1],[x+w*.43,base],[x-w*.42,base+3]],gradient(x-w*.3,top,x+w*.4,base,wall,"#8d654c"),"#70503d",3);
+    path([[x+w*.24,front-3],[x+w*.49,front-1],[x+w*.43,base],[x+w*.22,base-3]],"rgba(75,55,45,.16)","#795942",2);
+    // Warm watercolor patches and uneven timber/brick marks.
+    wash(x-w*.18,front+24,w*.2,h*.12,"#fff0cf",.20);
+    wash(x+w*.25,front+52,w*.15,h*.1,"#7b4937",.10);
+    if(kind==="guild"||kind==="weapon"||kind==="forge"){
+      for(let row=0;row<4;row++)for(let col=0;col<7;col++){
+        const bx=x-w*.39+col*w*.115+(row%2)*5,by=front+13+row*12;
+        if(kind==="guild"||kind==="forge"){
+          line([[bx,by],[bx+w*.075,by-1],[bx+w*.07,by+4]],row%2?"#d18a6c":"#9b5548",2);
+        }else{
+          line([[bx,by],[bx+w*.07,by-1]],"#8b8983",2);
+        }
+      }
+    }else{
+      for(let row=0;row<4;row++)line([[x-w*.37,front+17+row*10],[x-w*.12,front+16+row*10]],"rgba(113,72,44,.34)",1.5);
     }
-    if(b.name!=="住民の家"&&b.name!=="あなたの家"&&b.name!=="町長の家"){ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#4b3930";ctx.strokeText(b.name,x,top-34);ctx.fillStyle="#fff0c8";ctx.fillText(b.name,x,top-34);}
+    // Roofs are deliberately rounded and a little crooked, not geometric pixel tiles.
+    if(kind==="weapon"){
+      path([[x-w*.56,front+3],[x-w*.08,top-31],[x+w*.55,front-5],[x+w*.42,front+15],[x-w*.07,top-8],[x-w*.42,front+20]],gradient(x,top-28,x,front+20,"#66748a","#343f55"),"#414b5d",4);
+      for(let i=0;i<4;i++)line([[x-w*.34,top-4+i*6],[x+w*.33,top-9+i*6]],"rgba(226,224,211,.34)",2);
+    }else if(kind==="barber"){
+      path([[x-w*.55,front+3],[x-w*.08,top-27],[x+w*.55,front-3],[x+w*.39,front+17],[x-w*.08,top-7],[x-w*.39,front+18]],"#f3e5cf","#9a6b58",3);
+      const rw=w*.94/12;
+      for(let i=0;i<12;i++)round(x-w*.47+i*rw,front-4,rw+1,13,i%2?"#fff5e5":"#dc7771",null,0);
+      line([[x-w*.46,front+10],[x+w*.45,front+10]],"#fff0d9",2);
+    }else if(kind==="guild"){
+      path([[x-w*.57,front+4],[x-w*.09,top-34],[x+w*.57,front-2],[x+w*.43,front+18],[x-w*.08,top-12],[x-w*.43,front+21]],"#693d55","#503449",4);
+      path([[x-w*.47,front],[x-w*.08,top-27],[x+w*.47,front-4],[x+w*.34,front+8],[x-w*.08,top-8],[x-w*.35,front+13]],gradient(x,top-25,x,front+12,"#85516b","#4e3148"),"#a06b79",2);
+    }else if(kind==="inn"){
+      path([[x-w*.55,front+5],[x-w*.08,top-34],[x+w*.55,front-3],[x+w*.42,front+19],[x-w*.08,top-10],[x-w*.41,front+20]],gradient(x,top-30,x,front+20,"#e18a53","#a94e3d"),"#8e4f3b",4);
+      for(let i=0;i<5;i++)line([[x-w*.36+i*w*.17,top+2],[x-w*.30+i*w*.17,front+8]],"rgba(255,218,165,.38)",2);
+    }else{
+      path([[x-w*.55,front+4],[x-w*.08,top-29],[x+w*.55,front-2],[x+w*.42,front+17],[x-w*.08,top-8],[x-w*.41,front+18]],gradient(x,top-26,x,front+18,roof,kind==="item"?"#515c3b":"#633e37"),"#6f493b",3);
+      for(let i=0;i<4;i++)line([[x-w*.34,top+4+i*6],[x+w*.33,top+1+i*6]],"rgba(255,230,190,.25)",2);
+    }
+    // Hand-drawn timber framing, rounded windows and front door.
+    line([[x-w*.39,front+8],[x-w*.39,base-4],[x+w*.36,base-2]],"#80583e",4);
+    line([[x+w*.32,front+8],[x+w*.34,base-4]],"#80583e",4);
+    const windowAt=(wx,wy,lit=false)=>{
+      round(wx-11,wy-13,23,30,"#78513c","#684733",3);
+      round(wx-7,wy-9,15,22,lit?"#f6d98c":"#9fc4c0","#f0d6a7",2);
+      line([[wx,wy-8],[wx,wy+12]],"#f3dfb8",2);line([[wx-6,wy+1],[wx+7,wy+1]],"#f3dfb8",2);
+      if(lit)wash(wx,wy,22,27,"#ffe7a0",.22);
+    };
+    if(kind==="inn"){
+      // Two floors, several warmly glowing windows.
+      for(const xx of [x-w*.27,x,x+w*.25])windowAt(xx,front+13,true);
+      for(const xx of [x-w*.28,x+w*.04,x+w*.29])windowAt(xx,front+55,true);
+    }else if(kind==="guild"){
+      windowAt(x-w*.28,front+26,false);windowAt(x+w*.27,front+26,false);
+    }else if(kind==="barber"){
+      windowAt(x-w*.27,front+27,true);windowAt(x+w*.25,front+27,true);
+    }else{
+      windowAt(x-w*.27,front+25,kind==="item");windowAt(x+w*.25,front+25,false);
+    }
+    // Rounded entrance; guild doors open outward to welcome adventurers.
+    if(kind==="guild"){
+      round(x-25,front+26,50,base-front-23,"#5a392f","#4a3029",3);
+      path([[x-23,front+30],[x-43,front+39],[x-41,base-2],[x-21,base-3]],"#8e5a3e","#4d352b",3);
+      path([[x+23,front+30],[x+43,front+39],[x+41,base-2],[x+21,base-3]],"#8e5a3e","#4d352b",3);
+      line([[x-33,front+42],[x-33,base-8]],"#d5a46b",2);line([[x+33,front+42],[x+33,base-8]],"#d5a46b",2);
+    }else{
+      round(x-14,front+29,28,base-front-26,"#694431","#4e382b",3);
+      round(x-10,front+34,20,base-front-34,"#a86d48","#d0a071",1.5);
+      ellipse(x+6,base-13,2.5,2.5,"#f6d88d");
+    }
+    // Shop-specific picture-book props and emblems.
+    if(kind==="item"){
+      // Two little barrels and a crate, with herb/potion bottles.
+      const barrel=(bx,by)=>{
+        ctx.beginPath();ctx.moveTo(bx-12,by-16);ctx.quadraticCurveTo(bx-17,by-4,bx-11,by+9);
+        ctx.quadraticCurveTo(bx,by+14,bx+11,by+9);ctx.quadraticCurveTo(bx+16,by-4,bx+12,by-16);ctx.closePath();
+        ctx.fillStyle=gradient(bx-10,by,bx+10,by,"#c58a51","#865335");ctx.fill();ctx.strokeStyle="#68452f";ctx.lineWidth=2;ctx.stroke();
+        line([[bx-10,by-10],[bx+10,by-10]],"#e0b779",3);line([[bx-11,by+5],[bx+11,by+5]],"#e0b779",3);
+      };
+      barrel(x-w*.40,base+1);barrel(x+w*.39,base+1);
+      round(x-5,front+43,10,16,"#b6d8bd","#597e5b",1.5);round(x-3,front+39,6,6,"#e3c47d","#597e5b",1);
+      round(x+w*.18,front+43,10,16,"#d98c83","#8b5947",1.5);round(x+w*.18+2,front+39,6,6,"#e3c47d","#8b5947",1);
+      line([[x-17,top-2],[x-8,top-14],[x-2,top-5]],"#537c4b",3);
+      ellipse(x-11,top-13,4,3,"#7ba36a");
+    }else if(kind==="weapon"){
+      // Softly painted toy-like sword and shield crest on the stone wall.
+      ellipse(x,top+1,26,22,"#e6ddc8");
+      line([[x-3,top+12],[x+10,top-13]],"#69788b",5);line([[x+6,top-10],[x+14,top-18]],"#d5c6a5",3);
+      line([[x-10,top+1],[x+5,top+9]],"#8e6445",4);line([[x-14,top-2],[x-7,top+7]],"#8e6445",3);
+      path([[x+9,top-3],[x+23,top-1],[x+19,top+15],[x+10,top+19],[x+2,top+12]],"#8c9db0","#58677a",2);
+    }else if(kind==="barber"){
+      // Red-white-blue barber pole with rounded caps and a gentle spiral.
+      const bx=x+w*.48,by=front+35;
+      round(bx-8,by-26,16,54,"#f4e7d2","#8d6958",2);
+      ctx.save();ctx.beginPath();ctx.roundRect(bx-6,by-23,12,48,6);ctx.clip();
+      for(let i=-2;i<7;i++){
+        line([[bx-10,by-26+i*10],[bx+10,by-16+i*10]],i%3===0?"#d75e62":i%3===1?"#6488b3":"#fff5e6",5);
+      }ctx.restore();
+      ellipse(bx,by-27,9,4,"#f8eee0");ellipse(bx,by+28,9,4,"#d8c6ae");
+    }else if(kind==="guild"){
+      // Large hanging guild banner and shield crest.
+      line([[x,top-20],[x,front+9]],"#694331",4);
+      path([[x-19,top-15],[x+19,top-15],[x+17,front+10],[x,front+2],[x-17,front+10]],"#9e5360","#633b46",2);
+      path([[x-10,top-7],[x+10,top-7],[x+8,top+7],[x,top+14],[x-8,top+7]],"#e6c98c","#805c43",2);
+      line([[x,top-3],[x,top+8]],"#7c4a4b",2);line([[x-6,top+2],[x+6,top+2]],"#7c4a4b",2);
+    }else if(kind==="forge"){
+      // Bent chimney, soft puffs of smoke and a friendly little anvil.
+      path([[x+w*.25,top+5],[x+w*.24,top-34],[x+w*.34,top-39],[x+w*.37,top-31],[x+w*.34,front-12],[x+w*.27,front-10]],"#655d56","#49433e",3);
+      round(x+w*.22,top-42,27,11,"#786d64","#514a44",2);
+      for(const [sx,sy,rr] of [[.33,-54,9],[.40,-68,12],[.31,-82,8]]){
+        wash(x+w*sx,top+sy,rr*1.6,rr,"#d9d3c7",.8);
+        ellipse(x+w*sx,top+sy,rr,rr*.72,"rgba(239,235,223,.72)");
+      }
+      const ax=x-w*.43,ay=base+1;
+      path([[ax-17,ay-7],[ax-7,ay-12],[ax+9,ay-12],[ax+17,ay-6],[ax+9,ay-1],[ax+7,ay+8],[ax-9,ay+8],[ax-10,ay-1]],"#55504c","#342f2c",2);
+      line([[ax-20,ay-12],[ax+19,ay-12]],"#b7aaa0",3);
+      // warm furnace glow
+      wash(x+w*.38,front+42,22,18,"#e98a43",.32);
+      ellipse(x+w*.38,front+42,9,7,"#e9a24d");
+    }else if(kind==="inn"){
+      // Hanging wooden moon-and-bed lantern sign.
+      line([[x+w*.38,top+8],[x+w*.43,front+8]],"#70472f",3);
+      line([[x+w*.31,front+8],[x+w*.48,front+8]],"#70472f",3);
+      round(x+w*.31,front+8,36,35,"#6c4935","#49382e",2);
+      ellipse(x+w*.39,front+24,8,8,"#f1d28b");
+      ellipse(x+w*.42,front+21,7,7,"#6c4935");
+      line([[x+w*.34,front+32],[x+w*.47,front+32]],"#f1d28b",3);
+      line([[x+w*.35,front+26],[x+w*.35,front+32]],"#f1d28b",2);
+      line([[x+w*.46,front+26],[x+w*.46,front+32]],"#f1d28b",2);
+    }
+    // A few hand-painted highlights and pencil-like edge accents.
+    for(let i=0;i<9;i++){
+      const sx=x-w*.34+(i*37%Math.max(40,w*.68)),sy=front+12+(i*19%Math.max(18,h*.22));
+      wash(sx,sy,4+(i%3),2,"#fff0ce",.18);
+    }
+    if(b.name!=="住民の家"&&b.name!=="あなたの家"&&b.name!=="町長の家"){
+      ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;
+      ctx.strokeStyle="#6a4938";ctx.strokeText(b.name,x,top-48);
+      ctx.fillStyle="#fff1d8";ctx.fillText(b.name,x,top-48);
+    }
     ctx.restore();
   }
   function drawStorybookPersonAt(x,y,p,isPlayer=false,scale=1){
