@@ -437,49 +437,41 @@
   }
   function drawStorybookPersonAt(x,y,p,isPlayer=false,scale=1){
     ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.scale(scale,scale);
-    const dir=String(p.dir||"down"),moving=!!p.moving,phase=moving?Math.sin((p.walkClock||0)*12):0;
-    const bob=moving?Math.abs(phase)*1.2:0,step=moving?phase*4.2:0;
-    const hairMap={"栗色":"#70432f","金髪":"#d6a653","黒髪":"#332d34","銀髪":"#aeb8b5","茶色":"#8b5639","赤髪":"#a94f43","青髪":"#426d91","緑髪":"#527a45"};
-    const skinMap={"明るい肌":"#edc49a","普通の肌":"#d9a77f","褐色肌":"#b97858","色白":"#f1d8bd"};
-    const hair=hairMap[p.hair]||"#70432f",skin=skinMap[p.skin]||"#edc49a",cloth=p.outfit||p.color||"#4f78a5",ink="#352f35";
-    const back=dir==="up",left=dir==="left",right=dir==="right",side=left||right;
-    const sx=left?-1:right?1:0,sy=dir==="up"?-1:dir==="down"?1:0;
-    // shadow, boots and legs: movement is aligned to the facing direction; body stays upright
-    ellipse(1,2,13,4,"#526b43");
-    const legA=step,legB=-step;
-    rect(-8+legA,-17+bob,7,14,"#49352f");rect(1+legB,-17+bob,7,14,"#49352f");
-    rect(-9+legA,-5+bob,9,5,"#765039");rect(1+legB,-5+bob,9,5,"#765039");
-    // torso is drawn in four silhouettes; never rotate the character
-    rect(-10,-38+bob,20,23,"#4c3b34");
-    rect(-9,-37+bob,18,20,cloth);rect(-7,-35+bob,14,3,"#f0d5a0");
-    rect(-3,-32+bob,6,12,cloth);
-    // arms swing opposite to the legs, with side-view overlap
-    if(side){
-      const armX=sx<0?-12:7;
-      rect(armX,-34+bob+step*.25,5,16,"#49352f");rect(armX+1,-33+bob+step*.25,3,12,skin);
-      rect(armX,-21+bob+step*.25,5,4,skin);
-    }else{
-      rect(-13,-34+bob+step*.25,5,14,"#49352f");rect(8,-34+bob-step*.25,5,14,"#49352f");
-      rect(-12,-33+bob+step*.25,3,11,skin);rect(9,-33+bob-step*.25,3,11,skin);
+    const dir=p.dir||"down",move=!!p.moving,phase=move?Math.sin((p.walkClock||0)*11):0;
+    const step=phase*4, bob=move?Math.abs(phase)*1.5:0;
+    const species=String(p.species||"人間"),ink="#242326";
+    const side=dir==="left"||dir==="right",face=dir==="left"?-1:dir==="right"?1:0;
+    // A simple black stick-person silhouette; small accessories distinguish roles.
+    ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle=ink;ctx.fillStyle=ink;
+    ellipse(0,3,14,4,"rgba(54,75,48,.35)");
+    const headY=-49+bob;
+    // Species traits are deliberately bold and readable at small sizes.
+    if(species.includes("竜")||species.includes("ドラゴン")){
+      ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-5,headY-10);ctx.lineTo(-12,headY-19);ctx.lineTo(-2,headY-15);ctx.moveTo(5,headY-10);ctx.lineTo(12,headY-19);ctx.lineTo(2,headY-15);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(7,-25+bob);ctx.quadraticCurveTo(24,-18+bob,22,-5+bob);ctx.quadraticCurveTo(20,3+bob,29,-1+bob);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-11,-34+bob);ctx.lineTo(-22,-24+bob);ctx.lineTo(-12,-20+bob);ctx.stroke();
+    }else if(species.includes("エルフ")){
+      ctx.beginPath();ctx.moveTo(-7,headY-1);ctx.lineTo(-22,headY-9);ctx.lineTo(-13,headY+5);ctx.moveTo(7,headY-1);ctx.lineTo(22,headY-9);ctx.lineTo(13,headY+5);ctx.fill();
+    }else if(species.includes("獣")||species.includes("猫")||species.includes("狼")){
+      ctx.beginPath();ctx.moveTo(-10,headY-3);ctx.lineTo(-12,headY-18);ctx.lineTo(-1,headY-10);ctx.moveTo(10,headY-3);ctx.lineTo(12,headY-18);ctx.lineTo(1,headY-10);ctx.fill();
+      ctx.beginPath();ctx.moveTo(8,-25+bob);ctx.quadraticCurveTo(24,-28+bob,23,-14+bob);ctx.stroke();
+    }else if(species.includes("鳥")||species.includes("天使")){
+      ctx.beginPath();ctx.moveTo(-10,-32+bob);ctx.quadraticCurveTo(-28,-48+bob,-26,-23+bob);ctx.quadraticCurveTo(-18,-19+bob,-10,-26+bob);ctx.moveTo(10,-32+bob);ctx.quadraticCurveTo(28,-48+bob,26,-23+bob);ctx.quadraticCurveTo(18,-19+bob,10,-26+bob);ctx.fill();
+    }else if(species.includes("ドワーフ")){
+      ctx.beginPath();ctx.moveTo(-8,headY+4);ctx.lineTo(0,headY+22);ctx.lineTo(8,headY+4);ctx.fill();
     }
-    // head and hair direction-specific silhouettes; upright proportions remain unchanged
-    const hx=side?sx*2:0;
-    rect(hx-10,-57+bob,20,20,ink);rect(hx-9,-56+bob,18,18,skin);
-    if(back){
-      rect(hx-11,-59+bob,22,8,hair);rect(hx-10,-52+bob,20,12,hair);rect(hx-8,-43+bob,16,4,hair);
-    }else if(side){
-      rect(hx-10,-59+bob,20,7,hair);rect(hx-9,-56+bob,13,14,hair);rect(hx+sx*4,-51+bob,5,9,hair);
-      rect(hx+sx*7,-49+bob,3,5,skin);
-      rect(hx+sx*3,-49+bob,3,4,"#fff1d7");rect(hx+sx*4,-48+bob,2,2,p.eyes==="緑"?"#588451":"#4b6e8c");
-    }else{
-      rect(hx-11,-59+bob,22,8,hair);rect(hx-9,-56+bob,18,6,hair);rect(hx-11,-51+bob,5,7,hair);rect(hx+6,-51+bob,5,7,hair);
-      if(!back){rect(-6,-49+bob,4,5,"#fff1d7");rect(3,-49+bob,4,5,"#fff1d7");rect(-5,-48+bob,2,3,"#4b6e8c");rect(4,-48+bob,2,3,"#4b6e8c");rect(-2,-41+bob,4,2,"#a65d55");}
+    ctx.beginPath();ctx.arc(0,headY,9,0,Math.PI*2);ctx.fill();
+    // Upright torso, arms and legs. Only limbs swing while walking.
+    ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,-39+bob);ctx.lineTo(0,-17+bob);ctx.stroke();
+    ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(0,-34+bob);ctx.lineTo(-12-step*.45,-23+bob);ctx.moveTo(0,-34+bob);ctx.lineTo(12+step*.45,-23+bob);
+    ctx.moveTo(0,-17+bob);ctx.lineTo(-8+step,-2+bob);ctx.moveTo(0,-17+bob);ctx.lineTo(8-step,-2+bob);ctx.stroke();
+    if(p.role==="鍛冶師"||p.role==="職人"){ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-13,-24+bob);ctx.lineTo(-17,-17+bob);ctx.stroke();}
+    if(p.accessory==="マント"||p.role==="冒険者"){
+      ctx.fillStyle="#5a4b58";ctx.beginPath();ctx.moveTo(-7,-37+bob);ctx.lineTo(8,-37+bob);ctx.lineTo(12,-20+bob);ctx.lineTo(-10,-20+bob);ctx.closePath();ctx.fill();
+      ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.stroke();
     }
-    // accessory and back-facing pack
-    if(p.accessory==="帽子"||p.role==="旅人"||p.role==="冒険者"){rect(hx-13,-62+bob,26,5,"#67452f");rect(hx-8,-69+bob,16,8,"#b8874e");rect(hx-7,-67+bob,14,2,"#e4c27d");}
-    if(back){rect(-12,-34+bob,24,17,"#8b5a3d");rect(-9,-31+bob,18,10,"#b98752");}
-    if(p.accessory==="マント"){rect(-12,-38,24,21,"#765b83");rect(-8,-37,16,15,"#9a79a0");}
-    if(isPlayer){rect(8,-28,4,4,"#e0bc67");}
+    if(isPlayer){ctx.fillStyle="#e7c76e";ctx.beginPath();ctx.moveTo(0,-72+bob);ctx.lineTo(-6,-62+bob);ctx.lineTo(6,-62+bob);ctx.fill();}
     ctx.restore();
   }
   function drawNpcPixelPerson(p){const q=project(p.x,p.y);drawStorybookPersonAt(q.x,q.y,p,false,1.12);}
@@ -718,97 +710,30 @@
   }
   function render(){
     ctx.clearRect(0,0,W,H);
-    const emoji=(symbol,x,y,size=30)=>{
-      ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";
-      ctx.font=size+"px system-ui, 'Apple Color Emoji','Segoe UI Emoji',sans-serif";
-      ctx.fillText(symbol,x,y);ctx.restore();
-    };
-    const label=(text,x,y)=>{
-      ctx.save();ctx.font="12px 'Noto Sans JP',sans-serif";ctx.textAlign="center";
-      const w=ctx.measureText(text).width+14;
-      ctx.fillStyle="rgba(24,35,48,.82)";ctx.beginPath();ctx.roundRect(x-w/2,y-10,w,20,7);ctx.fill();
-      ctx.fillStyle="#fff";ctx.textBaseline="middle";ctx.fillText(text,x,y);ctx.restore();
-    };
-    const shadow=(x,y,w=24)=>{
-      ctx.save();ctx.fillStyle="rgba(35,55,40,.17)";ctx.beginPath();ctx.ellipse(x,y,w/2,5,0,0,Math.PI*2);ctx.fill();ctx.restore();
-    };
-    const drawEmoji=(symbol,wx,wy,size=32,name=null)=>{
-      const p=project(wx,wy);if(p.x<-60||p.x>W+60||p.y<-60||p.y>H+60)return;
-      shadow(p.x,p.y+size*.28,size*.8);emoji(symbol,p.x,p.y,size);
-      if(name)label(name,p.x,p.y+size*.58);
-    };
-    if(battle){
-      ctx.fillStyle="#b9d9c8";ctx.fillRect(0,0,W,H);
-      ctx.fillStyle="#91bf83";ctx.fillRect(0,H*.55,W,H*.45);
-      for(let i=0;i<8;i++)emoji(i%2?"🌳":"🌲",i*135+35,H*.52,38);
-      // Battle UI and actors use native emoji rather than custom character art.
-      ctx.fillStyle="rgba(22,32,46,.88)";ctx.beginPath();ctx.roundRect(14,14,260,122,12);ctx.fill();
-      ctx.fillStyle="#fff";ctx.textAlign="left";ctx.font="bold 17px 'Noto Sans JP',sans-serif";
-      ctx.fillText("🧙 冒険者",30,43);ctx.font="14px 'Noto Sans JP',sans-serif";
-      ctx.fillText("HP  "+battle.hp+" / "+battle.maxHp,30,75);
-      ctx.fillText("MP  "+battle.mp+" / "+battle.maxMp,30,101);
-      emoji("🧙",battle.playerX,H*.72,48);
-      battle.enemies.forEach((e,i)=>{
-        if(e.hp<=0)return;
-        const ex=620+(i%3)*105,ey=H*.62-Math.floor(i/3)*85;
-        const icon=e.name.includes("スライム")?"🟦":e.name.includes("ウルフ")?"🐺":e.name.includes("ゴブリン")?"👺":"🐉";
-        emoji(icon,ex,ey, e.boss?58:43);label(e.name,ex,ey+34);
-        ctx.fillStyle="#5a3030";ctx.fillRect(ex-31,ey+43,62,6);
-        ctx.fillStyle="#e85b58";ctx.fillRect(ex-30,ey+44,60*Math.max(0,e.hp/e.maxHp),4);
-      });
-      if(battleMessage&&performance.now()<battleMessageUntil){
-        ctx.fillStyle="rgba(22,32,46,.9)";ctx.beginPath();ctx.roundRect(260,205,440,54,10);ctx.fill();
-        ctx.fillStyle="#fff";ctx.textAlign="center";ctx.font="bold 17px 'Noto Sans JP',sans-serif";ctx.fillText(battleMessage,480,237);
-      }
-      return;
-    }
-    if(interior){
-      ctx.fillStyle="#e8d9bd";ctx.fillRect(0,0,W,H);
-      ctx.fillStyle="#c9a77e";ctx.fillRect(26,26,W-52,H-52);
-      ctx.fillStyle="#f4e7cf";ctx.fillRect(42,42,W-84,H-84);
-      emoji("🪟",130,115,54);emoji("🪟",830,115,54);
-      emoji(interior.building?.type==="forge"?"🔥":interior.building?.type==="inn"?"🛏️":"🪑",480,290,76);
-      emoji("🧙",480,440,42);
-      label(interior.building?.name||"室内",480,78);
-      label("操作ボタンで外へ出る",480,530);
-      return;
-    }
-    // Flat, readable world: plain grass, broad paths, a river, and emoji objects.
-    ctx.fillStyle="#9acb83";ctx.fillRect(0,0,W,H);
-    for(let i=0;i<90;i++){
-      const x=(i*173)%W,y=(i*97)%H;
-      ctx.fillStyle=i%3?"rgba(255,255,255,.12)":"rgba(70,130,70,.10)";
-      ctx.fillRect(x,y,3,3);
-    }
-    const river=[];
-    for(let y=300;y<=2550;y+=70)river.push([420+Math.sin(y/155)*62,y]);
-    ctx.beginPath();river.forEach((pt,i)=>{const p=project(pt[0],pt[1]);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)});
-    ctx.strokeStyle="#75b9d2";ctx.lineWidth=150;ctx.lineCap="round";ctx.stroke();
-    ctx.strokeStyle="rgba(255,255,255,.3)";ctx.lineWidth=3;ctx.stroke();
-    const road=(x1,y1,x2,y2,width=78)=>{
-      const a=project(x1,y1),b=project(x2,y2);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
-      ctx.strokeStyle="#d8bd8e";ctx.lineWidth=width;ctx.lineCap="round";ctx.stroke();
-    };
-    road(1600,350,1600,2380,86);road(650,1320,2680,1320,86);
-    const buildingIcons={guild:"🏰",shop:"🏪",forge:"⚒️",inn:"🏨",market:"🛒",bank:"🏦",home:"🏠",farm:"🌾"};
+    if(battle){drawBattle();return;}
+    if(interior){drawInterior();return;}
+    drawGround();
     const objects=[];
-    buildings.forEach(b=>objects.push({y:b.y+b.h,fn:()=>drawEmoji(buildingIcons[b.type]||"🏠",b.x+b.w/2,b.y+b.h/2,Math.max(32,Math.min(54,b.w*.22)),b.name)}));
-    for(let i=0;i<46;i++){
-      const x=80+Math.floor(hash(i,23)*2780),y=100+Math.floor(hash(i,31)*2500);
-      if(Math.hypot(x-1600,y-1320)<480||buildings.some(b=>x>b.x-100&&x<b.x+b.w+100&&y>b.y-100&&y<b.y+b.h+100))continue;
-      objects.push({y,fn:()=>drawEmoji(i%4===0?"🌲":"🌳",x,y,34+(i%3)*5)});
+    // Hand-painted picture-book scenery: leafy trees, flower patches and stones.
+    for(let i=0;i<78;i++){
+      const x=70+Math.floor(hash(i,23)*2860),y=90+Math.floor(hash(i,31)*2540);
+      if(Math.hypot(x-1600,y-1320)<490||buildings.some(b=>x>b.x-110&&x<b.x+b.w+110&&y>b.y-110&&y<b.y+b.h+110))continue;
+      objects.push({depth:y,draw:()=>drawTree(x,y,i)});
     }
-    townDecor.forEach(item=>{
-      const symbols={lamp:"🏮",bench:"🪑",flower:"🌼",barrel:"🛢️",crate:"📦",sign:"🪧",stall:"🛍️"};
-      objects.push({y:item[2],fn:()=>drawEmoji(symbols[item[0]]||"🌼",item[1],item[2],25)});
-    });
-    objects.push({y:1325,fn:()=>drawEmoji("⛲",1600,1320,48,"広場")});
-    const npcIcon=n=>n.role?.includes("衛兵")?"💂":n.role?.includes("農")?"🧑‍🌾":n.role?.includes("鍛冶")?"🧑‍🏭":n.role?.includes("受付")?"🧑‍💼":"🧑";
-    npcs.forEach(n=>objects.push({y:n.y,fn:()=>drawEmoji(npcIcon(n),n.x,n.y,29,n.name)}));
-    for(const p of others.values())objects.push({y:p.y,fn:()=>drawEmoji("🧑‍🚀",p.x,p.y,32,p.name)});
-    objects.push({y:player.y,fn:()=>drawEmoji("🧙",player.x,player.y,36,player.name)});
-    objects.sort((a,b)=>a.y-b.y).forEach(o=>o.fn());
-    fieldEnemies.filter(e=>e.alive&&e.hp>0).forEach(e=>drawEmoji(e.name.includes("スライム")?"🟦":e.name.includes("ウルフ")?"🐺":e.name.includes("ゴブリン")?"👺":"🐉",e.x,e.y,e.boss?46:34,e.name));
+    buildings.forEach((b,i)=>objects.push({depth:b.y+b.h,draw:()=>drawHouse(b,i)}));
+    townDecor.forEach(item=>objects.push({depth:item[2]+4,draw:()=>drawTownDecor(item)}));
+    objects.push({depth:1325,draw:()=>drawFountain(1600,1320)});
+    npcs.forEach(n=>objects.push({depth:n.y,draw:()=>drawStorybookPersonAt(project(n.x,n.y).x,project(n.x,n.y).y,n,false,1.0)}));
+    for(const p of others.values()){const q=project(p.x,p.y);objects.push({depth:p.y,draw:()=>drawStorybookPersonAt(q.x,q.y,p,false,1.0)});}
+    const pq=project(player.x,player.y);
+    objects.push({depth:player.y,draw:()=>drawStorybookPersonAt(pq.x,pq.y,player,true,1.12)});
+    fieldEnemies.filter(e=>e.alive&&e.hp>0).forEach(e=>objects.push({depth:e.y,draw:()=>{
+      const q=project(e.x,e.y);ellipse(q.x,q.y+7,19,6,"#587b4b");
+      if(e.name.includes("スライム")){ellipse(q.x,q.y-8,18,15,"#72bcb0");ellipse(q.x-6,q.y-11,4,5,"#fff0cf");ellipse(q.x+6,q.y-11,4,5,"#fff0cf");}
+      else if(e.name.includes("ウルフ")){ellipse(q.x,q.y-12,17,12,"#777b83");}
+      else{ellipse(q.x,q.y-12,15,17,e.boss?"#98704b":"#7b9a62");}
+    }}));
+    objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
   }
 
     function update(dt){
@@ -977,7 +902,7 @@
   }
 
   // Current full-art experiment: 3D anime fantasy. Next candidates will replace this renderer entirely.
-  document.body.dataset.graphicStyle="emojiworld";
+  document.body.dataset.graphicStyle="storybook-stick";
   function loop(t){const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;update(dt);render();requestAnimationFrame(loop)}
   document.querySelectorAll(".panel-tab").forEach(b=>b.addEventListener("click",()=>{}));
   $("open-adventurer").addEventListener("click",()=>{$("adventurer-panel").classList.remove("hidden")});$("close-adventurer").addEventListener("click",()=>$("adventurer-panel").classList.add("hidden"));
