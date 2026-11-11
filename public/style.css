@@ -614,3 +614,38 @@ body[data-graphic-style="storybook-stick"] .intro{color:#725b45!important}
 body[data-graphic-style="storybook-stick"] input,body[data-graphic-style="storybook-stick"] select{background:#fff4dc!important;border:1px solid #987653!important;color:#46362d!important;border-radius:7px!important}
 body[data-graphic-style="storybook-stick"] button{border-radius:7px}
 body[data-graphic-style="storybook-stick"] .hud-player,body[data-graphic-style="storybook-stick"] .hud-help,body[data-graphic-style="storybook-stick"] .notice{background:#f1e1bf;color:#49382d;border:2px solid #8b6b49;border-radius:9px;box-shadow:0 3px 9px rgba(35,28,20,.16)}
+
+
+/* Picture-book watercolor presentation: restore smooth, hand-painted edges. */
+:root{color-scheme:light;--bg:#eee1c8;--panel:#f5ead5;--line:#bda17b;--gold:#bd8b4e;--muted:#806b55}
+body{background:radial-gradient(ellipse at 50% 0%,#f8edda 0,#e6d4b8 65%,#d8c2a1 100%);color:#574331}
+.brand-mark{color:#b47b43}
+.online{color:#79634d}
+.game-shell{background:linear-gradient(145deg,#f7ecd9,#e9d8bd);border:2px solid #b89568;box-shadow:0 14px 38px rgba(91,64,40,.18)}
+.game-heading h1{color:#684b35}
+.location-chip{background:#f4e8d1;border:1px solid #c8aa7d;color:#6c7651}
+.canvas-wrap{border:5px solid #a77b51;border-radius:14px;background:#e5d5b6;box-shadow:inset 0 0 0 2px #f7e9ce,0 8px 20px rgba(91,64,40,.2)}
+#game{image-rendering:auto;image-rendering: smooth}
+.topbar .brand{color:#674a34}
+.bottom-info{color:#79664f}
+.graphic-style-label{display:inline-block;margin-right:12px;color:#7d684e;font-size:12px}
+.start-card{background:linear-gradient(160deg,#fff5e4,#ead8b9);border:2px solid #b89568;color:#604832;box-shadow:0 10px 28px rgba(77,53,34,.25)}
+.start-card h2{color:#674832}
+.start-card .intro,.start-card label{color:#80664d}
+.start-card input{background:#fffaf0;color:#5c4430;border:1px solid #c5a77e}
+.start-card button{background:linear-gradient(#e8c98e,#c99655);color:#493523}
+.auth-tabs .auth-tab{background:#e7d5b8;color:#674b34;border-color:#c3a47a}
+.auth-tabs .auth-tab.active{background:#c99556;color:#fff8eb;border-color:#b47b43}
+.hud-player,.hud-help{background:rgba(255,247,230,.94);border:1px solid #b28b5e;color:#654b35}
+.notice{background:rgba(255,247,230,.97);border:1px solid #b28b5e;color:#654b35}
+.mobile-controls button{background:#e7d5b8;border:1px solid #b28b5e;color:#654b35}
+.mobile-controls .interact-button,#open-adventurer{background:#c99556;color:#fff8eb;border-color:#a87943}
+#logout-button{background:#e7d5b8;border:1px solid #b28b5e;color:#654b35}
+.adventurer-panel{background:#f5ead5;border:2px solid #b89568;color:#5c4430;box-shadow:0 10px 30px rgba(77,53,34,.22)}
+.panel-head h2,.panel-content{color:#5c4430}
+.panel-close,.panel-tab,.panel-action{background:#e7d5b8;border:1px solid #b28b5e;color:#654b35}
+.panel-tab.active{background:#c99556;color:#fff8eb;border-color:#a87943}
+.panel-content .stat{background:#fff5e4;border:1px solid #d0b58d;color:#5c4430}
+.panel-content h3{color:#8c603b}
+.panel-content select{background:#fffaf0;color:#5c4430;border:1px solid #c5a77e}
+@media(max-width:650px){.graphic-style-label{font-size:10px;margin-right:6px}}
