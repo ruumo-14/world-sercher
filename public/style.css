@@ -603,3 +603,14 @@ body[data-graphic-style="emojiworld"] .intro{color:#c5d1dc!important}
 body[data-graphic-style="emojiworld"] input,body[data-graphic-style="emojiworld"] select{background:#172534!important;border:1px solid #536b7b!important;border-radius:6px!important;color:#edf2f7!important}
 body[data-graphic-style="emojiworld"] button{border-radius:6px}
 body[data-graphic-style="emojiworld"] .hud-player,body[data-graphic-style="emojiworld"] .hud-help,body[data-graphic-style="emojiworld"] .notice{background:#253547;color:#edf2f7;border:1px solid #536b7b;border-radius:7px;box-shadow:0 3px 9px rgba(0,0,0,.15)}
+
+/* Storybook world with simple black stick-figure people */
+body[data-graphic-style="storybook-stick"]{background:#25352d;color:#f5e8ce}
+body[data-graphic-style="storybook-stick"] .canvas-wrap{background:#78a85e;border:3px solid #604b3b;border-radius:12px;box-shadow:0 7px 20px rgba(35,28,20,.28)}
+body[data-graphic-style="storybook-stick"] canvas{image-rendering:auto;filter:none}
+body[data-graphic-style="storybook-stick"] .start-card{background:#f0dfbd!important;border:2px solid #76583e!important;border-radius:12px!important;color:#46362d!important;box-shadow:0 5px 15px rgba(35,28,20,.18)!important}
+body[data-graphic-style="storybook-stick"] .start-card h2{color:#59402f!important}
+body[data-graphic-style="storybook-stick"] .intro{color:#725b45!important}
+body[data-graphic-style="storybook-stick"] input,body[data-graphic-style="storybook-stick"] select{background:#fff4dc!important;border:1px solid #987653!important;color:#46362d!important;border-radius:7px!important}
+body[data-graphic-style="storybook-stick"] button{border-radius:7px}
+body[data-graphic-style="storybook-stick"] .hud-player,body[data-graphic-style="storybook-stick"] .hud-help,body[data-graphic-style="storybook-stick"] .notice{background:#f1e1bf;color:#49382d;border:2px solid #8b6b49;border-radius:9px;box-shadow:0 3px 9px rgba(35,28,20,.16)}
