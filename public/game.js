@@ -458,7 +458,7 @@
       // Stone furnace, glowing fire and anvil beside the entrance.
       rect(x+w*.25,front-8,24,h*.33,"#665c52");rect(x+w*.25-5,front-13,34,9,"#8a8174");
       ellipse(x+w*.38,front+20,15,11,"#e77d3d");ellipse(x+w*.38,front+17,8,8,"#ffd36f");
-      poly([{x-w*.39,y+7},{x-w*.18,y+7},{x-w*.14,y+16},{x-w*.23,y+22},{x-w*.33,y+22}], "#4b4644","#282628",2);
+      poly([{x:x-w*.39,y:y+7},{x:x-w*.18,y:y+7},{x:x-w*.14,y:y+16},{x:x-w*.23,y:y+22},{x:x-w*.33,y:y+22}], "#4b4644","#282628",2);
     }else if(b.type==="inn"){
       plaque();ctx.fillStyle="#9b4e43";ctx.font="bold 20px serif";ctx.textAlign="center";ctx.fillText("✦",x,top+23);
       rect(x+w*.28,front+20,25,7,"#8b5a3d");rect(x+w*.3,front+12,20,8,"#e4d2ad");
