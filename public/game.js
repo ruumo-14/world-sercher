@@ -3,8 +3,8 @@
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
   const W=960,H=600;
   // 120×75の仮想画面を960×600へ拡大し、1ドットを8×8画面ピクセルにする。
-  const pixelView=document.createElement("canvas");pixelView.width=120;pixelView.height=75;
-  const pixelViewCtx=pixelView.getContext("2d"); canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=true;
+  const pixelView=document.createElement("canvas");pixelView.width=320;pixelView.height=200;
+  const pixelViewCtx=pixelView.getContext("2d"); canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=false;
   const worldTileset=new Image();worldTileset.src="/assets/world-sercher-user-atlas.png";window.WS_WORLD_TILESET=worldTileset;
   const storybookTexture=new Image();storybookTexture.src="/assets/storybook-paper.svg";
   // 新しいGBA風タイルセット（建物・芝生・道）
@@ -736,38 +736,59 @@
     isoPoly([{x:x,y:y-ry},{x:x+rx,y:y},{x:x,y:y+ry},{x:x-rx,y:y}],fill,stroke,1);
   }
   function drawAnimeGround(){
-    const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#a9d9ef");sky.addColorStop(.58,"#d7eddf");sky.addColorStop(1,"#a6cf8d");ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
-    // distant soft hills
-    for(let i=0;i<5;i++){const y=175+i*34;ctx.beginPath();ctx.moveTo(0,y+80);for(let x=0;x<=W;x+=24)ctx.lineTo(x,y+Math.sin((x+i*113)/105)*18+Math.cos(x/190)*13);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=["#9fc78e","#8fbd7e","#82b275","#78a96c","#6e9f62"][i];ctx.fill();}
-    const left=Math.floor((camera.x-1700)/64),right=Math.ceil((camera.x+1700)/64);
-    const top=Math.floor((camera.y-1700)/64),bottom=Math.ceil((camera.y+1700)/64);
+    // A clean 16-bit palette: layered grass tiles, a complete ring river, and four bridges.
+    rect(0,0,W,H,"#9bc8d1");
+    for(let layer=0;layer<4;layer++){
+      const y=175+layer*28;
+      poly([{x:0,y:y+70},{x:0,y:y+18},{x:160,y:y-7},{x:330,y:y+12},{x:520,y:y-13},{x:740,y:y+10},{x:960,y:y-5},{x:960,y:H},{x:0,y:H}],
+        ["#9bbd83","#8bb276","#7ba568","#6e985e"][layer],null);
+    }
+    const left=Math.floor((camera.x-1850)/64),right=Math.ceil((camera.x+1850)/64);
+    const top=Math.floor((camera.y-1850)/64),bottom=Math.ceil((camera.y+1850)/64);
     for(let gy=top;gy<=bottom;gy++)for(let gx=left;gx<=right;gx++){
       const p=isoProject(gx*64,gy*64),v=hash(gx,gy);
-      isoDiamond(p.x,p.y,22,11,["#7eb96c","#86c276","#91c77e","#78b365"][Math.floor(v*4)]);
-      if(v>.77){ctx.fillStyle="#b5d78c";ctx.beginPath();ctx.ellipse(p.x-5,p.y-2,3,1.5,-.3,0,Math.PI*2);ctx.fill();}
-      if(v>.94){ctx.fillStyle="#f5e5a2";ctx.beginPath();ctx.arc(p.x+5,p.y-3,2,0,Math.PI*2);ctx.fill();}
+      isoDiamond(p.x,p.y,23,12,["#6fa75d","#78b164","#82b96b","#689e57"][Math.floor(v*4)]);
+      if(v>.72)isoDiamond(p.x-5,p.y-3,4,2,v>.9?"#d6d78c":"#91c477");
+      if(v>.95)isoDiamond(p.x+7,p.y+2,3,2,"#e9d69b");
     }
-    // river and its sandy banks, projected into the isometric world
-    const river=[];for(let y=420;y<=2520;y+=48)river.push(isoProject(390+Math.sin(y/155)*65+Math.sin(y/83)*13,y));
-    const strokePath=(pts,color,width)=>{ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";ctx.stroke();};
-    strokePath(river,"#9b8a62",94);strokePath(river,"#d2bd88",82);strokePath(river,"#3b9db8",68);strokePath(river,"#70c7d2",55);
-    river.forEach((p,i)=>{ctx.strokeStyle="rgba(225,250,245,.55)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p.x-14+(i%3)*4,p.y-4);ctx.lineTo(p.x+10,p.y-7);ctx.stroke();});
-    const road=(pts,w)=>{strokePath(pts,"#9c754c",w+10);strokePath(pts,"#d7b77d",w);strokePath(pts,"#ecd5a1",Math.max(3,w*.12));};
-    road([isoProject(1600,430),isoProject(1600,2370)],46);
-    road([isoProject(650,1320),isoProject(2660,1320)],46);
-    road([isoProject(1600,1320),isoProject(1100,900)],25);
-    road([isoProject(1600,1320),isoProject(2050,900)],25);
-    road([isoProject(1600,1320),isoProject(2050,1800)],25);
+    const river=[];
+    for(let i=0;i<=192;i++){
+      const angle=i/192*Math.PI*2,wobble=1+Math.sin(angle*5)*.008+Math.cos(angle*9)*.004;
+      river.push(isoProject(riverLoop.x+Math.cos(angle)*riverLoop.rx*wobble,riverLoop.y+Math.sin(angle)*riverLoop.ry*wobble));
+    }
+    const strokePath=(pts,color,width)=>{
+      ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+      ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";ctx.stroke();
+    };
+    strokePath(river,"#76583f",74);strokePath(river,"#c6a979",66);
+    strokePath(river,"#347f9b",50);strokePath(river,"#4c9eb0",39);
+    for(let i=0;i<96;i++){
+      const angle=i/96*Math.PI*2,wx=riverLoop.x+Math.cos(angle)*riverLoop.rx,wy=riverLoop.y+Math.sin(angle)*riverLoop.ry,p=isoProject(wx,wy);
+      rect(p.x-5+(i%4)*2,p.y-3,12,2,i%3?"#a9d7cf":"#d2e8d7");
+    }
+    const road=(pts,w)=>{
+      strokePath(pts,"#8b6948",w+12);strokePath(pts,"#c49a65",w);strokePath(pts,"#dfbd83",Math.max(2,w*.16));
+    };
+    const bridges=[[[1600,90],[1600,470]],[[1600,2170],[1600,2550]],[[80,1320],[470,1320]],[[2730,1320],[3120,1320]]];
+    bridges.forEach(points=>{
+      const projected=points.map(p=>isoProject(p[0],p[1]));
+      strokePath(projected,"#65432f",34);strokePath(projected,"#a87546",27);strokePath(projected,"#d2a16a",20);
+      for(let k=0;k<10;k++){
+        const t=(k+.5)/10,wx=points[0][0]+(points[1][0]-points[0][0])*t,wy=points[0][1]+(points[1][1]-points[0][1])*t,p=isoProject(wx,wy);
+        rect(p.x-5,p.y-2,10,3,k%2?"#98633e":"#e0b477");
+      }
+    });
+    road([isoProject(1600,470),isoProject(1600,2170)],38);
+    road([isoProject(470,1320),isoProject(2730,1320)],38);
+    road([isoProject(1600,1320),isoProject(1100,900)],22);
+    road([isoProject(1600,1320),isoProject(2050,900)],22);
+    road([isoProject(1600,1320),isoProject(2050,1800)],22);
     const plaza=isoProject(1600,1320);
-    isoDiamond(plaza.x,plaza.y+3,105,53,"#9e8b6d");
-    isoDiamond(plaza.x,plaza.y,99,49,"#d9c69a");
-    isoDiamond(plaza.x,plaza.y-2,87,43,"#eadbb8","#b59b70",2);
-    for(let i=0;i<24;i++){const a=i*Math.PI/12;const x=plaza.x+Math.cos(a)*77,y=plaza.y+Math.sin(a)*37;isoDiamond(x,y,4,2,i%2?"#f4e9cb":"#b8a17a");}
-    // fountain
-    isoDiamond(plaza.x,plaza.y-8,27,14,"#8c9a9b");
-    isoDiamond(plaza.x,plaza.y-13,23,12,"#d5e2d9");
-    isoDiamond(plaza.x,plaza.y-17,18,9,"#52b6c7");
-    ctx.fillStyle="#e9fbf3";ctx.beginPath();ctx.arc(plaza.x-5,plaza.y-21,3,0,Math.PI*2);ctx.fill();
+    isoDiamond(plaza.x,plaza.y+5,112,57,"#88775e");isoDiamond(plaza.x,plaza.y,105,53,"#c2ad86");
+    isoDiamond(plaza.x,plaza.y-3,93,47,"#e3d2ad","#9d805c",2);
+    for(let i=0;i<24;i++){const angle=i*Math.PI/12;isoDiamond(plaza.x+Math.cos(angle)*82,plaza.y+Math.sin(angle)*40,4,2,i%2?"#f3e6c5":"#ad956d");}
+    isoDiamond(plaza.x,plaza.y-10,29,15,"#8a9995");isoDiamond(plaza.x,plaza.y-16,24,12,"#d7e3d7");
+    isoDiamond(plaza.x,plaza.y-21,18,9,"#4da8b6");rect(plaza.x-6,plaza.y-27,5,4,"#e8f5dd");
   }
   function drawAnimeHouse(b,index=0){
     const x=b.x+b.w/2,y=b.y+b.h/2,w=b.w,h=b.h;
@@ -949,35 +970,42 @@
     // Battle actors remain in the established side-view battle coordinates.
     drawBattle();
   }
+  function finishPixelFrame(){
+    pixelViewCtx.clearRect(0,0,pixelView.width,pixelView.height);
+    pixelViewCtx.imageSmoothingEnabled=true;
+    pixelViewCtx.drawImage(canvas,0,0,pixelView.width,pixelView.height);
+    ctx.save();ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(pixelView,0,0,W,H);ctx.restore();
+  }
   function render(){
     ctx.clearRect(0,0,W,H);
-    if(battle){drawBattle();return;}
-    if(interior){drawInterior();return;}
-    drawGround();
+    if(battle){drawBattle();finishPixelFrame();return;}
+    if(interior){drawAnimeInterior();finishPixelFrame();return;}
+    drawAnimeGround();
     const objects=[];
-    // Hand-painted picture-book scenery: leafy trees, flower patches and stones.
-    for(let i=0;i<78;i++){
-      const x=70+Math.floor(hash(i,23)*2860),y=90+Math.floor(hash(i,31)*2540);
+    for(let i=0;i<96;i++){
+      const x=70+Math.floor(hash(i,23)*2860),y=90+Math.floor(hash(i,31)*2480);
       if(Math.hypot(x-1600,y-1320)<490||riverRingAt(x,y)||buildings.some(b=>x>b.x-110&&x<b.x+b.w+110&&y>b.y-110&&y<b.y+b.h+110))continue;
-      objects.push({depth:y,draw:()=>drawTree(x,y,i)});
+      objects.push({depth:x+y,draw:()=>drawAnimeTree(x,y,i)});
     }
-    buildings.forEach((b,i)=>objects.push({depth:b.y+b.h,draw:()=>drawHouse(b,i)}));
-    townDecor.forEach(item=>objects.push({depth:item[2]+4,draw:()=>drawTownDecor(item)}));
-    objects.push({depth:1325,draw:()=>drawFountain(1600,1320)});
-    npcs.forEach(n=>objects.push({depth:n.y,draw:()=>drawStorybookPersonAt(project(n.x,n.y).x,project(n.x,n.y).y,n,false,1.0)}));
-    for(const p of others.values()){const q=project(p.x,p.y);objects.push({depth:p.y,draw:()=>drawStorybookPersonAt(q.x,q.y,p,false,1.0)});}
-    const pq=project(player.x,player.y);
-    objects.push({depth:player.y,draw:()=>drawStorybookPersonAt(pq.x,pq.y,player,true,1.12)});
-    fieldEnemies.filter(e=>e.alive&&e.hp>0).forEach(e=>objects.push({depth:e.y,draw:()=>{
-      const q=project(e.x,e.y);ellipse(q.x,q.y+7,19,6,"#587b4b");
-      if(e.name.includes("スライム")){ellipse(q.x,q.y-8,18,15,"#72bcb0");ellipse(q.x-6,q.y-11,4,5,"#fff0cf");ellipse(q.x+6,q.y-11,4,5,"#fff0cf");}
-      else if(e.name.includes("ウルフ")){ellipse(q.x,q.y-12,17,12,"#777b83");}
-      else{ellipse(q.x,q.y-12,15,17,e.boss?"#98704b":"#7b9a62");}
+    buildings.forEach((b,i)=>objects.push({depth:b.x+b.y+b.w+b.h,draw:()=>drawAnimeHouse(b,i)}));
+    townDecor.forEach(item=>objects.push({depth:item[1]+item[2],draw:()=>drawAnimeDecor(item)}));
+    objects.push({depth:2920,draw:()=>{const p=isoProject(1600,1320);isoDiamond(p.x,p.y-10,29,15,"#8a9995");isoDiamond(p.x,p.y-16,24,12,"#d7e3d7");}});
+    npcs.forEach(n=>objects.push({depth:n.x+n.y,draw:()=>drawAnimePerson(n,false)}));
+    for(const p of others.values())objects.push({depth:p.x+p.y,draw:()=>drawAnimePerson(p,false)});
+    objects.push({depth:player.x+player.y,draw:()=>drawAnimePerson(player,true)});
+    fieldEnemies.filter(e=>e.alive&&e.hp>0).forEach(e=>objects.push({depth:e.x+e.y,draw:()=>{
+      const q=isoProject(e.x,e.y);isoDiamond(q.x,q.y+7,20,9,"#527d4e");
+      if(e.name.includes("スライム")){
+        isoDiamond(q.x,q.y-10,19,14,"#4d9eaa");rect(q.x-8,q.y-15,4,5,"#fff0d0");rect(q.x+5,q.y-15,4,5,"#fff0d0");
+        rect(q.x-7,q.y-14,2,3,"#354b50");rect(q.x+6,q.y-14,2,3,"#354b50");
+      }else{isoDiamond(q.x,q.y-12,e.boss?22:17,e.boss?27:21,e.color);rect(q.x-8,q.y-18,4,5,"#fff0d0");rect(q.x+5,q.y-18,4,5,"#fff0d0");}
     }}));
     objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
+    finishPixelFrame();
   }
 
-    function update(dt){
+  function update(dt){
     if(!started||!$("creation-panel").classList.contains("hidden"))return;
     if(battle){
       if(battle.finished)return;
