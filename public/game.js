@@ -279,8 +279,10 @@
       const r=await fetch("/api/me",{credentials:"same-origin",cache:"no-store"}),j=await responseJson(r);
       if(r.ok&&j.loggedIn)await enterWorld(j.profile);
       else if(!r.ok)authMessage.textContent=j.error||"アカウント機能を確認してね";
-      else authMessage.textContent="サーバー接続済み。ログインまたは新規登録してね。";
-      connectionState.textContent="サーバー接続済み";
+      else authMessage.textContent=health.realtime===false
+        ?"ログインサーバーには接続できています。ログインできますが、オンライン通信の公開キーが未設定です。"
+        :"サーバー接続済み。ログインまたは新規登録してね。";
+      connectionState.textContent=health.realtime===false?"ログインサーバー接続済み（オンライン通信未設定）":"サーバー接続済み";
     }catch(e){
       authMessage.textContent="サーバーに接続できません。APIの配置とVercelの設定を確認してね。";
       connectionState.textContent="サーバー未接続";
