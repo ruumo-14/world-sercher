@@ -331,8 +331,22 @@
     realtimeChannel.send({type:"broadcast",event:"player-move",payload}).catch(error=>console.warn("Player update failed:",error));
   }
   function updateOnline(){onlineCount.textContent="村にいる冒険者 "+(others.size+(started?1:0))+"人"}
-  function blocked(x,y){if(interior)return x<92||y<92||x>868||y>508;if(x<70||y<70||x>worldW-70||y>worldH-70)return true;if(Math.hypot(x-(water.x+water.w/2),y-(water.y+water.h/2))<220)return true;return buildings.some(b=>x+12>b.x&&x-12<b.x+b.w&&y+8>b.y+32&&y-8<b.y+b.h)}
-  const worldW=3000,worldH=2300;
+  const worldW=3200,worldH=2550;
+  const riverLoop={x:1600,y:1320,rx:1340,ry:1050,inner:.88,outer:1.06};
+  function riverRingAt(x,y){
+    const nx=(x-riverLoop.x)/riverLoop.rx,ny=(y-riverLoop.y)/riverLoop.ry;
+    const radius=Math.sqrt(nx*nx+ny*ny);
+    if(radius<riverLoop.inner||radius>riverLoop.outer)return false;
+    const angle=Math.atan2(ny,nx);
+    const bridgeAngles=[0,Math.PI/2,Math.PI,-Math.PI/2];
+    return !bridgeAngles.some(a=>Math.abs(Math.atan2(Math.sin(angle-a),Math.cos(angle-a)))<.075);
+  }
+  function blocked(x,y){
+    if(interior)return x<92||y<92||x>868||y>508;
+    if(x<70||y<70||x>worldW-70||y>worldH-70)return true;
+    if(riverRingAt(x,y))return true;
+    return buildings.some(b=>x+12>b.x&&x-12<b.x+b.w&&y+8>b.y+32&&y-8<b.y+b.h);
+  }
   window.addEventListener("keydown",e=>{
     const k=e.key.toLowerCase();
     if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();
@@ -378,13 +392,51 @@
       if(v>.16){rect(q.x+4+(v*17|0)%18,q.y+5+(v*23|0)%18,3,3,v>.78?"#a7ca68":"#4b8745");}
       if(v>.89){rect(q.x+18,q.y+9,4,2,"#d7d58a");}
     }
-    // River is built from broad stepped banks and water tiles.
-    const riverPts=[];for(let y=420;y<=2520;y+=64)riverPts.push([390+Math.sin(y/155)*65+Math.sin(y/83)*13,y]);
-    storyWorldPath(riverPts,"#765d43",218);storyWorldPath(riverPts,"#c2aa7b",202);storyWorldPath(riverPts,"#397f9b",174);storyWorldPath(riverPts,"#5ba8b4",150);
-    for(let i=0;i<48;i++){const wy=480+i*42,bend=390+Math.sin(wy/155)*65+Math.sin(wy/83)*13,q=project(bend,wy);rect(q.x-25,q.y-3,20+(i%4)*5,3,"#b3dcd0");}
-    // Main roads use tiled paving, dark edges, and a pale center seam.
-    storyWorldPath([[1600,430],[1600,2370]],"#795d42",142);storyWorldPath([[1600,430],[1600,2370]],"#b98b57",126);
-    storyWorldPath([[650,1320],[2660,1320]],"#795d42",142);storyWorldPath([[650,1320],[2660,1320]],"#c79a63",126);
+    // リーフェルを囲む環状河川。川幅と岸辺を分けて描き、町を水辺の内側に守る。
+    const riverPts=[];
+    for(let i=0;i<=160;i++){
+      const a=i/160*Math.PI*2;
+      const wobbleX=Math.sin(a*5)*18+Math.cos(a*9)*7;
+      const wobbleY=Math.cos(a*4)*14+Math.sin(a*7)*6;
+      riverPts.push([riverLoop.x+Math.cos(a)*riverLoop.rx+wobbleX,riverLoop.y+Math.sin(a)*riverLoop.ry+wobbleY]);
+    }
+    storyWorldPath(riverPts,"#765d43",232);
+    storyWorldPath(riverPts,"#c2aa7b",212);
+    storyWorldPath(riverPts,"#397f9b",184);
+    storyWorldPath(riverPts,"#4e96ad",166);
+    storyWorldPath(riverPts,"#5ba8b4",146);
+    for(let i=0;i<112;i++){
+      const a=i/112*Math.PI*2;
+      const wx=riverLoop.x+Math.cos(a)*riverLoop.rx;
+      const wy=riverLoop.y+Math.sin(a)*riverLoop.ry;
+      const q=project(wx,wy);
+      const tangent=Math.atan2(Math.cos(a)*riverLoop.ry,-Math.sin(a)*riverLoop.rx);
+      ctx.save();ctx.translate(q.x,q.y);ctx.rotate(tangent);
+      rect(-17,-2,34,3,i%3?"#b3dcd0":"#d0e8d5");
+      ctx.restore();
+    }
+    // Four wooden bridges connect the enclosed town to the surrounding grassland.
+    const bridge=(wx,wy,vertical)=>{
+      const p=project(wx,wy);ctx.save();ctx.translate(p.x,p.y);
+      if(!vertical)ctx.rotate(Math.PI/2);
+      rect(-84,-142,168,284,"#684a35");
+      rect(-78,-136,156,272,"#a87548");
+      rect(-70,-132,140,264,"#c4935d");
+      for(let y=-120;y<130;y+=24){
+        rect(-68,y,136,4,"#e0b77b");
+        rect(-68,y+9,136,2,"#94613d");
+      }
+      rect(-86,-140,8,280,"#704a32");rect(78,-140,8,280,"#704a32");
+      for(let y=-132;y<140;y+=34){
+        rect(-91,y,18,9,"#8b5a38");rect(73,y,18,9,"#8b5a38");
+      }
+      ctx.restore();
+    };
+    bridge(1600,270,true);bridge(1600,2370,true);
+    bridge(260,1320,false);bridge(2940,1320,false);
+    // Main roads pass through the four bridges and meet at the central plaza.
+    storyWorldPath([[1600,120],[1600,2520]],"#795d42",142);storyWorldPath([[1600,120],[1600,2520]],"#b98b57",126);
+    storyWorldPath([[120,1320],[3080,1320]],"#795d42",142);storyWorldPath([[120,1320],[3080,1320]],"#c79a63",126);
     storyWorldPath([[1600,1320],[1100,900]],"#b98b57",68);storyWorldPath([[1600,1320],[2050,900]],"#b98b57",68);storyWorldPath([[1600,1320],[2050,1800]],"#b98b57",68);
     // Paving seams and scattered stones
     for(let i=0;i<80;i++){const x=700+(i*73)%1900,y=1260+((i*31)%110)-55,q=project(x,y);rect(q.x,q.y,18,3,i%2?"#d8b57b":"#a97e50");}
@@ -397,7 +449,7 @@
     // Lively storybook details scattered through grassy clearings.
     for(let i=0;i<190;i++){
       const wx=90+Math.floor(hash(i,71)*2860),wy=100+Math.floor(hash(i,83)*2480);
-      if(Math.hypot(wx-1600,wy-1320)<470||buildings.some(b=>wx>b.x-90&&wx<b.x+b.w+90&&wy>b.y-90&&wy<b.y+b.h+90))continue;
+      if(Math.hypot(wx-1600,wy-1320)<470||riverRingAt(wx,wy)||buildings.some(b=>wx>b.x-90&&wx<b.x+b.w+90&&wy>b.y-90&&wy<b.y+b.h+90))continue;
       const p=project(wx,wy),kind=i%5;
       if(kind===0){ellipse(p.x,p.y+3,7,3,"#477849");for(let k=0;k<5;k++){const a=k*Math.PI*2/5;ellipse(p.x+Math.cos(a)*4,p.y-4+Math.sin(a)*3,3,2,["#f3d77e","#e9a1a0","#f5e9c8"][i%3]);}ellipse(p.x,p.y-4,2,2,"#d8a84d");}
       else if(kind===1){ellipse(p.x,p.y,5,3,"#8c8b7d");ellipse(p.x-2,p.y-2,3,2,"#bcb9a7");}
@@ -906,7 +958,7 @@
     // Hand-painted picture-book scenery: leafy trees, flower patches and stones.
     for(let i=0;i<78;i++){
       const x=70+Math.floor(hash(i,23)*2860),y=90+Math.floor(hash(i,31)*2540);
-      if(Math.hypot(x-1600,y-1320)<490||buildings.some(b=>x>b.x-110&&x<b.x+b.w+110&&y>b.y-110&&y<b.y+b.h+110))continue;
+      if(Math.hypot(x-1600,y-1320)<490||riverRingAt(x,y)||buildings.some(b=>x>b.x-110&&x<b.x+b.w+110&&y>b.y-110&&y<b.y+b.h+110))continue;
       objects.push({depth:y,draw:()=>drawTree(x,y,i)});
     }
     buildings.forEach((b,i)=>objects.push({depth:b.y+b.h,draw:()=>drawHouse(b,i)}));
