@@ -736,38 +736,54 @@
     isoPoly([{x:x,y:y-ry},{x:x+rx,y:y},{x:x,y:y+ry},{x:x-rx,y:y}],fill,stroke,1);
   }
   function drawAnimeGround(){
-    // A clean 16-bit palette: layered grass tiles, a complete ring river, and four bridges.
-    rect(0,0,W,H,"#9bc8d1");
-    for(let layer=0;layer<4;layer++){
-      const y=175+layer*28;
-      poly([{x:0,y:y+70},{x:0,y:y+18},{x:160,y:y-7},{x:330,y:y+12},{x:520,y:y-13},{x:740,y:y+10},{x:960,y:y-5},{x:960,y:H},{x:0,y:H}],
-        ["#9bbd83","#8bb276","#7ba568","#6e985e"][layer],null);
+    // Soft, hand-painted fantasy landscape; keep the new isometric town layout.
+    const sky=ctx.createLinearGradient(0,0,0,H);
+    sky.addColorStop(0,"#a9d9ec");sky.addColorStop(.52,"#d9eddf");sky.addColorStop(1,"#b6d49a");
+    rect(0,0,W,H,sky);
+    for(let layer=0;layer<5;layer++){
+      const base=155+layer*42;
+      ctx.beginPath();ctx.moveTo(0,base+100);
+      for(let x=0;x<=W;x+=18){
+        const y=base+Math.sin((x+layer*127)/118)*17+Math.cos(x/205+layer)*13;
+        ctx.lineTo(x,y);
+      }
+      ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+      const hill=ctx.createLinearGradient(0,base-20,0,H);
+      hill.addColorStop(0,["#a9cc91","#9bc484","#8db879","#80ad6f","#75a467"][layer]);
+      hill.addColorStop(1,["#8eb779","#80ad6d","#75a363","#6d985b","#628e54"][layer]);
+      ctx.fillStyle=hill;ctx.fill();
     }
-    const left=Math.floor((camera.x-1850)/64),right=Math.ceil((camera.x+1850)/64);
-    const top=Math.floor((camera.y-1850)/64),bottom=Math.ceil((camera.y+1850)/64);
-    for(let gy=top;gy<=bottom;gy++)for(let gx=left;gx<=right;gx++){
-      const p=isoProject(gx*64,gy*64),v=hash(gx,gy);
-      isoDiamond(p.x,p.y,23,12,["#6fa75d","#78b164","#82b96b","#689e57"][Math.floor(v*4)]);
-      if(v>.72)isoDiamond(p.x-5,p.y-3,4,2,v>.9?"#d6d78c":"#91c477");
-      if(v>.95)isoDiamond(p.x+7,p.y+2,3,2,"#e9d69b");
+    // Organic, softly shaded ground patches replace the visible square tile grid.
+    for(let gy=Math.floor((camera.y-1750)/128);gy<=Math.ceil((camera.y+1750)/128);gy++){
+      for(let gx=Math.floor((camera.x-1750)/128);gx<=Math.ceil((camera.x+1750)/128);gx++){
+        const p=isoProject(gx*128+64,gy*128+64),v=hash(gx,gy);
+        const r=18+v*19;
+        const g=ctx.createRadialGradient(p.x-r*.2,p.y-r*.25,2,p.x,p.y,r);
+        g.addColorStop(0,v>.5?"rgba(190,220,142,.32)":"rgba(223,226,157,.20)");
+        g.addColorStop(1,"rgba(110,157,87,0)");
+        ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(p.x,p.y,r*1.8,r*.9,0,0,Math.PI*2);ctx.fill();
+      }
     }
     const river=[];
-    for(let i=0;i<=192;i++){
-      const angle=i/192*Math.PI*2,wobble=1+Math.sin(angle*5)*.008+Math.cos(angle*9)*.004;
+    for(let i=0;i<=240;i++){
+      const angle=i/240*Math.PI*2,wobble=1+Math.sin(angle*5)*.008+Math.cos(angle*9)*.004;
       river.push(isoProject(riverLoop.x+Math.cos(angle)*riverLoop.rx*wobble,riverLoop.y+Math.sin(angle)*riverLoop.ry*wobble));
     }
     const strokePath=(pts,color,width)=>{
       ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
       ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";ctx.stroke();
     };
-    strokePath(river,"#76583f",74);strokePath(river,"#c6a979",66);
-    strokePath(river,"#347f9b",50);strokePath(river,"#4c9eb0",39);
-    for(let i=0;i<96;i++){
-      const angle=i/96*Math.PI*2,wx=riverLoop.x+Math.cos(angle)*riverLoop.rx,wy=riverLoop.y+Math.sin(angle)*riverLoop.ry,p=isoProject(wx,wy);
-      rect(p.x-5+(i%4)*2,p.y-3,12,2,i%3?"#a9d7cf":"#d2e8d7");
+    strokePath(river,"#79634b",82);strokePath(river,"#c8b48a",72);
+    strokePath(river,"#367f99",54);strokePath(river,"#64b6c2",42);
+    // Loose, hand-painted glints on the river surface.
+    for(let i=0;i<70;i++){
+      const angle=i/70*Math.PI*2,wx=riverLoop.x+Math.cos(angle)*riverLoop.rx,wy=riverLoop.y+Math.sin(angle)*riverLoop.ry,p=isoProject(wx,wy);
+      ctx.strokeStyle=i%3?"rgba(219,245,230,.62)":"rgba(255,250,218,.72)";
+      ctx.lineWidth=2+(i%3);ctx.beginPath();ctx.moveTo(p.x-8,p.y-2);ctx.quadraticCurveTo(p.x,p.y-5,p.x+10,p.y-1);ctx.stroke();
     }
     const road=(pts,w)=>{
-      strokePath(pts,"#8b6948",w+12);strokePath(pts,"#c49a65",w);strokePath(pts,"#dfbd83",Math.max(2,w*.16));
+      strokePath(pts,"#876447",w+13);strokePath(pts,"#c49a69",w);
+      strokePath(pts,"#e1c28d",Math.max(3,w*.16));
     };
     road([isoProject(1600,470),isoProject(1600,2170)],38);
     road([isoProject(470,1320),isoProject(2730,1320)],38);
@@ -776,19 +792,27 @@
     road([isoProject(1600,1320),isoProject(2050,1800)],22);
     const bridges=[[[1600,90],[1600,470]],[[1600,2170],[1600,2550]],[[80,1320],[470,1320]],[[2730,1320],[3120,1320]]];
     bridges.forEach(points=>{
-      const projected=points.map(p=>isoProject(p[0],p[1]));
-      strokePath(projected,"#65432f",34);strokePath(projected,"#a87546",27);strokePath(projected,"#d2a16a",20);
-      for(let k=0;k<10;k++){
-        const t=(k+.5)/10,wx=points[0][0]+(points[1][0]-points[0][0])*t,wy=points[0][1]+(points[1][1]-points[0][1])*t,p=isoProject(wx,wy);
-        rect(p.x-5,p.y-2,10,3,k%2?"#98633e":"#e0b477");
+      const q=points.map(p=>isoProject(p[0],p[1]));
+      strokePath(q,"#654832",35);strokePath(q,"#a87548",28);strokePath(q,"#d9ad78",20);
+      for(let k=0;k<9;k++){
+        const t=(k+.5)/9,p=isoProject(points[0][0]+(points[1][0]-points[0][0])*t,points[0][1]+(points[1][1]-points[0][1])*t);
+        ctx.strokeStyle=k%2?"rgba(92,57,36,.55)":"rgba(255,220,165,.55)";
+        ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p.x-8,p.y-2);ctx.lineTo(p.x+8,p.y+2);ctx.stroke();
       }
     });
     const plaza=isoProject(1600,1320);
-    isoDiamond(plaza.x,plaza.y+5,112,57,"#88775e");isoDiamond(plaza.x,plaza.y,105,53,"#c2ad86");
-    isoDiamond(plaza.x,plaza.y-3,93,47,"#e3d2ad","#9d805c",2);
-    for(let i=0;i<24;i++){const angle=i*Math.PI/12;isoDiamond(plaza.x+Math.cos(angle)*82,plaza.y+Math.sin(angle)*40,4,2,i%2?"#f3e6c5":"#ad956d");}
-    isoDiamond(plaza.x,plaza.y-10,29,15,"#8a9995");isoDiamond(plaza.x,plaza.y-16,24,12,"#d7e3d7");
-    isoDiamond(plaza.x,plaza.y-21,18,9,"#4da8b6");rect(plaza.x-6,plaza.y-27,5,4,"#e8f5dd");
+    const shadow=ctx.createRadialGradient(plaza.x,plaza.y+15,10,plaza.x,plaza.y+15,135);
+    shadow.addColorStop(0,"rgba(69,67,49,.28)");shadow.addColorStop(1,"rgba(69,67,49,0)");
+    ctx.fillStyle=shadow;ctx.beginPath();ctx.ellipse(plaza.x,plaza.y+12,135,70,0,0,Math.PI*2);ctx.fill();
+    isoDiamond(plaza.x,plaza.y+5,112,57,"#a58c6b");
+    isoDiamond(plaza.x,plaza.y,105,53,"#d0bd98");
+    isoDiamond(plaza.x,plaza.y-3,93,47,"#e7d9ba","#b49a72",2);
+    for(let i=0;i<24;i++){
+      const angle=i*Math.PI/12;isoDiamond(plaza.x+Math.cos(angle)*82,plaza.y+Math.sin(angle)*40,4,2,i%2?"#f3e6c5":"#b6a17d");
+    }
+    isoDiamond(plaza.x,plaza.y-10,29,15,"#9aa49a");
+    isoDiamond(plaza.x,plaza.y-16,24,12,"#e0e6d6");
+    isoDiamond(plaza.x,plaza.y-21,18,9,"#64aebb");
   }
   function drawAnimeHouse(b,index=0){
     const x=b.x+b.w/2,y=b.y+b.h/2,w=b.w,h=b.h;
