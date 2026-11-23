@@ -89,7 +89,13 @@
         group.push({name:e[0],hp:e[1],maxHp:e[2],color:e[3],boss:false});
       }
     }
-    battle={enemies:group,playerX:120,playerY:0,vy:0,hp:100,maxHp:100,mp:30,maxMp:30,attackCooldown:0,enemyCooldown:1.1,defending:false,herbs:1,finished:false};keys.clear();
+    group.forEach((enemy,index)=>{
+      enemy.x=620+index*86;
+      enemy.attackState="approach";
+      enemy.attackTimer=0.8+index*0.35;
+      enemy.hitFlash=0;
+    });
+    battle={enemies:group,playerX:120,playerY:0,vy:0,hp:100,maxHp:100,mp:30,maxMp:30,attackCooldown:0,attackTimer:0,facing:1,defending:false,herbs:1,finished:false};keys.clear();
     $("mobile-controls").classList.add("battle-hidden");
     $("battle-controls").classList.remove("hidden");
     say(touched.boss?"強敵が現れた！ ボス戦からは逃げられない。":"敵と接触した！ 戦闘開始！");
@@ -117,10 +123,24 @@
   }
   function battleAttack(){
     if(!battle||battle.finished||battle.attackCooldown>0)return;
-    const target=battle.enemies.find(e=>e.hp>0);
-    if(!target)return;
+    const direction=battle.facing||1;
+    const target=battle.enemies
+      .filter(e=>e.hp>0)
+      .filter(e=>{
+        const dx=e.x-battle.playerX;
+        return Math.abs(dx)<=118 && dx*direction>=-18;
+      })
+      .sort((a,b)=>Math.abs(a.x-battle.playerX)-Math.abs(b.x-battle.playerX))[0];
+    if(!target){
+      say("敵に近づき、正面を向いて攻撃してね。");
+      return;
+    }
     target.hp=Math.max(0,target.hp-14);
-    battle.attackCooldown=.38;
+    target.hitFlash=.18;
+    battle.attackTimer=.2;
+    battle.attackCooldown=.42;
+    battleMessage=target.hp<=0?target.name+"を倒した！":target.name+"に命中！";
+    battleMessageUntil=performance.now()+650;
     if(battle.enemies.every(e=>e.hp<=0))finishBattle("win");
   }
   function battleMagic(){
@@ -195,7 +215,7 @@
     bar(34,84,200,battle.hp,battle.maxHp,"#bd554b");bar(34,111,200,battle.mp,battle.maxMp,"#428eae");
     // Battle avatar is drawn in screen coordinates.
     drawStorybookPersonAt(battle.playerX,438-battle.playerY,player,true,1.25);
-    battle.enemies.forEach((e,i)=>{if(e.hp<=0)return;const ex=650+(i%3)*92,ey=422-Math.floor(i/3)*70;
+    battle.enemies.forEach((e,i)=>{if(e.hp<=0)return;const ex=Number.isFinite(e.x)?e.x:650+(i%3)*92,ey=422-Math.floor(i/3)*70;
       ellipse(ex,ey+8,e.boss?46:32,9,"#77654a");
       if(e.name.includes("スライム")){
         rect(ex-28,ey-25,56,27,"#377c80");rect(ex-22,ey-35,44,14,"#4ca4a0");rect(ex-12,ey-40,24,8,"#9dd8c8");
@@ -206,7 +226,15 @@
         if(e.boss){rect(ex-34,ey-58,15,16,"#b18b58");rect(ex+19,ey-58,15,16,"#b18b58");}
       }
       ctx.fillStyle="#44352e";ctx.font="bold 13px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(e.name,ex,ey-67);bar(ex-34,ey-55,68,e.hp,e.maxHp,"#bd554b");
+      if(e.attackState==="windup"){
+        ctx.fillStyle="#a83f35";ctx.font="bold 24px sans-serif";ctx.fillText("!",ex,ey-91);
+        ctx.strokeStyle="#d65c48";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(ex,ey+8,35,12,0,0,Math.PI*2);ctx.stroke();
+      }
     });
+    if(battle.attackTimer>0){
+      ctx.strokeStyle="#f7d17c";ctx.lineWidth=7;ctx.lineCap="round";
+      ctx.beginPath();ctx.arc(battle.playerX+(battle.facing||1)*34,405-battle.playerY,28,-.95,.95);ctx.stroke();
+    }
     if(battle.defending){ctx.strokeStyle="#d6eff0";ctx.lineWidth=5;ctx.strokeRect(battle.playerX-23,390-battle.playerY,46,58);}
     if(battleMessage&&performance.now()<battleMessageUntil){rect(250,210,460,58,"#47382f");rect(255,215,450,48,"#f2dfb5");ctx.fillStyle="#49372e";ctx.textAlign="center";ctx.font="bold 18px 'Noto Sans JP',sans-serif";ctx.fillText(battleMessage,480,245);}
   }
@@ -902,15 +930,45 @@
     if(battle){
       if(battle.finished)return;
       let dx=0;if(keys.has("a")||keys.has("arrowleft"))dx--;if(keys.has("d")||keys.has("arrowright"))dx++;
+      if(dx)battle.facing=dx>0?1:-1;
       battle.playerX=Math.max(35,Math.min(W-35,battle.playerX+dx*260*dt));
       if((keys.has(" ")||keys.has("w")||keys.has("arrowup"))&&battle.playerY<=0)battle.vy=390;
       battle.playerY=Math.max(0,battle.playerY+battle.vy*dt);battle.vy-=980*dt;
       battle.attackCooldown=Math.max(0,battle.attackCooldown-dt);
+      battle.attackTimer=Math.max(0,battle.attackTimer-dt);
       battle.defending=keys.has("x");
-      battle.enemyCooldown-=dt;
-      if(battle.enemyCooldown<=0){
-        const alive=battle.enemies.filter(e=>e.hp>0);
-        if(alive.length){const damage=alive.some(e=>e.boss)?14:alive.length*5;battle.hp=Math.max(0,battle.hp-(battle.defending?Math.ceil(damage*.35):damage));battle.enemyCooldown=1.25;if(battle.hp<=0){battle.finished=true;battleMessage="力尽きてしまった…";battleMessageUntil=performance.now()+1500;setTimeout(()=>{battle=null;player.x=1600;player.y=1300;saveCurrent();$("battle-controls").classList.add("hidden");$("mobile-controls").classList.remove("battle-hidden");say("町へ戻りました。戦闘の続きは今後実装します。");},1500);return;}}
+      for(const enemy of battle.enemies){
+        if(enemy.hp<=0)continue;
+        enemy.hitFlash=Math.max(0,(enemy.hitFlash||0)-dt);
+        const delta=battle.playerX-enemy.x;
+        const distance=Math.abs(delta);
+        if(enemy.attackState==="approach"){
+          if(distance>112)enemy.x+=Math.sign(delta)*72*dt;
+          else{enemy.attackState="windup";enemy.attackTimer=.58;}
+        }else if(enemy.attackState==="windup"){
+          enemy.attackTimer-=dt;
+          if(enemy.attackTimer<=0){
+            if(distance<142){
+              if(battle.playerY>28){
+                battleMessage="ジャンプで攻撃をかわした！";
+              }else{
+                const damage=enemy.boss?16:9;
+                battle.hp=Math.max(0,battle.hp-(battle.defending?Math.ceil(damage*.35):damage));
+                battleMessage=battle.defending?"攻撃を防いだ！":"敵の攻撃を受けた！";
+              }
+              battleMessageUntil=performance.now()+650;
+            }
+            enemy.attackState="recovery";enemy.attackTimer=.82;
+          }
+        }else if(enemy.attackState==="recovery"){
+          enemy.attackTimer-=dt;
+          if(enemy.attackTimer<=0){enemy.attackState="approach";enemy.attackTimer=0;}
+        }
+      }
+      if(battle.hp<=0){
+        battle.finished=true;battleMessage="力尽きてしまった…";battleMessageUntil=performance.now()+1500;
+        setTimeout(()=>{battle=null;player.x=1600;player.y=1300;saveCurrent();$("battle-controls").classList.add("hidden");$("mobile-controls").classList.remove("battle-hidden");say("町へ戻りました。戦闘の続きは今後実装します。");},1500);
+        return;
       }
       if(battle.playerX>=W-38){
         finishBattle("escape");
