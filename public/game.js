@@ -723,45 +723,32 @@
     ctx.save();ctx.globalAlpha=.08;for(let i=0;i<180;i++){const x=(i*97)%W,y=(i*53)%H;rect(x,y,2,2,i%2?"#f4e5bf":"#3b4e38");}ctx.restore();
   }
 
-  // 3D anime fantasy renderer: the world coordinates and gameplay remain unchanged.
+  // Overhead fantasy renderer: north is screen-up and buildings face the camera.
+  // Front-facing top-down view: north is screen-up, with no diagonal/isometric shear.
   function isoProject(wx,wy,z=0){
-    const dx=wx-camera.x,dy=wy-camera.y;
-    return {x:Math.round(W/2+(dx-dy)*.34),y:Math.round(H/2+(dx+dy)*.17-z)};
+    const scale=.34,dx=wx-camera.x,dy=wy-camera.y;
+    return {x:Math.round(W/2+dx*scale),y:Math.round(H/2+dy*scale-z)};
   }
   function isoPoly(points,fill,stroke=null,line=1){
     ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();
     ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}
   }
   function isoDiamond(x,y,rx,ry,fill,stroke=null){
-    isoPoly([{x:x,y:y-ry},{x:x+rx,y:y},{x:x,y:y+ry},{x:x-rx,y:y}],fill,stroke,1);
+    ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);
+    ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}
   }
   function drawAnimeGround(){
-    // Soft, hand-painted fantasy landscape; keep the new isometric town layout.
-    const sky=ctx.createLinearGradient(0,0,0,H);
-    sky.addColorStop(0,"#a9d9ec");sky.addColorStop(.52,"#d9eddf");sky.addColorStop(1,"#b6d49a");
-    rect(0,0,W,H,sky);
-    for(let layer=0;layer<5;layer++){
-      const base=155+layer*42;
-      ctx.beginPath();ctx.moveTo(0,base+100);
-      for(let x=0;x<=W;x+=18){
-        const y=base+Math.sin((x+layer*127)/118)*17+Math.cos(x/205+layer)*13;
-        ctx.lineTo(x,y);
-      }
-      ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
-      const hill=ctx.createLinearGradient(0,base-20,0,H);
-      hill.addColorStop(0,["#a9cc91","#9bc484","#8db879","#80ad6f","#75a467"][layer]);
-      hill.addColorStop(1,["#8eb779","#80ad6d","#75a363","#6d985b","#628e54"][layer]);
-      ctx.fillStyle=hill;ctx.fill();
-    }
-    // Organic, softly shaded ground patches replace the visible square tile grid.
-    for(let gy=Math.floor((camera.y-1750)/128);gy<=Math.ceil((camera.y+1750)/128);gy++){
-      for(let gx=Math.floor((camera.x-1750)/128);gx<=Math.ceil((camera.x+1750)/128);gx++){
-        const p=isoProject(gx*128+64,gy*128+64),v=hash(gx,gy);
-        const r=18+v*19;
-        const g=ctx.createRadialGradient(p.x-r*.2,p.y-r*.25,2,p.x,p.y,r);
-        g.addColorStop(0,v>.5?"rgba(190,220,142,.32)":"rgba(223,226,157,.20)");
+    const grass=ctx.createLinearGradient(0,0,W,H);
+    grass.addColorStop(0,"#a8ce88");grass.addColorStop(.48,"#91bd78");grass.addColorStop(1,"#79a965");
+    rect(0,0,W,H,grass);
+    // Soft, organic meadow texture in a true overhead layout.
+    for(let gy=Math.floor((camera.y-1100)/128);gy<=Math.ceil((camera.y+1100)/128);gy++){
+      for(let gx=Math.floor((camera.x-1500)/128);gx<=Math.ceil((camera.x+1500)/128);gx++){
+        const p=isoProject(gx*128+64,gy*128+64),v=hash(gx,gy),r=13+v*18;
+        const g=ctx.createRadialGradient(p.x-r*.2,p.y-r*.25,1,p.x,p.y,r);
+        g.addColorStop(0,v>.5?"rgba(207,229,157,.34)":"rgba(231,231,161,.22)");
         g.addColorStop(1,"rgba(110,157,87,0)");
-        ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(p.x,p.y,r*1.8,r*.9,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(p.x,p.y,r*1.8,r,0,0,Math.PI*2);ctx.fill();
       }
     }
     const river=[];
@@ -773,102 +760,96 @@
       ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
       ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";ctx.lineJoin="round";ctx.stroke();
     };
-    strokePath(river,"#79634b",82);strokePath(river,"#c8b48a",72);
-    strokePath(river,"#367f99",54);strokePath(river,"#64b6c2",42);
-    // Loose, hand-painted glints on the river surface.
+    strokePath(river,"#79634b",34);strokePath(river,"#c8b48a",29);
+    strokePath(river,"#367f99",23);strokePath(river,"#64b6c2",16);
     for(let i=0;i<70;i++){
       const angle=i/70*Math.PI*2,wx=riverLoop.x+Math.cos(angle)*riverLoop.rx,wy=riverLoop.y+Math.sin(angle)*riverLoop.ry,p=isoProject(wx,wy);
       ctx.strokeStyle=i%3?"rgba(219,245,230,.62)":"rgba(255,250,218,.72)";
-      ctx.lineWidth=2+(i%3);ctx.beginPath();ctx.moveTo(p.x-8,p.y-2);ctx.quadraticCurveTo(p.x,p.y-5,p.x+10,p.y-1);ctx.stroke();
+      ctx.lineWidth=1+(i%2);ctx.beginPath();ctx.moveTo(p.x-5,p.y-1);ctx.quadraticCurveTo(p.x,p.y-3,p.x+6,p.y);ctx.stroke();
     }
-    const road=(pts,w)=>{
-      strokePath(pts,"#876447",w+13);strokePath(pts,"#c49a69",w);
-      strokePath(pts,"#e1c28d",Math.max(3,w*.16));
-    };
-    road([isoProject(1600,470),isoProject(1600,2170)],38);
-    road([isoProject(470,1320),isoProject(2730,1320)],38);
-    road([isoProject(1600,1320),isoProject(1100,900)],22);
-    road([isoProject(1600,1320),isoProject(2050,900)],22);
-    road([isoProject(1600,1320),isoProject(2050,1800)],22);
+    const road=(pts,w)=>{strokePath(pts,"#876447",w+8);strokePath(pts,"#c49a69",w);strokePath(pts,"#e1c28d",Math.max(2,w*.14));};
+    road([isoProject(1600,470),isoProject(1600,2170)],19);
+    road([isoProject(470,1320),isoProject(2730,1320)],19);
+    road([isoProject(1600,1320),isoProject(1100,900)],12);
+    road([isoProject(1600,1320),isoProject(2050,900)],12);
+    road([isoProject(1600,1320),isoProject(2050,1800)],12);
     const bridges=[[[1600,90],[1600,470]],[[1600,2170],[1600,2550]],[[80,1320],[470,1320]],[[2730,1320],[3120,1320]]];
     bridges.forEach(points=>{
       const q=points.map(p=>isoProject(p[0],p[1]));
-      strokePath(q,"#654832",35);strokePath(q,"#a87548",28);strokePath(q,"#d9ad78",20);
+      strokePath(q,"#654832",17);strokePath(q,"#a87548",13);strokePath(q,"#d9ad78",8);
       for(let k=0;k<9;k++){
         const t=(k+.5)/9,p=isoProject(points[0][0]+(points[1][0]-points[0][0])*t,points[0][1]+(points[1][1]-points[0][1])*t);
         ctx.strokeStyle=k%2?"rgba(92,57,36,.55)":"rgba(255,220,165,.55)";
-        ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p.x-8,p.y-2);ctx.lineTo(p.x+8,p.y+2);ctx.stroke();
+        ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(p.x-4,p.y-1);ctx.lineTo(p.x+4,p.y+1);ctx.stroke();
       }
     });
     const plaza=isoProject(1600,1320);
-    const shadow=ctx.createRadialGradient(plaza.x,plaza.y+15,10,plaza.x,plaza.y+15,135);
+    const shadow=ctx.createRadialGradient(plaza.x,plaza.y+7,4,plaza.x,plaza.y+7,66);
     shadow.addColorStop(0,"rgba(69,67,49,.28)");shadow.addColorStop(1,"rgba(69,67,49,0)");
-    ctx.fillStyle=shadow;ctx.beginPath();ctx.ellipse(plaza.x,plaza.y+12,135,70,0,0,Math.PI*2);ctx.fill();
-    isoDiamond(plaza.x,plaza.y+5,112,57,"#a58c6b");
-    isoDiamond(plaza.x,plaza.y,105,53,"#d0bd98");
-    isoDiamond(plaza.x,plaza.y-3,93,47,"#e7d9ba","#b49a72",2);
-    for(let i=0;i<24;i++){
-      const angle=i*Math.PI/12;isoDiamond(plaza.x+Math.cos(angle)*82,plaza.y+Math.sin(angle)*40,4,2,i%2?"#f3e6c5":"#b6a17d");
-    }
-    isoDiamond(plaza.x,plaza.y-10,29,15,"#9aa49a");
-    isoDiamond(plaza.x,plaza.y-16,24,12,"#e0e6d6");
-    isoDiamond(plaza.x,plaza.y-21,18,9,"#64aebb");
+    ctx.fillStyle=shadow;ctx.beginPath();ctx.ellipse(plaza.x,plaza.y+7,68,38,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#a58c6b";ctx.beginPath();ctx.ellipse(plaza.x,plaza.y+3,40,25,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#d0bd98";ctx.beginPath();ctx.ellipse(plaza.x,plaza.y,37,23,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#e7d9ba";ctx.beginPath();ctx.ellipse(plaza.x,plaza.y-2,32,19,0,0,Math.PI*2);ctx.fill();
+    for(let i=0;i<24;i++){const angle=i*Math.PI/12;ctx.fillStyle=i%2?"#f3e6c5":"#b6a17d";ctx.beginPath();ctx.ellipse(plaza.x+Math.cos(angle)*27,plaza.y+Math.sin(angle)*15,1.4,1,0,0,Math.PI*2);ctx.fill();}
+    ctx.fillStyle="#9aa49a";ctx.beginPath();ctx.ellipse(plaza.x,plaza.y-6,10,6,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#e0e6d6";ctx.beginPath();ctx.ellipse(plaza.x,plaza.y-10,8,5,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#64aebb";ctx.beginPath();ctx.ellipse(plaza.x,plaza.y-13,6,4,0,0,Math.PI*2);ctx.fill();
   }
   function drawAnimeHouse(b,index=0){
-    const x=b.x+b.w/2,y=b.y+b.h/2,w=b.w,h=b.h;
-    const c1=isoProject(x-w/2,y-h/2),c2=isoProject(x+w/2,y-h/2),c3=isoProject(x+w/2,y+h/2),c4=isoProject(x-w/2,y+h/2);
-    if(c1.x<-250&&c2.x<-250&&c3.x<-250&&c4.x<-250)return;
-    const height=49+Math.min(32,h*.12);
-    const shadow=ctx.createRadialGradient((c1.x+c2.x+c3.x+c4.x)/4,(c1.y+c2.y+c3.y+c4.y)/4,4,(c1.x+c2.x+c3.x+c4.x)/4,(c1.y+c2.y+c3.y+c4.y)/4,(w+h)*.34);
-    shadow.addColorStop(0,"rgba(48,61,42,.28)");shadow.addColorStop(1,"rgba(48,61,42,0)");
-    ctx.fillStyle=shadow;ctx.beginPath();ctx.ellipse((c1.x+c2.x+c3.x+c4.x)/4,(c1.y+c2.y+c3.y+c4.y)/4+8,(w+h)*.34,(w+h)*.17,0,0,Math.PI*2);ctx.fill();
-    const wallTop=[c1,c2,c3,c4].map(p=>({x:p.x,y:p.y-height}));
+    const top=isoProject(b.x,b.y),bottom=isoProject(b.x+b.w,b.y+b.h);
+    const x=top.x,y=top.y,w=bottom.x-top.x,h=bottom.y-top.y;
+    if(x+w<-120||x>W+120||y+h<-120||y>H+120)return;
+    const shadow=ctx.createRadialGradient(x+w/2,y+h*.76,2,x+w/2,y+h*.76,w*.68);
+    shadow.addColorStop(0,"rgba(48,61,42,.30)");shadow.addColorStop(1,"rgba(48,61,42,0)");
+    ctx.fillStyle=shadow;ctx.beginPath();ctx.ellipse(x+w/2,y+h*.78,w*.62,h*.28,0,0,Math.PI*2);ctx.fill();
     const plaster=["#ead7b5","#e4c99f","#e8d9bd","#d9c19e"][index%4];
-    const side=ctx.createLinearGradient(c2.x,c2.y-height,c3.x,c3.y);side.addColorStop(0,"#bd916b");side.addColorStop(1,"#805b43");
-    isoPoly([c2,c3,wallTop[2],wallTop[1]],side,"#79543e",2);
-    const front=ctx.createLinearGradient(c4.x,c4.y-height,c3.x,c3.y);front.addColorStop(0,"#f4e5c8");front.addColorStop(.72,plaster);front.addColorStop(1,"#c9a77e");
-    isoPoly([c4,c3,wallTop[2],wallTop[3]],front,"#9b7655",2);
-    // Soft timber framing and a gently arched entrance
-    ctx.strokeStyle="rgba(111,75,51,.72)";ctx.lineWidth=5;ctx.lineCap="round";
-    ctx.beginPath();ctx.moveTo(c4.x+8,c4.y-9);ctx.lineTo(wallTop[3].x+8,wallTop[3].y+8);ctx.moveTo(c3.x-8,c3.y-9);ctx.lineTo(wallTop[2].x-8,wallTop[2].y+8);ctx.stroke();
-    const mid={x:(c3.x+c4.x)/2,y:(c3.y+c4.y)/2-height*.52};
-    const door=ctx.createLinearGradient(mid.x-9,mid.y,mid.x+10,mid.y+35);door.addColorStop(0,"#533c32");door.addColorStop(1,"#986849");
-    ctx.fillStyle=door;ctx.beginPath();ctx.moveTo(mid.x-10,mid.y+35);ctx.lineTo(mid.x-10,mid.y+8);ctx.quadraticCurveTo(mid.x,mid.y-5,mid.x+10,mid.y+8);ctx.lineTo(mid.x+10,mid.y+35);ctx.closePath();ctx.fill();
-    ctx.fillStyle="#e5bd77";ctx.beginPath();ctx.arc(mid.x+6,mid.y+20,1.8,0,Math.PI*2);ctx.fill();
-    const win={x:(c2.x+c3.x)/2-10,y:(c2.y+c3.y)/2-height*.62};
-    ctx.fillStyle="#76513e";ctx.beginPath();ctx.roundRect(win.x-2,win.y-2,22,27,5);ctx.fill();
-    const glass=ctx.createLinearGradient(win.x,win.y,win.x+18,win.y+24);glass.addColorStop(0,"#b9e0d9");glass.addColorStop(1,"#5d9ca3");
-    ctx.fillStyle=glass;ctx.beginPath();ctx.roundRect(win.x,win.y,18,23,4);ctx.fill();
-    ctx.strokeStyle="#f1d9a8";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(win.x+9,win.y+1);ctx.lineTo(win.x+9,win.y+22);ctx.moveTo(win.x+1,win.y+12);ctx.lineTo(win.x+17,win.y+12);ctx.stroke();
-    // Broad, curved roof planes with soft layered highlights
-    const ridgeA={x:(c1.x+c2.x)/2,y:(c1.y+c2.y)/2-height-35},ridgeB={x:(c3.x+c4.x)/2,y:(c3.y+c4.y)/2-height-35};
-    const roofL=ctx.createLinearGradient(ridgeA.x,ridgeA.y,c4.x,c4.y-height);roofL.addColorStop(0,"#d17d68");roofL.addColorStop(.65,"#a9544b");roofL.addColorStop(1,"#743f3d");
-    const roofR=ctx.createLinearGradient(ridgeA.x,ridgeA.y,c2.x,c2.y-height);roofR.addColorStop(0,"#e5a078");roofR.addColorStop(1,"#985047");
-    isoPoly([ridgeA,{x:c1.x-8,y:c1.y-height-4},{x:c4.x-8,y:c4.y-height-4},ridgeB],roofL,"#74463d",2);
-    isoPoly([ridgeA,{x:c2.x+8,y:c2.y-height-4},{x:c3.x+8,y:c3.y-height-4},ridgeB],roofR,"#74463d",2);
-    ctx.strokeStyle="rgba(255,218,176,.35)";ctx.lineWidth=2;
-    for(let k=1;k<5;k++){const t=k/5;ctx.beginPath();ctx.moveTo(ridgeA.x+(ridgeB.x-ridgeA.x)*t-9,ridgeA.y+(ridgeB.y-ridgeA.y)*t+7);ctx.quadraticCurveTo(ridgeA.x+(ridgeB.x-ridgeA.x)*t,ridgeA.y+(ridgeB.y-ridgeA.y)*t+12,ridgeA.x+(ridgeB.x-ridgeA.x)*t+10,ridgeA.y+(ridgeB.y-ridgeA.y)*t+7);ctx.stroke();}
-    if(index%3===0){ctx.fillStyle="#98644e";ctx.beginPath();ctx.roundRect(ridgeA.x+ w*.16,ridgeA.y-17,12,31,3);ctx.fill();ctx.fillStyle="rgba(255,248,225,.24)";for(let k=0;k<3;k++){ctx.beginPath();ctx.arc(ridgeA.x+w*.16+7+k*5,ridgeA.y-25-k*8,5-k,0,Math.PI*2);ctx.fill();}}
-    ctx.fillStyle="rgba(65,48,38,.72)";ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="rgba(255,242,216,.8)";ctx.strokeText(b.name,mid.x,Math.min(c1.y,c2.y)-height-45);ctx.fillText(b.name,mid.x,Math.min(c1.y,c2.y)-height-45);
+    // The lower edge is the visible front wall; the roof is seen from directly above.
+    const wall=ctx.createLinearGradient(x,y+h*.48,x,y+h);
+    wall.addColorStop(0,"#f2dfbd");wall.addColorStop(1,"#a97b59");
+    ctx.fillStyle=wall;ctx.beginPath();ctx.roundRect(x+4,y+h*.42,w-8,h*.56,5);ctx.fill();
+    ctx.strokeStyle="#8b6448";ctx.lineWidth=2;ctx.stroke();
+    const doorW=Math.max(8,w*.16),doorH=h*.34,doorX=x+w/2-doorW/2,doorY=y+h-doorH;
+    const door=ctx.createLinearGradient(doorX,doorY,doorX+doorW,doorY+doorH);
+    door.addColorStop(0,"#533c32");door.addColorStop(1,"#986849");
+    ctx.fillStyle=door;ctx.beginPath();ctx.roundRect(doorX,doorY,doorW,doorH,3);ctx.fill();
+    ctx.fillStyle="#e5bd77";ctx.beginPath();ctx.arc(doorX+doorW*.78,doorY+doorH*.58,1.5,0,Math.PI*2);ctx.fill();
+    const winW=Math.max(7,w*.13),winH=Math.max(7,h*.16);
+    for(const wx of [x+w*.19,x+w*.68]){
+      ctx.fillStyle="#76513e";ctx.beginPath();ctx.roundRect(wx,y+h*.58,winW,winH,3);ctx.fill();
+      const glass=ctx.createLinearGradient(wx,y+h*.58,wx+winW,y+h*.58+winH);
+      glass.addColorStop(0,"#b9e0d9");glass.addColorStop(1,"#5d9ca3");
+      ctx.fillStyle=glass;ctx.beginPath();ctx.roundRect(wx+2,y+h*.58+2,winW-4,winH-4,2);ctx.fill();
+    }
+    const roof=ctx.createLinearGradient(x,y,x+w,y+h*.68);
+    roof.addColorStop(0,index%2?"#d17d68":"#c77b61");roof.addColorStop(.55,index%2?"#a9544b":"#a85d4e");roof.addColorStop(1,"#743f3d");
+    ctx.fillStyle=roof;ctx.beginPath();ctx.moveTo(x-3,y+h*.08);ctx.quadraticCurveTo(x+w*.5,y-7,x+w+3,y+h*.08);ctx.lineTo(x+w-1,y+h*.62);ctx.quadraticCurveTo(x+w*.5,y+h*.7,x+1,y+h*.62);ctx.closePath();ctx.fill();
+    ctx.strokeStyle="#74463d";ctx.lineWidth=2;ctx.stroke();
+    ctx.strokeStyle="rgba(255,218,176,.42)";ctx.lineWidth=1.4;
+    for(let k=1;k<5;k++){const xx=x+w*k/5;ctx.beginPath();ctx.moveTo(xx,y+h*.13);ctx.quadraticCurveTo(xx-3,y+h*.34,xx,y+h*.58);ctx.stroke();}
+    ctx.strokeStyle="rgba(255,230,190,.38)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+5,y+h*.12);ctx.quadraticCurveTo(x+w*.5,y+h*.02,x+w-5,y+h*.12);ctx.stroke();
+    // A narrow strip of plaster remains visible below the roof eave.
+    ctx.fillStyle=plaster;ctx.fillRect(x+5,y+h*.62,w-10,3);
+    if(index%3===0){ctx.fillStyle="#98644e";ctx.beginPath();ctx.roundRect(x+w*.76,y-4,Math.max(5,w*.08),h*.25,2);ctx.fill();}
+    ctx.fillStyle="rgba(65,48,38,.82)";ctx.font="bold 10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";
+    ctx.lineWidth=3;ctx.strokeStyle="rgba(255,242,216,.9)";ctx.strokeText(b.name,x+w/2,y-8);ctx.fillText(b.name,x+w/2,y-8);
   }
   function drawAnimeTree(wx,wy,index=0){
-    const p=isoProject(wx,wy);if(p.x<-100||p.x>W+100||p.y<-180||p.y>H+100)return;
-    const r=20+(index%4)*3;
-    const shadow=ctx.createRadialGradient(p.x,p.y+3,2,p.x,p.y+3,r+18);
+    const p=isoProject(wx,wy);if(p.x<-70||p.x>W+70||p.y<-90||p.y>H+90)return;
+    const r=13+(index%4)*2;
+    const shadow=ctx.createRadialGradient(p.x,p.y+2,1,p.x,p.y+2,r+12);
     shadow.addColorStop(0,"rgba(49,77,43,.28)");shadow.addColorStop(1,"rgba(49,77,43,0)");
-    ctx.fillStyle=shadow;ctx.beginPath();ctx.ellipse(p.x,p.y+5,r+18,(r+18)*.48,0,0,Math.PI*2);ctx.fill();
-    const trunk=ctx.createLinearGradient(p.x-7,p.y-45,p.x+8,p.y);
+    ctx.fillStyle=shadow;ctx.beginPath();ctx.ellipse(p.x,p.y+3,r+12,(r+12)*.55,0,0,Math.PI*2);ctx.fill();
+    const trunk=ctx.createLinearGradient(p.x-4,p.y-24,p.x+5,p.y);
     trunk.addColorStop(0,"#a97a50");trunk.addColorStop(.55,"#80543a");trunk.addColorStop(1,"#62432f");
-    ctx.fillStyle=trunk;ctx.beginPath();ctx.moveTo(p.x-6,p.y+1);ctx.quadraticCurveTo(p.x-3,p.y-22,p.x-4,p.y-48);
-    ctx.lineTo(p.x+5,p.y-49);ctx.quadraticCurveTo(p.x+3,p.y-20,p.x+8,p.y+2);ctx.closePath();ctx.fill();
+    ctx.fillStyle=trunk;ctx.beginPath();ctx.roundRect(p.x-3,p.y-7,6,13,2);ctx.fill();
     const colors=["#477f4b","#5a9653","#72a95d","#8ab96d"];
-    const blobs=[[-15,-48,23], [8,-60,25],[-3,-78,25],[-24,-69,19],[21,-43,19],[0,-43,23]];
+    const blobs=[[-10,-16,13],[7,-20,14],[-2,-30,14],[-17,-25,11],[17,-14,11],[0,-14,13]];
     blobs.forEach((v,i)=>{
       const [ox,oy,rr]=v,x=p.x+ox,y=p.y+oy;
-      const g=ctx.createRadialGradient(x-rr*.35,y-rr*.4,2,x,y,rr*1.25);
+      const g=ctx.createRadialGradient(x-rr*.35,y-rr*.4,1,x,y,rr*1.25);
       g.addColorStop(0,colors[(i+index)%4]);g.addColorStop(.72,colors[(i+index+1)%4]);g.addColorStop(1,"#376b42");
       ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,rr,rr*.82,(i%3-1)*.12,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle="rgba(40,91,48,.28)";ctx.lineWidth=1.2;ctx.stroke();
+      ctx.strokeStyle="rgba(40,91,48,.28)";ctx.lineWidth=1;ctx.stroke();
       ctx.fillStyle="rgba(213,235,160,.34)";ctx.beginPath();ctx.ellipse(x-rr*.28,y-rr*.28,rr*.34,rr*.18,-.4,0,Math.PI*2);ctx.fill();
     });
   }
@@ -878,7 +859,7 @@
     const skin={"明るい肌":"#f2c9a5","普通の肌":"#dca77f","褐色肌":"#b97858","色白":"#f5d9c2"}[p.skin]||"#f0c6a0";
     const hair={"栗色":"#70442f","金髪":"#e2b85c","黒髪":"#302a35","銀髪":"#c4cbd0","茶色":"#89543a","赤髪":"#a84e42","青髪":"#4e79a4","緑髪":"#58804c"}[p.hair]||"#70442f";
     const cloth=p.outfit||p.color||"#507fb3",side=p.dir==="left"||p.dir==="right",back=p.dir==="up";
-    ctx.save();ctx.translate(q.x,q.y);
+    ctx.save();ctx.translate(q.x,q.y);ctx.scale(.76,.76);
     const shade=ctx.createRadialGradient(0,2,1,0,3,19);shade.addColorStop(0,"rgba(45,63,43,.28)");shade.addColorStop(1,"rgba(45,63,43,0)");
     ctx.fillStyle=shade;ctx.beginPath();ctx.ellipse(0,4,20,9,0,0,Math.PI*2);ctx.fill();
     // Boots and soft cloth silhouette
@@ -901,7 +882,7 @@
     if(p.accessory==="マント"||p.role==="冒険者"){ctx.fillStyle="rgba(93,73,111,.9)";ctx.beginPath();ctx.moveTo(-9,-36);ctx.quadraticCurveTo(-17,-27,-14,-9);ctx.quadraticCurveTo(0,-13,13,-9);ctx.lineTo(9,-36);ctx.closePath();ctx.fill();}
     if(isPlayer){ctx.fillStyle="#f4d27d";ctx.beginPath();ctx.arc(11,-31,2.8,0,Math.PI*2);ctx.fill();}
     ctx.restore();
-    if(p.name){ctx.font="bold 10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="rgba(58,70,52,.8)";ctx.strokeText(p.name,q.x,q.y-86);ctx.fillStyle="#fff8e5";ctx.fillText(p.name,q.x,q.y-86);}
+    if(p.name){ctx.font="bold 10px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="rgba(58,70,52,.8)";ctx.strokeText(p.name,q.x,q.y-67);ctx.fillStyle="#fff8e5";ctx.fillText(p.name,q.x,q.y-67);}
   }
   function drawAnimeDecor(item){
     const [type,wx,wy]=item,p=isoProject(wx,wy);if(p.x<-50||p.x>W+50||p.y<-70||p.y>H+70)return;
