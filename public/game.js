@@ -769,6 +769,11 @@
     const road=(pts,w)=>{
       strokePath(pts,"#8b6948",w+12);strokePath(pts,"#c49a65",w);strokePath(pts,"#dfbd83",Math.max(2,w*.16));
     };
+    road([isoProject(1600,470),isoProject(1600,2170)],38);
+    road([isoProject(470,1320),isoProject(2730,1320)],38);
+    road([isoProject(1600,1320),isoProject(1100,900)],22);
+    road([isoProject(1600,1320),isoProject(2050,900)],22);
+    road([isoProject(1600,1320),isoProject(2050,1800)],22);
     const bridges=[[[1600,90],[1600,470]],[[1600,2170],[1600,2550]],[[80,1320],[470,1320]],[[2730,1320],[3120,1320]]];
     bridges.forEach(points=>{
       const projected=points.map(p=>isoProject(p[0],p[1]));
@@ -778,11 +783,6 @@
         rect(p.x-5,p.y-2,10,3,k%2?"#98633e":"#e0b477");
       }
     });
-    road([isoProject(1600,470),isoProject(1600,2170)],38);
-    road([isoProject(470,1320),isoProject(2730,1320)],38);
-    road([isoProject(1600,1320),isoProject(1100,900)],22);
-    road([isoProject(1600,1320),isoProject(2050,900)],22);
-    road([isoProject(1600,1320),isoProject(2050,1800)],22);
     const plaza=isoProject(1600,1320);
     isoDiamond(plaza.x,plaza.y+5,112,57,"#88775e");isoDiamond(plaza.x,plaza.y,105,53,"#c2ad86");
     isoDiamond(plaza.x,plaza.y-3,93,47,"#e3d2ad","#9d805c",2);
@@ -878,7 +878,7 @@
     else {ctx.fillStyle="#795238";ctx.fillRect(180,300,600,54);ctx.fillStyle="#c28c55";ctx.fillRect(190,285,580,24);}
     ctx.fillStyle="#fff3d4";ctx.font="bold 22px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.fillText(b.name,480,66);
     ctx.fillStyle="#64452f";ctx.font="14px 'Noto Sans JP',sans-serif";ctx.fillText("Eキー / 操作ボタン：外へ出る",480,550);
-    drawAnimePerson(player,true);
+    drawAnimePerson({...player,x:480,y:465},true,true);
   }
   function drawAnimeBattle(){
     const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#8ac9e5");bg.addColorStop(.55,"#d4e9ce");bg.addColorStop(1,"#9dc47c");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
