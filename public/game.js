@@ -266,7 +266,26 @@
   async function saveCurrent(){if(!started)return;try{await fetch("/api/save",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:player.name,x:interior?interior.outside.x:player.x,y:interior?interior.outside.y:player.y})})}catch(e){}}
   $("logout-button").addEventListener("click",async()=>{await saveCurrent();if(realtimeClient&&realtimeChannel)await realtimeClient.removeChannel(realtimeChannel);realtimeChannel=null;await fetch("/api/logout",{method:"POST",credentials:"same-origin"});location.reload()});
   setInterval(()=>{if(started)saveCurrent()},10000);window.addEventListener("pagehide",saveCurrent);
-  async function checkLogin(){try{const r=await fetch("/api/me",{credentials:"same-origin"}),j=await responseJson(r);if(r.ok&&j.loggedIn)await enterWorld(j.profile);else if(!r.ok)authMessage.textContent=j.error||"アカウント機能を確認してね"}catch(e){authMessage.textContent="サーバーに接続できません。再読み込みしてね。"}}
+  async function checkLogin(){
+    try{
+      const healthResponse=await fetch("/api/health",{credentials:"same-origin",cache:"no-store"});
+      const health=await responseJson(healthResponse);
+      if(!healthResponse.ok||!health.ready){
+        const missing=Array.isArray(health.missing)&&health.missing.length?"不足している設定: "+health.missing.join(" / "):"Supabaseサーバーに接続できません。";
+        authMessage.textContent="サーバーに接続できません。"+missing+" VercelのPreview環境変数を確認してね。";
+        connectionState.textContent="サーバー未接続";
+        return;
+      }
+      const r=await fetch("/api/me",{credentials:"same-origin",cache:"no-store"}),j=await responseJson(r);
+      if(r.ok&&j.loggedIn)await enterWorld(j.profile);
+      else if(!r.ok)authMessage.textContent=j.error||"アカウント機能を確認してね";
+      else authMessage.textContent="サーバー接続済み。ログインまたは新規登録してね。";
+      connectionState.textContent="サーバー接続済み";
+    }catch(e){
+      authMessage.textContent="サーバーに接続できません。APIの配置とVercelの設定を確認してね。";
+      connectionState.textContent="サーバー未接続";
+    }
+  }
   checkLogin();
   function currentPlayerState(){
     return {id:realtimeId,name:player.name,x:player.x,y:player.y,dir:player.dir,moving:!!player.moving,walkClock:player.walkClock||0,color:player.outfit,hair:player.hair,skin:player.skin,eyes:player.eyes,style:player.style,accessory:player.accessory};
