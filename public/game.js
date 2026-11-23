@@ -840,11 +840,24 @@
   }
   function drawAnimeTree(wx,wy,index=0){
     const p=isoProject(wx,wy);if(p.x<-100||p.x>W+100||p.y<-180||p.y>H+100)return;
-    const r=18+(index%3)*3;
-    isoDiamond(p.x,p.y+2,r+8,(r+8)*.48,"rgba(44,74,43,.28)");
-    ctx.fillStyle="#79533a";ctx.beginPath();ctx.moveTo(p.x-7,p.y);ctx.lineTo(p.x-4,p.y-44);ctx.lineTo(p.x+5,p.y-44);ctx.lineTo(p.x+8,p.y);ctx.closePath();ctx.fill();
-    const colors=["#367d50","#47965a","#5baa65","#79bd72"];
-    [[-13,-51,22], [8,-61,24],[-3,-78,25],[-23,-70,19],[20,-43,18]].forEach((v,i)=>{ctx.fillStyle=colors[(i+index)%4];ctx.beginPath();ctx.ellipse(p.x+v[0],p.y+v[1],v[2],v[2]*.83,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="rgba(203,239,151,.25)";ctx.beginPath();ctx.ellipse(p.x+v[0]-v[2]*.28,p.y+v[1]-v[2]*.3,v[2]*.35,v[2]*.2,-.5,0,Math.PI*2);ctx.fill();});
+    const r=20+(index%4)*3;
+    const shadow=ctx.createRadialGradient(p.x,p.y+3,2,p.x,p.y+3,r+18);
+    shadow.addColorStop(0,"rgba(49,77,43,.28)");shadow.addColorStop(1,"rgba(49,77,43,0)");
+    ctx.fillStyle=shadow;ctx.beginPath();ctx.ellipse(p.x,p.y+5,r+18,(r+18)*.48,0,0,Math.PI*2);ctx.fill();
+    const trunk=ctx.createLinearGradient(p.x-7,p.y-45,p.x+8,p.y);
+    trunk.addColorStop(0,"#a97a50");trunk.addColorStop(.55,"#80543a");trunk.addColorStop(1,"#62432f");
+    ctx.fillStyle=trunk;ctx.beginPath();ctx.moveTo(p.x-6,p.y+1);ctx.quadraticCurveTo(p.x-3,p.y-22,p.x-4,p.y-48);
+    ctx.lineTo(p.x+5,p.y-49);ctx.quadraticCurveTo(p.x+3,p.y-20,p.x+8,p.y+2);ctx.closePath();ctx.fill();
+    const colors=["#477f4b","#5a9653","#72a95d","#8ab96d"];
+    const blobs=[[-15,-48,23], [8,-60,25],[-3,-78,25],[-24,-69,19],[21,-43,19],[0,-43,23]];
+    blobs.forEach((v,i)=>{
+      const [ox,oy,rr]=v,x=p.x+ox,y=p.y+oy;
+      const g=ctx.createRadialGradient(x-rr*.35,y-rr*.4,2,x,y,rr*1.25);
+      g.addColorStop(0,colors[(i+index)%4]);g.addColorStop(.72,colors[(i+index+1)%4]);g.addColorStop(1,"#376b42");
+      ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,rr,rr*.82,(i%3-1)*.12,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle="rgba(40,91,48,.28)";ctx.lineWidth=1.2;ctx.stroke();
+      ctx.fillStyle="rgba(213,235,160,.34)";ctx.beginPath();ctx.ellipse(x-rr*.28,y-rr*.28,rr*.34,rr*.18,-.4,0,Math.PI*2);ctx.fill();
+    });
   }
   function drawAnimePerson(p,isPlayer=false,screenSpace=false){
     const q=screenSpace?{x:p.x,y:p.y}:isoProject(p.x,p.y);if(q.x<-80||q.x>W+80||q.y<-100||q.y>H+100)return;
