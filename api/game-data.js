@@ -39,20 +39,46 @@ module.exports = async function handler(req, res) {
       const level = Math.max(1, Math.min(200, Math.floor(Number(data.level) || 1)));
       const gold = Math.max(0, Math.min(2000000000, Math.floor(Number(data.gold) || 0)));
       const previousRows = await db("game_saves", {
-        select: "level,gold,level_record_at,gold_record_at",
+        select: "level,gold,game_data,level_record_at,gold_record_at",
         user_id: "eq." + session.sub,
         limit: "1",
       });
       const previous = previousRows?.[0] || {};
+      const previousData = previous.game_data && typeof previous.game_data === "object" && !Array.isArray(previous.game_data)
+        ? previous.game_data
+        : {};
+      const authoritative = {
+        level: Math.max(1, Math.min(200, Math.floor(Number(previous.level ?? previousData.level) || 1))),
+        gold: Math.max(0, Math.min(2000000000, Math.floor(Number(previous.gold ?? previousData.gold) || 0))),
+        playerXp: Math.max(0, Number(previousData.playerXp) || 0),
+        inventory: Array.isArray(previousData.inventory) ? previousData.inventory : [],
+        equipment: Array.isArray(previousData.equipment) ? previousData.equipment : [],
+      };
+      const sameJson = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+      const requestedProtected = {
+        level: Math.max(1, Math.min(200, Math.floor(Number(data.level ?? authoritative.level) || 1))),
+        gold: Math.max(0, Math.min(2000000000, Math.floor(Number(data.gold ?? authoritative.gold) || 0))),
+        playerXp: Math.max(0, Number(data.playerXp ?? authoritative.playerXp) || 0),
+        inventory: Array.isArray(data.inventory) ? data.inventory : [],
+        equipment: Array.isArray(data.equipment) ? data.equipment : [],
+      };
+      if (
+        requestedProtected.level !== authoritative.level ||
+        requestedProtected.gold !== authoritative.gold ||
+        requestedProtected.playerXp !== authoritative.playerXp ||
+        !sameJson(requestedProtected.inventory, authoritative.inventory) ||
+        !sameJson(requestedProtected.equipment, authoritative.equipment)
+      ) {
+        return send(res, 403, { error: "レベル・経験値・GOLD・アイテム・装備はサーバーで確認できる操作からのみ変更できます。" });
+      }
+
       const now = new Date().toISOString();
       const patch = {
-        game_data: { ...data, level, gold },
-        level,
-        gold,
+        game_data: { ...data, ...authoritative },
+        level: authoritative.level,
+        gold: authoritative.gold,
         updated_at: now,
       };
-      if (level > Number(previous.level || 1)) patch.level_record_at = now;
-      if (gold > Number(previous.gold || 0)) patch.gold_record_at = now;
       await db("game_saves", { user_id: "eq." + session.sub }, {
         method: "PATCH",
         body: patch,

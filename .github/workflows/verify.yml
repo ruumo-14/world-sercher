@@ -1,11 +1,11 @@
-name: Verify JavaScript
+name: Verify JavaScript and browser assets
 on:
   push:
-    branches: [main]
+    branches: [main, "rebuild/**"]
   pull_request:
     branches: [main]
 jobs:
-  syntax:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,4 +14,6 @@ jobs:
           node-version: 20
       - name: Check JavaScript syntax
         run: |
-          find api lib public -name '*.js' -print0 | xargs -0 -n1 node --check
+          find api lib public scripts -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Check browser assets and secret boundaries
+        run: node scripts/verify-game.js

@@ -36,6 +36,16 @@ Never put `SUPABASE_SECRET_KEY` or `SESSION_SECRET` in browser code, HTML, or a 
 3. Add the environment variables above to the required environments.
 4. Deploy. Later commits to the connected branch will trigger Vercel deployments automatically.
 
+### Important for branch preview URLs
+
+If you are testing a branch preview URL (for example, a URL containing `git-rebuild-world-sercher-v2`), set the same required variables for the **Preview** environment in Vercel, not only Production. In the Environment Variables screen, select Preview (or select both Preview and Production) for:
+- `SUPABASE_URL`
+- `SUPABASE_SECRET_KEY` (or the legacy `SUPABASE_SERVICE_ROLE_KEY`)
+- `SUPABASE_PUBLISHABLE_KEY` (or `SUPABASE_ANON_KEY`, for player presence)
+- `SESSION_SECRET` (at least 32 characters; use the same value across deployments so sessions remain valid)
+
+After changing environment variables, redeploy the preview. Do not paste secret values into chat or source files.
+
 The `api/` directory contains Vercel serverless functions. Static files are served from `public/`. There is no Express server or `server.js`.
 
 ## 4. Current implementation notes
