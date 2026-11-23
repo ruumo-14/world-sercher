@@ -16,12 +16,11 @@ module.exports = async function handler(req, res) {
   if (!url.startsWith("https://")) missing.push("SUPABASE_URL");
   if (!serviceKey) missing.push("SUPABASE_SECRET_KEY（または SUPABASE_SERVICE_ROLE_KEY）");
   if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) missing.push("SESSION_SECRET（32文字以上）");
-  if (!realtimeKey) missing.push("SUPABASE_PUBLISHABLE_KEY（または SUPABASE_ANON_KEY）");
   if (missing.length) return send(res, 503, { ready: false, missing });
 
   try {
     await db("game_users", { select: "id", limit: "1" });
-    return send(res, 200, { ready: true, database: "connected", realtime: "configured" });
+    return send(res, 200, { ready: true, database: "connected", realtime: !!realtimeKey, realtimeMissing: !realtimeKey });
   } catch (_) {
     return send(res, 503, {
       ready: false,
