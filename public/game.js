@@ -2,9 +2,9 @@
 (() => {
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
   const W=960,H=600;
-  // 120×75の仮想画面を960×600へ拡大し、1ドットを8×8画面ピクセルにする。
-  const pixelView=document.createElement("canvas");pixelView.width=320;pixelView.height=200;
-  const pixelViewCtx=pixelView.getContext("2d"); canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=false;
+  // Full-resolution canvas with smooth, illustrated rendering.
+  const pixelView=document.createElement("canvas");pixelView.width=W;pixelView.height=H;
+  const pixelViewCtx=pixelView.getContext("2d"); canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=true;
   const worldTileset=new Image();worldTileset.src="/assets/world-sercher-user-atlas.png";window.WS_WORLD_TILESET=worldTileset;
   const storybookTexture=new Image();storybookTexture.src="/assets/storybook-paper.svg";
   // 新しいGBA風タイルセット（建物・芝生・道）
@@ -970,17 +970,10 @@
     // Battle actors remain in the established side-view battle coordinates.
     drawBattle();
   }
-  function finishPixelFrame(){
-    pixelViewCtx.clearRect(0,0,pixelView.width,pixelView.height);
-    pixelViewCtx.imageSmoothingEnabled=true;
-    pixelViewCtx.drawImage(canvas,0,0,pixelView.width,pixelView.height);
-    ctx.save();ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;
-    ctx.drawImage(pixelView,0,0,W,H);ctx.restore();
-  }
   function render(){
     ctx.clearRect(0,0,W,H);
-    if(battle){drawBattle();finishPixelFrame();return;}
-    if(interior){drawAnimeInterior();finishPixelFrame();return;}
+    if(battle){drawBattle();return;}
+    if(interior){drawAnimeInterior();return;}
     drawAnimeGround();
     const objects=[];
     for(let i=0;i<96;i++){
@@ -1002,7 +995,6 @@
       }else{isoDiamond(q.x,q.y-12,e.boss?22:17,e.boss?27:21,e.color);rect(q.x-8,q.y-18,4,5,"#fff0d0");rect(q.x+5,q.y-18,4,5,"#fff0d0");}
     }}));
     objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
-    finishPixelFrame();
   }
 
   function update(dt){
