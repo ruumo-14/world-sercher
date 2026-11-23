@@ -432,11 +432,11 @@
       }
       ctx.restore();
     };
-    bridge(1600,270,true);bridge(1600,2370,true);
-    bridge(260,1320,false);bridge(2940,1320,false);
     // Main roads pass through the four bridges and meet at the central plaza.
     storyWorldPath([[1600,120],[1600,2520]],"#795d42",142);storyWorldPath([[1600,120],[1600,2520]],"#b98b57",126);
     storyWorldPath([[120,1320],[3080,1320]],"#795d42",142);storyWorldPath([[120,1320],[3080,1320]],"#c79a63",126);
+    bridge(1600,270,true);bridge(1600,2370,true);
+    bridge(260,1320,false);bridge(2940,1320,false);
     storyWorldPath([[1600,1320],[1100,900]],"#b98b57",68);storyWorldPath([[1600,1320],[2050,900]],"#b98b57",68);storyWorldPath([[1600,1320],[2050,1800]],"#b98b57",68);
     // Paving seams and scattered stones
     for(let i=0;i<80;i++){const x=700+(i*73)%1900,y=1260+((i*31)%110)-55,q=project(x,y);rect(q.x,q.y,18,3,i%2?"#d8b57b":"#a97e50");}
