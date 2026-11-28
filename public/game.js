@@ -3,9 +3,10 @@
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
   const W=960,H=600;
   // 480×300の描画バッファを2倍表示し、16bit風のドットをくっきり保つ。
-  const RENDER_SCALE=0.5;
-  canvas.width=W*RENDER_SCALE;canvas.height=H*RENDER_SCALE;
-  ctx.setTransform(RENDER_SCALE,0,0,RENDER_SCALE,0,0);
+  // Keep the original submitted player sprite at its exact 72px render size.
+  const RENDER_SCALE=1;
+  canvas.width=W;canvas.height=H;
+  ctx.setTransform(1,0,0,1,0,0);
   ctx.imageSmoothingEnabled=false;
   const worldTileset=new Image();worldTileset.src="/assets/world-sercher-user-atlas.png";window.WS_WORLD_TILESET=worldTileset;
   const storybookTexture=new Image();storybookTexture.src="/assets/storybook-paper.svg";
