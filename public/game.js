@@ -13,6 +13,10 @@
   townArt.onerror=()=>console.warn("新しい街素材を読み込めませんでした。");
   let interior=null;
   // Load the approved protagonist walk sheet; field movement logic is intentionally preserved.
+  const playerMovementAtlas=new Image();
+  window.WS_PLAYER_MOVEMENT_ATLAS=playerMovementAtlas;
+  playerMovementAtlas.src="/assets/player-movement-atlas.png";
+  playerMovementAtlas.onerror=()=>console.warn("歩行・走行スプライトを読み込めませんでした。");
   const playerWalkSheet=new Image();
   window.WS_PLAYER_WALK_SHEET=playerWalkSheet;
   fetch("/assets/player-walk-12.b64",{cache:"force-cache"}).then(r=>{if(!r.ok)throw new Error("sprite sheet unavailable");return r.text();})
@@ -241,7 +245,7 @@
   async function checkLogin(){try{const r=await fetch("/api/me",{credentials:"same-origin"}),j=await responseJson(r);if(r.ok&&j.loggedIn)await enterWorld(j.profile);else if(!r.ok)authMessage.textContent=j.error||"アカウント機能を確認してね"}catch(e){authMessage.textContent="サーバーに接続できません。再読み込みしてね。"}}
   checkLogin();
   function currentPlayerState(){
-    return {id:realtimeId,name:player.name,x:player.x,y:player.y,dir:player.dir,moving:!!player.moving,walkClock:player.walkClock||0,color:player.outfit,hair:player.hair,skin:player.skin,eyes:player.eyes,style:player.style,accessory:player.accessory};
+    return {id:realtimeId,name:player.name,x:player.x,y:player.y,dir:player.dir,moving:!!player.moving,running:!!player.running,walkClock:player.walkClock||0,color:player.outfit,hair:player.hair,skin:player.skin,eyes:player.eyes,style:player.style,accessory:player.accessory};
   }
   function refreshPresence(){
     if(!realtimeChannel)return;
@@ -315,6 +319,7 @@
   });window.addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));window.addEventListener("blur",()=>keys.clear());
   const keyMap={up:"arrowup",down:"arrowdown",left:"arrowleft",right:"arrowright"};document.querySelectorAll("[data-dir]").forEach(b=>{const k=keyMap[b.dataset.dir];b.addEventListener("pointerdown",e=>{e.preventDefault();keys.add(k)});["pointerup","pointercancel","pointerleave"].forEach(t=>b.addEventListener(t,()=>keys.delete(k)))});
   $("interact-button").addEventListener("click",()=>{if(interior)leaveBuilding();else interact()});
+  const runControl=$("run-control");if(runControl){runControl.addEventListener("pointerdown",e=>{e.preventDefault();keys.add("shift");runControl.classList.add("active");});["pointerup","pointercancel","pointerleave"].forEach(type=>runControl.addEventListener(type,()=>{keys.delete("shift");runControl.classList.remove("active");}));}
   function enterBuilding(b){
     interior={building:b,outside:{x:player.x,y:player.y}};
     player.x=480;player.y=320;player.moving=false;camera.x=480;camera.y=320;keys.clear();
@@ -819,8 +824,25 @@
     });
     for(let i=0;i<7;i++){ctx.fillStyle=i%2?"rgba(255,242,190,.55)":"rgba(230,220,157,.5)";ctx.beginPath();ctx.ellipse(p.x-22+(i*13)%43,p.y-69+(i%3)*13,3,1.7,-.3,0,Math.PI*2);ctx.fill();}
   }
+  const movementDirectionRows={"up":0,"up-right":1,"right":2,"down-right":3,"down":4,"down-left":5,"left":6,"up-left":7};
+  function drawMovementSprite(p,q){
+    if(!playerMovementAtlas.complete||!playerMovementAtlas.naturalWidth)return false;
+    const row=movementDirectionRows[p.dir]??4;
+    const mode=p.running?1:0;
+    const frame=p.moving?Math.floor(((p.walkClock||0)/.2)%8):0;
+    ctx.save();ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(playerMovementAtlas,frame*48,(mode*8+row)*48,48,48,q.x-36,q.y-72,72,72);
+    ctx.restore();
+    if(p.name){
+      ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;
+      ctx.strokeStyle="#355044";ctx.strokeText(p.name,q.x,q.y-77);
+      ctx.fillStyle="#fff8df";ctx.fillText(p.name,q.x,q.y-77);ctx.restore();
+    }
+    return true;
+  }
   function drawAnimePerson(p,isPlayer=false,screenSpace=false){
     const q=screenSpace?{x:p.x,y:p.y}:isoProject(p.x,p.y);if(q.x<-80||q.x>W+80||q.y<-100||q.y>H+100)return;
+    if(!p.isNpc&&(isPlayer||p.id)&&drawMovementSprite(p,q))return;
     const moving=!!p.moving,phase=moving?Math.sin((p.walkClock||0)*10):0,step=phase*4;
     const skin={"明るい肌":"#f2c9a5","普通の肌":"#dca77f","褐色肌":"#b97858","色白":"#f5d9c2"}[p.skin]||"#f0c6a0";
     const hair={"栗色":"#70442f","金髪":"#e2b85c","黒髪":"#302a35","銀髪":"#c4cbd0","茶色":"#89543a","赤髪":"#a84e42","青髪":"#4e79a4","緑髪":"#58804c"}[p.hair]||"#70442f";
@@ -1046,9 +1068,9 @@
       return;
     }
     const wasMoving=!!player.moving;
-    player.moving=false;
+    player.moving=false;player.running=false;
     let dx=0,dy=0;if(keys.has("w")||keys.has("arrowup"))dy--;if(keys.has("s")||keys.has("arrowdown"))dy++;if(keys.has("a")||keys.has("arrowleft"))dx--;if(keys.has("d")||keys.has("arrowright"))dx++;
-    if(dx||dy){player.moving=true;player.walkClock=(player.walkClock||0)+dt;const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=player.x+dx*player.speed*dt,ny=player.y+dy*player.speed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";}
+    if(dx||dy){player.moving=true;player.running=keys.has("shift");player.walkClock=(player.walkClock||0)+dt;const len=Math.hypot(dx,dy);dx/=len;dy/=len;const moveSpeed=player.speed*(player.running?1.65:1);const nx=player.x+dx*moveSpeed*dt,ny=player.y+dy*moveSpeed*dt;if(!blocked(nx,player.y))player.x=nx;if(!blocked(player.x,ny))player.y=ny;player.dir=dx<-.3?(dy<-.3?"up-left":dy>.3?"down-left":"left"):dx>.3?(dy<-.3?"up-right":dy>.3?"down-right":"right"):dy<0?"up":"down";}else{player.running=false;}
     if(realtimeChannel&&!interior&&(player.moving||wasMoving))publishPlayerState(!player.moving);
     camera.x=player.x;camera.y=player.y;
     const outsideTown=!interior&&Math.hypot(player.x-town.x,player.y-town.y)>520;

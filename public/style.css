@@ -103,3 +103,5 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;image-rendering:aut
 .bottom-info{color:#816d58}
 .battle-controls{background:rgba(255,247,229,.92);border:1px solid #c5a77e;border-radius:12px;color:#654b35}
 @media(max-width:650px){.canvas-wrap{border-width:3px;border-radius:12px}.game-shell{border-radius:13px}.start-card{border-radius:14px}}
+
+.run-control{display:none}@media(max-width:650px){.mobile-controls .run-control{display:block;width:82px;height:48px;background:#d5ad5f;color:#263323;font-weight:800;border-color:#f0d18b}.mobile-controls .run-control.active{background:#f4d991;box-shadow:0 0 0 3px #f4d99155}}
