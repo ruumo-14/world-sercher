@@ -80,7 +80,7 @@ body{background:radial-gradient(ellipse at 50% 0%,#faf0dc 0,#ead9bd 58%,#d8c4a5 
 .game-heading h1{color:#674b35}.eyebrow{color:#a77a48}
 .location-chip{background:#f6ead3;border:1px solid #c6a77a;color:#6f7555}
 .canvas-wrap{border:5px solid #a77a50;border-radius:18px;background:#b5c98e;box-shadow:inset 0 0 0 2px #f5e8ce,0 10px 24px rgba(79,57,36,.2)}
-canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;image-rendering:auto;image-rendering: smooth;touch-action:none}
+canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
 .overlay{background:rgba(79,62,43,.35);backdrop-filter:blur(3px)}
 .start-card{background:linear-gradient(160deg,#fff6e6,#edddc1);border:2px solid #c2a077;border-radius:18px;box-shadow:0 12px 35px rgba(74,52,33,.25);color:#5e4733}
 .start-card h2{color:#694b33}.intro,.start-card label{color:#80664d}
