@@ -15,16 +15,23 @@
   townArt.src="/assets/world-sercher-gba-atlas.png";
   townArt.onerror=()=>console.warn("新しい街素材を読み込めませんでした。");
   let interior=null;
-  // Load the approved protagonist walk sheet; field movement logic is intentionally preserved.
-  const playerMovementAtlas=new Image();
-  window.WS_PLAYER_MOVEMENT_ATLAS=playerMovementAtlas;
-  playerMovementAtlas.src="/assets/player-movement-atlas.png";
-  playerMovementAtlas.onerror=()=>console.warn("歩行・走行スプライトを読み込めませんでした。");
-  const playerWalkSheet=new Image();
-  window.WS_PLAYER_WALK_SHEET=playerWalkSheet;
-  fetch("/assets/player-walk-12.b64",{cache:"force-cache"}).then(r=>{if(!r.ok)throw new Error("sprite sheet unavailable");return r.text();})
-    .then(data=>{playerWalkSheet.src="data:image/png;base64,"+data.trim();})
-    .catch(()=>{console.warn("主人公スプライトを読み込めませんでした。");});
+  // Use the user's 16 original GIFs directly. The files are never edited or re-encoded.
+  const playerDirectionFiles={
+    "up":"north","up-right":"north-east","right":"east","down-right":"south-east",
+    "down":"south","down-left":"south-west","left":"west","up-left":"north-west"
+  };
+  const playerGifSprites={walking:{},running:{}};
+  for(const [direction,suffix] of Object.entries(playerDirectionFiles)){
+    const walking=new Image();
+    walking.src="/assets/Idle_walking-8-frames_"+suffix+(suffix==="south"?" (1)":"")+".gif";
+    walking.onerror=()=>console.warn("主人公の歩行GIFを読み込めません:",walking.src);
+    playerGifSprites.walking[direction]=walking;
+    const running=new Image();
+    running.src="/assets/Idle_running-8-frames_"+suffix+".gif";
+    running.onerror=()=>console.warn("主人公の走行GIFを読み込めません:",running.src);
+    playerGifSprites.running[direction]=running;
+  }
+  window.WS_PLAYER_GIF_SPRITES=playerGifSprites;
   const $=id=>document.getElementById(id);
   const startPanel=$("start-panel"),authForm=$("auth-form"),accountName=$("account-name"),password=$("account-password"),characterName=$("character-name"),nameWrap=$("character-name-wrap"),authMessage=$("auth-message"),authSubmit=$("auth-submit"),loginTab=$("login-tab"),registerTab=$("register-tab"),notice=$("notice"),hudName=$("hud-name"),onlineCount=$("online-count"),connectionState=$("connection-state");
   const player={id:null,name:"冒険者",x:1600,y:1300,speed:155,dir:"down",species:"人間",hair:"栗色",skin:"明るい肌",eyes:"青",style:"旅人",outfit:"#4f78a5",accessory:"なし"};
@@ -201,7 +208,7 @@
     const bar=(x,y,w,v,max,color)=>{rect(x,y,w,10,"#69584a");rect(x+2,y+2,w-4,6,"#9a8a70");rect(x+2,y+2,(w-4)*Math.max(0,v/max),6,color);};
     bar(34,84,200,battle.hp,battle.maxHp,"#bd554b");bar(34,111,200,battle.mp,battle.maxMp,"#428eae");
     // Battle avatar is drawn in screen coordinates.
-    drawStorybookPersonAt(battle.playerX,438-battle.playerY,player,true,1.25);
+    drawMovementSprite({...player,moving:true}, {x:battle.playerX,y:438-battle.playerY});
     battle.enemies.forEach((e,i)=>{if(e.hp<=0)return;const ex=650+(i%3)*92,ey=422-Math.floor(i/3)*70;
       ellipse(ex,ey+8,e.boss?46:32,9,"#77654a");
       if(e.name.includes("スライム")){
@@ -661,15 +668,14 @@
     });
     for(let i=0;i<7;i++){ctx.fillStyle=i%2?"rgba(255,242,190,.55)":"rgba(230,220,157,.5)";ctx.beginPath();ctx.ellipse(p.x-22+(i*13)%43,p.y-69+(i%3)*13,3,1.7,-.3,0,Math.PI*2);ctx.fill();}
   }
-  const movementDirectionRows={"up":0,"up-right":1,"right":2,"down-right":3,"down":4,"down-left":5,"left":6,"up-left":7};
   function drawMovementSprite(p,q){
-    if(!playerMovementAtlas.complete||!playerMovementAtlas.naturalWidth)return false;
-    const row=movementDirectionRows[p.dir]??4;
-    const mode=p.running?1:0;
-    const frame=p.moving?Math.floor(((p.walkClock||0)/.2)%8):0;
-    // Original submitted sheet: 48x48 source cells, never downsampled or recolored.
+    const direction=playerDirectionFiles[p.dir]?p.dir:"down";
+    const mode=p.running?"running":"walking";
+    const sprite=playerGifSprites[mode][direction];
+    if(!sprite||!sprite.complete||!sprite.naturalWidth)return false;
+    // Draw the original animated GIF directly; only its on-screen placement is scaled.
     ctx.save();ctx.imageSmoothingEnabled=false;
-    ctx.drawImage(playerMovementAtlas,frame*24,(mode*8+row)*24,24,24,q.x-36,q.y-72,72,72);
+    ctx.drawImage(sprite,q.x-36,q.y-72,72,72);
     ctx.restore();
     if(p.name){
       ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;
