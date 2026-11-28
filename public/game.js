@@ -353,41 +353,31 @@
   function storyWorldPath(points,color,width){ctx.beginPath();points.forEach((p,i)=>{const q=project(p[0],p[1]);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="square";ctx.lineJoin="round";ctx.stroke();}
   function tile(wx,wy,fill){const p=project(wx,wy);rect(p.x,p.y,TILE,TILE,fill);}
   function drawGround(){
-    rect(0,0,W,H,PAL.grass[1]);
+    // Temporary blocky placeholder world art. Player sprites remain separate original assets.
+    rect(0,0,W,H,"#75a957");
     const tileW=TILE*WORLD_VIEW_ANGLE.horizontal,tileH=TILE*WORLD_VIEW_ANGLE.vertical;
-    const left=Math.floor((camera.x-W/(2*WORLD_VIEW_ANGLE.horizontal))/TILE)-1,top=Math.floor((camera.y-H/(2*WORLD_VIEW_ANGLE.vertical))/TILE)-1;
+    const left=Math.floor((camera.x-W/(2*WORLD_VIEW_ANGLE.horizontal))/TILE)-1;
+    const top=Math.floor((camera.y-H/(2*WORLD_VIEW_ANGLE.vertical))/TILE)-1;
     for(let ty=0;ty<Math.ceil(H/tileH)+3;ty++)for(let tx=0;tx<Math.ceil(W/tileW)+3;tx++){
       const gx=left+tx,gy=top+ty,q=project(gx*TILE,gy*TILE),v=hash(gx,gy);
-      rect(q.x,q.y,tileW+1,tileH+1,PAL.grass[Math.floor(v*4)]);
-      if(v>.16){rect(q.x+3+(v*13|0)%Math.max(5,tileW-9),q.y+3+(v*17|0)%Math.max(5,tileH-7),2,2,v>.78?"#a7ca68":"#4b8745");}
-      if(v>.89){rect(q.x+tileW*.56,q.y+tileH*.3,3,2,"#d7d58a");}
+      rect(q.x,q.y,tileW+1,tileH+1,v>.5?"#78ad59":"#72a653");
+      if(v>.72)rect(q.x+8+(v*19|0)%Math.max(6,tileW-12),q.y+7+(v*13|0)%Math.max(6,tileH-12),4,4,"#91bd67");
     }
-    // River is built from broad stepped banks and water tiles.
+    // River and roads stay in their existing world positions, but use flat placeholder colors.
     const riverPts=[];for(let y=420;y<=2520;y+=64)riverPts.push([390+Math.sin(y/155)*65+Math.sin(y/83)*13,y]);
-    storyWorldPath(riverPts,"#765d43",218);storyWorldPath(riverPts,"#c2aa7b",202);storyWorldPath(riverPts,"#397f9b",174);storyWorldPath(riverPts,"#5ba8b4",150);
-    for(let i=0;i<48;i++){const wy=480+i*42,bend=390+Math.sin(wy/155)*65+Math.sin(wy/83)*13,q=project(bend,wy);rect(q.x-25,q.y-3,20+(i%4)*5,3,"#b3dcd0");}
-    // Main roads use tiled paving, dark edges, and a pale center seam.
-    storyWorldPath([[1600,430],[1600,2370]],"#795d42",142);storyWorldPath([[1600,430],[1600,2370]],"#b98b57",126);
-    storyWorldPath([[650,1320],[2660,1320]],"#795d42",142);storyWorldPath([[650,1320],[2660,1320]],"#c79a63",126);
-    storyWorldPath([[1600,1320],[1100,900]],"#b98b57",68);storyWorldPath([[1600,1320],[2050,900]],"#b98b57",68);storyWorldPath([[1600,1320],[2050,1800]],"#b98b57",68);
-    // Paving seams and scattered stones
-    for(let i=0;i<80;i++){const x=700+(i*73)%1900,y=1260+((i*31)%110)-55,q=project(x,y);rect(q.x,q.y,18,3,i%2?"#d8b57b":"#a97e50");}
-    // central plaza with concentric stone ring
-    const q=project(1600,1320);ellipse(q.x,q.y+12,192,190,"#806b50");ellipse(q.x,q.y,184,184,"#c1ae8b");ellipse(q.x,q.y-3,170,170,"#ded0ad");
-    ctx.strokeStyle="#a68c66";ctx.lineWidth=8;ctx.beginPath();ctx.ellipse(q.x,q.y-3,158,158,0,0,Math.PI*2);ctx.stroke();
-    for(let i=0;i<32;i++){const a=i*Math.PI/16,x=q.x+Math.cos(a)*147,y=q.y+Math.sin(a)*147;rect(x-5,y-4,10,8,i%2?"#b5a07a":"#efe1be");}
-    drawFountain(1600,1320);
-    const m=project(2000,2140);ellipse(m.x,m.y+8,164,94,"#8a6b4a");ellipse(m.x,m.y,156,88,"#c4a477");
-    // Lively storybook details scattered through grassy clearings.
-    for(let i=0;i<190;i++){
-      const wx=90+Math.floor(hash(i,71)*2860),wy=100+Math.floor(hash(i,83)*2480);
-      if(Math.hypot(wx-1600,wy-1320)<470||buildings.some(b=>wx>b.x-90&&wx<b.x+b.w+90&&wy>b.y-90&&wy<b.y+b.h+90))continue;
-      const p=project(wx,wy),kind=i%5;
-      if(kind===0){ellipse(p.x,p.y+3,7,3,"#477849");for(let k=0;k<5;k++){const a=k*Math.PI*2/5;ellipse(p.x+Math.cos(a)*4,p.y-4+Math.sin(a)*3,3,2,["#f3d77e","#e9a1a0","#f5e9c8"][i%3]);}ellipse(p.x,p.y-4,2,2,"#d8a84d");}
-      else if(kind===1){ellipse(p.x,p.y,5,3,"#8c8b7d");ellipse(p.x-2,p.y-2,3,2,"#bcb9a7");}
-      else if(kind===2){ctx.strokeStyle="#477b47";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p.x,p.y+4);ctx.lineTo(p.x-2,p.y-5);ctx.moveTo(p.x,p.y+4);ctx.lineTo(p.x+4,p.y-3);ctx.stroke();}
-    }
-
+    storyWorldPath(riverPts,"#477b91",190);storyWorldPath(riverPts,"#5799aa",166);
+    storyWorldPath([[1600,430],[1600,2370]],"#a98a5b",126);
+    storyWorldPath([[650,1320],[2660,1320]],"#a98a5b",126);
+    storyWorldPath([[1600,1320],[1100,900]],"#a98a5b",64);
+    storyWorldPath([[1600,1320],[2050,900]],"#a98a5b",64);
+    storyWorldPath([[1600,1320],[2050,1800]],"#a98a5b",64);
+    // Simple square plaza placeholder.
+    const q=project(1600,1320);
+    rect(q.x-104,q.y-72,208,144,"#bca77e");
+    rect(q.x-88,q.y-56,176,112,"#c9b88f");
+    rect(q.x-20,q.y-18,40,36,"#6b9eaa");
+    rect(q.x-12,q.y-30,24,12,"#8dbbc0");
+    const m=project(2000,2140);rect(m.x-76,m.y-35,152,70,"#b89a70");
   }
   const townDecor=[
     ["lamp",1180,1120],["lamp",2020,1120],["lamp",1180,1540],["lamp",2020,1540],
@@ -399,214 +389,56 @@
     ["stall",1950,1990],["stall",2160,1990],["flower",920,1780],["flower",1060,1870],["flower",2320,1680],["flower",2350,930]
   ];
   function drawTownDecor(item){
-    const [type,wx,wy]=item,p=project(wx,wy),x=p.x,y=p.y;if(x<-70||y<-80||x>W+70||y>H+80)return;
-    ellipse(x,y+7,18,5,"#56734a");
+    const [type,wx,wy]=item,p=project(wx,wy),x=Math.round(p.x),y=Math.round(p.y);
+    if(x<-70||y<-80||x>W+70||y>H+80)return;
+    rect(x-8,y+3,16,5,"#527b45");
     if(type==="flower"){
-      rect(x-2,y-12,3,15,"#477b48");rect(x-8,y-5,6,3,"#5c994c");rect(x+2,y-8,6,3,"#5c994c");
-      const c=["#e78d8a","#f1d274","#d9a0bd","#f4e6bc"];for(let k=0;k<5;k++){const a=k*Math.PI*2/5;rect(x+Math.round(Math.cos(a)*5)-2,y-17+Math.round(Math.sin(a)*3)-2,5,5,c[(k+Math.floor(wx/100))%4]);}rect(x-1,y-18,4,4,"#d9ad50");
+      rect(x-2,y-10,4,14,"#477b48");rect(x-8,y-14,5,5,"#e5a6a4");rect(x+3,y-17,5,5,"#f0d16f");rect(x-1,y-20,5,5,"#e5a6a4");
     }else if(type==="lamp"){
-      rect(x-3,y-26,6,32,"#68452f");rect(x-10,y-42,20,18,"#4a3a30");rect(x-7,y-39,14,12,"#f4d98d");rect(x-13,y-45,26,4,"#b98b55");
+      rect(x-3,y-30,6,34,"#765039");rect(x-9,y-42,18,14,"#765039");rect(x-6,y-39,12,8,"#f0d78b");
     }else if(type==="bench"){
-      rect(x-25,y-13,50,9,"#70472f");rect(x-27,y-19,54,8,"#bd8650");rect(x-19,y-7,5,18,"#67432e");rect(x+14,y-7,5,18,"#67432e");
+      rect(x-23,y-14,46,8,"#a97749");rect(x-21,y-21,42,7,"#c4955e");rect(x-17,y-6,5,12,"#765039");rect(x+12,y-6,5,12,"#765039");
     }else if(type==="barrel"||type==="crate"){
-      rect(x-12,y-16,24,24,type==="barrel"?"#9b633c":"#bd8953");rect(x-12,y-13,24,4,"#e0b978");rect(x-12,y+1,24,4,"#70472f");rect(x-2,y-16,3,24,"#765037");
+      rect(x-11,y-15,22,22,type==="barrel"?"#98623d":"#b98750");rect(x-11,y-11,22,4,"#d5ad70");rect(x-11,y+1,22,4,"#765039");
     }else if(type==="sign"){
-      rect(x-2,y-26,4,34,"#70472f");rect(x-19,y-39,38,18,"#765039");rect(x-16,y-36,32,12,"#e7ca8e");rect(x-3,y-33,6,6,"#b07848");
+      rect(x-2,y-28,4,32,"#765039");rect(x-17,y-39,34,16,"#9a7048");rect(x-13,y-35,26,8,"#e4c58d");
     }else if(type==="stall"){
-      rect(x-25,y-3,50,14,"#70472f");rect(x-28,y-19,56,17,"#e1c18a");for(let k=0;k<4;k++)rect(x-27+k*14,y-18,7,15,k%2?"#bd6252":"#e2b46d");
+      rect(x-24,y-3,48,13,"#765039");rect(x-26,y-19,52,16,"#c49a67");rect(x-12,y-19,8,16,"#b65e50");rect(x+7,y-19,8,16,"#b65e50");
     }
   }
   function drawFountain(wx,wy){
-    const p=project(wx,wy),x=p.x,y=p.y;ellipse(x,y+22,52,15,"#79664d");ellipse(x,y,52,34,"#7c7060");ellipse(x,y-5,45,28,"#ded0ad");ellipse(x,y-8,36,21,"#4c9aac");
-    rect(x-24,y-11,18,3,"#a9d7cf");rect(x+7,y-2,22,3,"#a9d7cf");rect(x-4,y-30,8,18,"#c5b28b");rect(x-8,y-35,16,7,"#e7d6ae");rect(x-2,y-43,4,10,"#7dc5c2");
+    const p=project(wx,wy),x=Math.round(p.x),y=Math.round(p.y);
+    rect(x-30,y+8,60,12,"#8c795c");rect(x-26,y-5,52,16,"#c1b18d");
+    rect(x-22,y-8,44,10,"#5797a5");rect(x-5,y-24,10,18,"#c1b18d");rect(x-9,y-29,18,6,"#ded0ad");
   }
   function drawTree(wx,wy,index=0){
-    const p=project(wx,wy),x=p.x,y=p.y;if(x<-100||y<-140||x>W+100||y>H+100)return;
-    ellipse(x+4,y+8,35,10,"#55794a");
-    rect(x-6,y-31,12,40,"#765039");rect(x-3,y-29,4,35,"#a8794d");
-    const shades=["#397447","#4c8b4b","#65a45a","#80b76a"];
-    const blobs=[[-20,-43,24],[-3,-59,28],[19,-42,25],[-18,-25,22],[5,-29,27],[1,-78,17]];
-    blobs.forEach(([ox,oy,r],i)=>{ellipse(x+ox,y+oy,r+3,r*.78, "#2f633c");ellipse(x+ox,y+oy-2,r,r*.78,shades[(i+index)%shades.length]);});
-    for(let i=0;i<5;i++){ellipse(x-18+(i*13)%38,y-50+(i%3)*14,3,2,"#b5d37a");}
+    const p=project(wx,wy),x=Math.round(p.x),y=Math.round(p.y);
+    if(x<-100||y<-140||x>W+100||y>H+100)return;
+    rect(x-16,y+3,34,7,"#527b45");
+    rect(x-5,y-29,10,34,"#765039");
+    rect(x-20,y-48,40,25,"#3f7946");
+    rect(x-15,y-61,30,18,"#4c8b4b");
+    rect(x-7,y-68,14,12,"#65a45a");
+    rect(x-11,y-45,7,5,"#80b76a");
   }
   function drawHouse(b,index=0){
-    const p=project(b.x+b.w/2,b.y+b.h/2),x=p.x,y=p.y;
+    const p=project(b.x+b.w/2,b.y+b.h/2),x=Math.round(p.x),y=Math.round(p.y);
     if(x<-260||y<-280||x>W+260||y>H+280)return;
-    const w=Math.max(92,b.w*.92),h=Math.max(78,b.h*.82);
-    const kind=b.name==="道具屋"?"item":b.name==="武器屋"?"weapon":b.name==="理髪店"?"barber":
-      b.name==="冒険者ギルド"?"guild":b.name==="鍛冶屋"?"forge":b.name==="宿屋"?"inn":"home";
-    ctx.save();
-    ctx.lineJoin="round";ctx.lineCap="round";
-    const path=(pts,fill,stroke="#72533e",width=3)=>{
-      ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
-      for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);
-      ctx.closePath();ctx.fillStyle=fill;ctx.fill();
-      if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke();}
-    };
-    const wash=(cx,cy,rx,ry,color,alpha=.18)=>{
-      ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();
-      ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.restore();
-    };
-    const line=(pts,color,width=3)=>{
-      ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
-      for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);
-      ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
-    };
-    const round=(rx,ry,rw,rh,fill,stroke="#76563f",lw=2)=>{
-      ctx.beginPath();ctx.moveTo(rx+8,ry);ctx.quadraticCurveTo(rx,ry,rx,ry+8);
-      ctx.lineTo(rx,ry+rh-8);ctx.quadraticCurveTo(rx,ry+rh,rx+8,ry+rh);
-      ctx.lineTo(rx+rw-8,ry+rh);ctx.quadraticCurveTo(rx+rw,ry+rh,rx+rw,ry+rh-8);
-      ctx.lineTo(rx+rw,ry+8);ctx.quadraticCurveTo(rx+rw,ry,rx+rw-8,ry);
-      ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();}
-    };
-    const gradient=(x1,y1,x2,y2,a,z)=>{
-      const g=ctx.createLinearGradient(x1,y1,x2,y2);g.addColorStop(0,a);g.addColorStop(1,z);return g;
-    };
-    const top=y-h*.48,front=y-h*.10,base=y+h*.39;
-    ellipse(x+7,base+13,w*.62,15,"rgba(75,86,54,.28)");
-    // A soft, slightly irregular wall silhouette with a visible side plane.
-    const wall=kind==="guild"?"#b85f4d":kind==="weapon"?"#aaa69b":kind==="forge"?"#746b61":
-      kind==="inn"?"#c28b5e":kind==="barber"?"#f0d8b5":kind==="item"?"#c59a6a":"#c79b70";
-    const roof=kind==="guild"?"#633b50":kind==="weapon"?"#46546a":kind==="forge"?"#514c49":
-      kind==="inn"?"#c46e43":kind==="barber"?"#d96e68":kind==="item"?"#77784d":"#8b5947";
-    path([[x-w*.49,front+5],[x-w*.05,top-5],[x+w*.49,front-1],[x+w*.43,base],[x-w*.42,base+3]],gradient(x-w*.3,top,x+w*.4,base,wall,"#8d654c"),"#70503d",3);
-    path([[x+w*.24,front-3],[x+w*.49,front-1],[x+w*.43,base],[x+w*.22,base-3]],"rgba(75,55,45,.16)","#795942",2);
-    // Warm watercolor patches and uneven timber/brick marks.
-    wash(x-w*.18,front+24,w*.2,h*.12,"#fff0cf",.20);
-    wash(x+w*.25,front+52,w*.15,h*.1,"#7b4937",.10);
-    if(kind==="guild"||kind==="weapon"||kind==="forge"){
-      for(let row=0;row<4;row++)for(let col=0;col<7;col++){
-        const bx=x-w*.39+col*w*.115+(row%2)*5,by=front+13+row*12;
-        if(kind==="guild"||kind==="forge"){
-          line([[bx,by],[bx+w*.075,by-1],[bx+w*.07,by+4]],row%2?"#d18a6c":"#9b5548",2);
-        }else{
-          line([[bx,by],[bx+w*.07,by-1]],"#8b8983",2);
-        }
-      }
-    }else{
-      for(let row=0;row<4;row++)line([[x-w*.37,front+17+row*10],[x-w*.12,front+16+row*10]],"rgba(113,72,44,.34)",1.5);
-    }
-    // Roofs are deliberately rounded and a little crooked, not geometric pixel tiles.
-    if(kind==="weapon"){
-      path([[x-w*.56,front+3],[x-w*.08,top-31],[x+w*.55,front-5],[x+w*.42,front+15],[x-w*.07,top-8],[x-w*.42,front+20]],gradient(x,top-28,x,front+20,"#66748a","#343f55"),"#414b5d",4);
-      for(let i=0;i<4;i++)line([[x-w*.34,top-4+i*6],[x+w*.33,top-9+i*6]],"rgba(226,224,211,.34)",2);
-    }else if(kind==="barber"){
-      path([[x-w*.55,front+3],[x-w*.08,top-27],[x+w*.55,front-3],[x+w*.39,front+17],[x-w*.08,top-7],[x-w*.39,front+18]],"#f3e5cf","#9a6b58",3);
-      const rw=w*.94/12;
-      for(let i=0;i<12;i++)round(x-w*.47+i*rw,front-4,rw+1,13,i%2?"#fff5e5":"#dc7771",null,0);
-      line([[x-w*.46,front+10],[x+w*.45,front+10]],"#fff0d9",2);
-    }else if(kind==="guild"){
-      path([[x-w*.57,front+4],[x-w*.09,top-34],[x+w*.57,front-2],[x+w*.43,front+18],[x-w*.08,top-12],[x-w*.43,front+21]],"#693d55","#503449",4);
-      path([[x-w*.47,front],[x-w*.08,top-27],[x+w*.47,front-4],[x+w*.34,front+8],[x-w*.08,top-8],[x-w*.35,front+13]],gradient(x,top-25,x,front+12,"#85516b","#4e3148"),"#a06b79",2);
-    }else if(kind==="inn"){
-      path([[x-w*.55,front+5],[x-w*.08,top-34],[x+w*.55,front-3],[x+w*.42,front+19],[x-w*.08,top-10],[x-w*.41,front+20]],gradient(x,top-30,x,front+20,"#e18a53","#a94e3d"),"#8e4f3b",4);
-      for(let i=0;i<5;i++)line([[x-w*.36+i*w*.17,top+2],[x-w*.30+i*w*.17,front+8]],"rgba(255,218,165,.38)",2);
-    }else{
-      path([[x-w*.55,front+4],[x-w*.08,top-29],[x+w*.55,front-2],[x+w*.42,front+17],[x-w*.08,top-8],[x-w*.41,front+18]],gradient(x,top-26,x,front+18,roof,kind==="item"?"#515c3b":"#633e37"),"#6f493b",3);
-      for(let i=0;i<4;i++)line([[x-w*.34,top+4+i*6],[x+w*.33,top+1+i*6]],"rgba(255,230,190,.25)",2);
-    }
-    // Hand-drawn timber framing, rounded windows and front door.
-    line([[x-w*.39,front+8],[x-w*.39,base-4],[x+w*.36,base-2]],"#80583e",4);
-    line([[x+w*.32,front+8],[x+w*.34,base-4]],"#80583e",4);
-    const windowAt=(wx,wy,lit=false)=>{
-      round(wx-11,wy-13,23,30,"#78513c","#684733",3);
-      round(wx-7,wy-9,15,22,lit?"#f6d98c":"#9fc4c0","#f0d6a7",2);
-      line([[wx,wy-8],[wx,wy+12]],"#f3dfb8",2);line([[wx-6,wy+1],[wx+7,wy+1]],"#f3dfb8",2);
-      if(lit)wash(wx,wy,22,27,"#ffe7a0",.22);
-    };
-    if(kind==="inn"){
-      // Two floors, several warmly glowing windows.
-      for(const xx of [x-w*.27,x,x+w*.25])windowAt(xx,front+13,true);
-      for(const xx of [x-w*.28,x+w*.04,x+w*.29])windowAt(xx,front+55,true);
-    }else if(kind==="guild"){
-      windowAt(x-w*.28,front+26,false);windowAt(x+w*.27,front+26,false);
-    }else if(kind==="barber"){
-      windowAt(x-w*.27,front+27,true);windowAt(x+w*.25,front+27,true);
-    }else{
-      windowAt(x-w*.27,front+25,kind==="item");windowAt(x+w*.25,front+25,false);
-    }
-    // Rounded entrance; guild doors open outward to welcome adventurers.
-    if(kind==="guild"){
-      round(x-25,front+26,50,base-front-23,"#5a392f","#4a3029",3);
-      path([[x-23,front+30],[x-43,front+39],[x-41,base-2],[x-21,base-3]],"#8e5a3e","#4d352b",3);
-      path([[x+23,front+30],[x+43,front+39],[x+41,base-2],[x+21,base-3]],"#8e5a3e","#4d352b",3);
-      line([[x-33,front+42],[x-33,base-8]],"#d5a46b",2);line([[x+33,front+42],[x+33,base-8]],"#d5a46b",2);
-    }else{
-      round(x-14,front+29,28,base-front-26,"#694431","#4e382b",3);
-      round(x-10,front+34,20,base-front-34,"#a86d48","#d0a071",1.5);
-      ellipse(x+6,base-13,2.5,2.5,"#f6d88d");
-    }
-    // Shop-specific picture-book props and emblems.
-    if(kind==="item"){
-      // Two little barrels and a crate, with herb/potion bottles.
-      const barrel=(bx,by)=>{
-        ctx.beginPath();ctx.moveTo(bx-12,by-16);ctx.quadraticCurveTo(bx-17,by-4,bx-11,by+9);
-        ctx.quadraticCurveTo(bx,by+14,bx+11,by+9);ctx.quadraticCurveTo(bx+16,by-4,bx+12,by-16);ctx.closePath();
-        ctx.fillStyle=gradient(bx-10,by,bx+10,by,"#c58a51","#865335");ctx.fill();ctx.strokeStyle="#68452f";ctx.lineWidth=2;ctx.stroke();
-        line([[bx-10,by-10],[bx+10,by-10]],"#e0b779",3);line([[bx-11,by+5],[bx+11,by+5]],"#e0b779",3);
-      };
-      barrel(x-w*.40,base+1);barrel(x+w*.39,base+1);
-      round(x-5,front+43,10,16,"#b6d8bd","#597e5b",1.5);round(x-3,front+39,6,6,"#e3c47d","#597e5b",1);
-      round(x+w*.18,front+43,10,16,"#d98c83","#8b5947",1.5);round(x+w*.18+2,front+39,6,6,"#e3c47d","#8b5947",1);
-      line([[x-17,top-2],[x-8,top-14],[x-2,top-5]],"#537c4b",3);
-      ellipse(x-11,top-13,4,3,"#7ba36a");
-    }else if(kind==="weapon"){
-      // Softly painted toy-like sword and shield crest on the stone wall.
-      ellipse(x,top+1,26,22,"#e6ddc8");
-      line([[x-3,top+12],[x+10,top-13]],"#69788b",5);line([[x+6,top-10],[x+14,top-18]],"#d5c6a5",3);
-      line([[x-10,top+1],[x+5,top+9]],"#8e6445",4);line([[x-14,top-2],[x-7,top+7]],"#8e6445",3);
-      path([[x+9,top-3],[x+23,top-1],[x+19,top+15],[x+10,top+19],[x+2,top+12]],"#8c9db0","#58677a",2);
-    }else if(kind==="barber"){
-      // Red-white-blue barber pole with rounded caps and a gentle spiral.
-      const bx=x+w*.48,by=front+35;
-      round(bx-8,by-26,16,54,"#f4e7d2","#8d6958",2);
-      ctx.save();ctx.beginPath();ctx.roundRect(bx-6,by-23,12,48,6);ctx.clip();
-      for(let i=-2;i<7;i++){
-        line([[bx-10,by-26+i*10],[bx+10,by-16+i*10]],i%3===0?"#d75e62":i%3===1?"#6488b3":"#fff5e6",5);
-      }ctx.restore();
-      ellipse(bx,by-27,9,4,"#f8eee0");ellipse(bx,by+28,9,4,"#d8c6ae");
-    }else if(kind==="guild"){
-      // Large hanging guild banner and shield crest.
-      line([[x,top-20],[x,front+9]],"#694331",4);
-      path([[x-19,top-15],[x+19,top-15],[x+17,front+10],[x,front+2],[x-17,front+10]],"#9e5360","#633b46",2);
-      path([[x-10,top-7],[x+10,top-7],[x+8,top+7],[x,top+14],[x-8,top+7]],"#e6c98c","#805c43",2);
-      line([[x,top-3],[x,top+8]],"#7c4a4b",2);line([[x-6,top+2],[x+6,top+2]],"#7c4a4b",2);
-    }else if(kind==="forge"){
-      // Bent chimney, soft puffs of smoke and a friendly little anvil.
-      path([[x+w*.25,top+5],[x+w*.24,top-34],[x+w*.34,top-39],[x+w*.37,top-31],[x+w*.34,front-12],[x+w*.27,front-10]],"#655d56","#49433e",3);
-      round(x+w*.22,top-42,27,11,"#786d64","#514a44",2);
-      for(const [sx,sy,rr] of [[.33,-54,9],[.40,-68,12],[.31,-82,8]]){
-        wash(x+w*sx,top+sy,rr*1.6,rr,"#d9d3c7",.8);
-        ellipse(x+w*sx,top+sy,rr,rr*.72,"rgba(239,235,223,.72)");
-      }
-      const ax=x-w*.43,ay=base+1;
-      path([[ax-17,ay-7],[ax-7,ay-12],[ax+9,ay-12],[ax+17,ay-6],[ax+9,ay-1],[ax+7,ay+8],[ax-9,ay+8],[ax-10,ay-1]],"#55504c","#342f2c",2);
-      line([[ax-20,ay-12],[ax+19,ay-12]],"#b7aaa0",3);
-      // warm furnace glow
-      wash(x+w*.38,front+42,22,18,"#e98a43",.32);
-      ellipse(x+w*.38,front+42,9,7,"#e9a24d");
-    }else if(kind==="inn"){
-      // Hanging wooden moon-and-bed lantern sign.
-      line([[x+w*.38,top+8],[x+w*.43,front+8]],"#70472f",3);
-      line([[x+w*.31,front+8],[x+w*.48,front+8]],"#70472f",3);
-      round(x+w*.31,front+8,36,35,"#6c4935","#49382e",2);
-      ellipse(x+w*.39,front+24,8,8,"#f1d28b");
-      ellipse(x+w*.42,front+21,7,7,"#6c4935");
-      line([[x+w*.34,front+32],[x+w*.47,front+32]],"#f1d28b",3);
-      line([[x+w*.35,front+26],[x+w*.35,front+32]],"#f1d28b",2);
-      line([[x+w*.46,front+26],[x+w*.46,front+32]],"#f1d28b",2);
-    }
-    // A few hand-painted highlights and pencil-like edge accents.
-    for(let i=0;i<9;i++){
-      const sx=x-w*.34+(i*37%Math.max(40,w*.68)),sy=front+12+(i*19%Math.max(18,h*.22));
-      wash(sx,sy,4+(i%3),2,"#fff0ce",.18);
-    }
-    if(b.name!=="住民の家"&&b.name!=="あなたの家"&&b.name!=="町長の家"){
-      ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;
-      ctx.strokeStyle="#6a4938";ctx.strokeText(b.name,x,top-48);
-      ctx.fillStyle="#fff1d8";ctx.fillText(b.name,x,top-48);
-    }
-    ctx.restore();
+    const w=Math.max(76,Math.min(130,b.w*.78)),h=Math.max(58,Math.min(92,b.h*.72));
+    const colors=b.name==="武器屋"?["#8d9695","#52677b"]:
+      b.name==="鍛冶屋"?["#77716b","#514b47"]:
+      b.name==="冒険者ギルド"?["#bd745d","#694657"]:
+      b.name==="宿屋"?["#c49a68","#985d43"]:
+      b.name==="道具屋"?["#b99a68","#6d7950"]:
+      b.name==="理髪店"?["#e2c9a7","#c56f70"]:["#c49a70","#895b49"];
+    rect(x-w/2-5,y+h/2-2,w+10,8,"#557b48");
+    rect(x-w/2,y-h/2+12,w,h-12,colors[0]);
+    rect(x-w/2-7,y-h/2,w+14,20,colors[1]);
+    rect(x-w/2+8,y-h/2+17,12,12,"#d8bd8b");
+    rect(x+w/2-20,y-h/2+17,12,12,"#d8bd8b");
+    rect(x-9,y+h/2-29,18,27,"#684a39");
+    rect(x-4,y+h/2-18,3,3,"#e7ca8e");
+    rect(x-17,y-h/2-7,34,5,"#765039");
   }
   function drawStorybookPersonAt(x,y,p,isPlayer=false,scale=1){
     ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.scale(scale,scale);
