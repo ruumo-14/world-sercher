@@ -831,7 +831,7 @@
     const mode=p.running?1:0;
     const frame=p.moving?Math.floor(((p.walkClock||0)/.2)%8):0;
     ctx.save();ctx.imageSmoothingEnabled=false;
-    ctx.drawImage(playerMovementAtlas,frame*48,(mode*8+row)*48,48,48,q.x-36,q.y-72,72,72);
+    ctx.drawImage(playerMovementAtlas,frame*24,(mode*8+row)*24,24,24,q.x-36,q.y-72,72,72);
     ctx.restore();
     if(p.name){
       ctx.save();ctx.font="bold 11px 'Noto Sans JP',sans-serif";ctx.textAlign="center";ctx.lineWidth=3;
