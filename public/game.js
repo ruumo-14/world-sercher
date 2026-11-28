@@ -2,9 +2,11 @@
 (() => {
   const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
   const W=960,H=600;
-  // 120×75の仮想画面を960×600へ拡大し、1ドットを8×8画面ピクセルにする。
-  const pixelView=document.createElement("canvas");pixelView.width=120;pixelView.height=75;
-  const pixelViewCtx=pixelView.getContext("2d"); canvas.width=W;canvas.height=H;ctx.imageSmoothingEnabled=true;
+  // 480×300の描画バッファを2倍表示し、16bit風のドットをくっきり保つ。
+  const RENDER_SCALE=0.5;
+  canvas.width=W*RENDER_SCALE;canvas.height=H*RENDER_SCALE;
+  ctx.setTransform(RENDER_SCALE,0,0,RENDER_SCALE,0,0);
+  ctx.imageSmoothingEnabled=false;
   const worldTileset=new Image();worldTileset.src="/assets/world-sercher-user-atlas.png";window.WS_WORLD_TILESET=worldTileset;
   const storybookTexture=new Image();storybookTexture.src="/assets/storybook-paper.svg";
   // 新しいGBA風タイルセット（建物・芝生・道）
@@ -344,18 +346,20 @@
   function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
   function ellipse(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);ctx.fill()}
   const TILE=32, DEPTH=1;
-  function project(wx,wy){return{x:Math.round(W/2+(wx-camera.x)),y:Math.round(H/2+(wy-camera.y))};}
+  const WORLD_VIEW_ANGLE=Object.freeze({horizontal:0.88,vertical:0.62});
+  function project(wx,wy){const dx=wx-camera.x,dy=wy-camera.y;return{x:Math.round(W/2+dx*WORLD_VIEW_ANGLE.horizontal),y:Math.round(H/2+dy*WORLD_VIEW_ANGLE.vertical)};}
   function poly(points,fill,stroke=PAL.ink,line=2){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}}
   function storyWorldPath(points,color,width){ctx.beginPath();points.forEach((p,i)=>{const q=project(p[0],p[1]);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="square";ctx.lineJoin="round";ctx.stroke();}
   function tile(wx,wy,fill){const p=project(wx,wy);rect(p.x,p.y,TILE,TILE,fill);}
   function drawGround(){
     rect(0,0,W,H,PAL.grass[1]);
-    const left=Math.floor((camera.x-W/2)/TILE)-1,top=Math.floor((camera.y-H/2)/TILE)-1;
-    for(let ty=0;ty<Math.ceil(H/TILE)+3;ty++)for(let tx=0;tx<Math.ceil(W/TILE)+3;tx++){
+    const tileW=TILE*WORLD_VIEW_ANGLE.horizontal,tileH=TILE*WORLD_VIEW_ANGLE.vertical;
+    const left=Math.floor((camera.x-W/(2*WORLD_VIEW_ANGLE.horizontal))/TILE)-1,top=Math.floor((camera.y-H/(2*WORLD_VIEW_ANGLE.vertical))/TILE)-1;
+    for(let ty=0;ty<Math.ceil(H/tileH)+3;ty++)for(let tx=0;tx<Math.ceil(W/tileW)+3;tx++){
       const gx=left+tx,gy=top+ty,q=project(gx*TILE,gy*TILE),v=hash(gx,gy);
-      rect(q.x,q.y,TILE,TILE,PAL.grass[Math.floor(v*4)]);
-      if(v>.16){rect(q.x+4+(v*17|0)%18,q.y+5+(v*23|0)%18,3,3,v>.78?"#a7ca68":"#4b8745");}
-      if(v>.89){rect(q.x+18,q.y+9,4,2,"#d7d58a");}
+      rect(q.x,q.y,tileW+1,tileH+1,PAL.grass[Math.floor(v*4)]);
+      if(v>.16){rect(q.x+3+(v*13|0)%Math.max(5,tileW-9),q.y+3+(v*17|0)%Math.max(5,tileH-7),2,2,v>.78?"#a7ca68":"#4b8745");}
+      if(v>.89){rect(q.x+tileW*.56,q.y+tileH*.3,3,2,"#d7d58a");}
     }
     // River is built from broad stepped banks and water tiles.
     const riverPts=[];for(let y=420;y<=2520;y+=64)riverPts.push([390+Math.sin(y/155)*65+Math.sin(y/83)*13,y]);
@@ -1018,33 +1022,42 @@
   }
   function render(){
     ctx.clearRect(0,0,W,H);
-    if(battle){drawAnimeBattle();return;}
-    if(interior){drawAnimeInterior();return;}
-    drawAnimeGround();
+    if(battle){drawBattle();return;}
+    if(interior){drawInterior();return;}
+    drawGround();
     const objects=[];
     for(let i=0;i<78;i++){
       const x=70+Math.floor(hash(i,23)*2860),y=90+Math.floor(hash(i,31)*2540);
       if(Math.hypot(x-1600,y-1320)<490||buildings.some(b=>x>b.x-110&&x<b.x+b.w+110&&y>b.y-110&&y<b.y+b.h+110))continue;
-      objects.push({depth:y,draw:()=>drawAnimeTree(x,y,i)});
+      objects.push({depth:y,draw:()=>drawTree(x,y,i)});
     }
-    buildings.forEach((b,i)=>objects.push({depth:b.y+b.h,draw:()=>drawAnimeHouse(b,i)}));
-    townDecor.forEach(item=>objects.push({depth:item[2]+4,draw:()=>drawAnimeDecor(item)}));
-    npcs.forEach(n=>objects.push({depth:n.y,draw:()=>drawAnimePerson(n,false)}));
-    for(const p of others.values())objects.push({depth:p.y,draw:()=>drawAnimePerson(p,false)});
-    objects.push({depth:player.y,draw:()=>drawAnimePerson(player,true)});
+    buildings.forEach((b,i)=>objects.push({depth:b.y+b.h,draw:()=>drawHouse(b,i)}));
+    townDecor.forEach(item=>objects.push({depth:item[2]+4,draw:()=>drawTownDecor(item)}));
+    npcs.forEach(n=>objects.push({depth:n.y,draw:()=>drawNpcPixelPerson(n)}));
+    for(const p of others.values())objects.push({depth:p.y,draw:()=>{
+      const q=project(p.x,p.y);
+      if(!drawMovementSprite(p,q))drawPixelPerson(p,false);
+    }});
+    objects.push({depth:player.y,draw:()=>{
+      const q=project(player.x,player.y);
+      if(!drawMovementSprite(player,q))drawPixelPerson(player,true);
+    }});
     fieldEnemies.filter(e=>e.alive&&e.hp>0).forEach(e=>objects.push({depth:e.y,draw:()=>{
-      const q=isoProject(e.x,e.y);if(q.x<-60||q.x>W+60||q.y<-80||q.y>H+80)return;
-      ctx.fillStyle="rgba(52,71,47,.22)";ctx.beginPath();ctx.ellipse(q.x,q.y+7,21,7,0,0,Math.PI*2);ctx.fill();
+      const q=project(e.x,e.y);if(q.x<-60||q.x>W+60||q.y<-80||q.y>H+80)return;
+      ellipse(q.x,q.y+7,19,5,"#526b46");
       if(e.name.includes("スライム")){
-        const grad=ctx.createRadialGradient(q.x-7,q.y-22,2,q.x,q.y-10,25);grad.addColorStop(0,"#c4eee0");grad.addColorStop(.5,"#78c8bd");grad.addColorStop(1,"#438f91");
-        ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(q.x-21,q.y+1);ctx.quadraticCurveTo(q.x-24,q.y-23,q.x-7,q.y-30);ctx.quadraticCurveTo(q.x+12,q.y-36,q.x+22,q.y-10);ctx.quadraticCurveTo(q.x+25,q.y+2,q.x,q.y+3);ctx.closePath();ctx.fill();ctx.strokeStyle="#477d79";ctx.lineWidth=2;ctx.stroke();
-        ctx.fillStyle="#fff7e6";ctx.beginPath();ctx.arc(q.x-7,q.y-15,4,0,Math.PI*2);ctx.arc(q.x+7,q.y-15,4,0,Math.PI*2);ctx.fill();ctx.fillStyle="#425d60";ctx.beginPath();ctx.arc(q.x-6,q.y-14,1.8,0,Math.PI*2);ctx.arc(q.x+8,q.y-14,1.8,0,Math.PI*2);ctx.fill();
+        rect(q.x-17,q.y-22,34,20,"#367f83");rect(q.x-12,q.y-28,24,8,"#58aaa4");
+        rect(q.x-9,q.y-16,4,5,"#fff0d0");rect(q.x+5,q.y-16,4,5,"#fff0d0");
+        rect(q.x-8,q.y-15,2,3,"#344d50");rect(q.x+6,q.y-15,2,3,"#344d50");
       }else{
-        const col=e.color||"#8b9a7a";ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(q.x,q.y-13,17,20,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#5d6853";ctx.lineWidth=2;ctx.stroke();
-        ctx.fillStyle="#fff5df";ctx.beginPath();ctx.arc(q.x-6,q.y-17,3,0,Math.PI*2);ctx.arc(q.x+6,q.y-17,3,0,Math.PI*2);ctx.fill();
+        rect(q.x-13,q.y-33,26,33,e.color||"#8b9a7a");
+        rect(q.x-10,q.y-39,20,10,e.color||"#8b9a7a");
+        rect(q.x-8,q.y-25,4,5,"#fff0d0");rect(q.x+4,q.y-25,4,5,"#fff0d0");
+        if(e.boss){rect(q.x-19,q.y-42,7,12,"#c29b5e");rect(q.x+12,q.y-42,7,12,"#c29b5e");}
       }
     }}));
     objects.sort((a,b)=>a.depth-b.depth).forEach(o=>o.draw());
+    applyStorybookTexture();
   }
 
   function update(dt){
